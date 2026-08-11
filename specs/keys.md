@@ -29,6 +29,13 @@ RESEND_BASE_URL=https://api.resend.com
 RESEND_KEY_MGMT_SITE=https://resend.com/api-keys
 SMTP_URL=
 
+# ── 批量导入限额（kb-agent MVP-3）────────────────────────────
+# KB_IMPORT_MAX_FILES_PER_BATCH=20
+# KB_IMPORT_MAX_BYTES_PER_FILE=5242880
+# KB_IMPORT_MAX_BYTES_PER_BATCH=20971520
+# KB_EXTERNAL_SEARCH_RPM=30
+# KB_FETCH_RPM=20
+
 # ── PostgreSQL（应用元数据）──────────────────────────────────
 DATABASE_HOST=
 DATABASE_PORT=5432
@@ -64,7 +71,7 @@ API_KEY_PEPPER=
 API_KEY_ENCRYPTION_SECRET=
 SESSION_SECRET=
 
-# ── 外部知识源（按需；未接入则留空；MVP-4）───────────────────
+# ── 外部知识源（按需；未接入则留空；MVP-3 source）───────────
 # TAVILY_API_KEY=
 # EXA_API_KEY=
 ```
@@ -73,8 +80,8 @@ SESSION_SECRET=
 
 | 变量 | 本地开发（根目录 `.env`） | 生产（Portainer / `.env.prod`） |
 | --- | --- | --- |
-| `PUBLIC_BASE_URL` | 可用 `http://127.0.0.1:3000` 或公网预览域 | **必须** `https://kb.agent-mate.ai` |
-| `NEXT_PUBLIC_APP_URL` | `http://127.0.0.1:3000` | `https://kb.agent-mate.ai`（进前端包） |
+| `PUBLIC_BASE_URL` | 邮件/邀请链接基址：优先 **`http://localhost:3000`**（勿用 `127.0.0.1`——Safari HTTPS-First 会升成 `https://127.0.0.1` 并丢掉端口） | **必须** `https://kb.agent-mate.ai`（禁止 loopback；`publicAppBaseUrl()` 生产会校验） |
+| `NEXT_PUBLIC_APP_URL` | `http://localhost:3000`（与上同域） | `https://kb.agent-mate.ai`（与 `PUBLIC_BASE_URL` 一致） |
 | `AGENT_BASE_URL` | `http://127.0.0.1:8000` | Compose 内网如 `http://kb-agent:8000` |
 | `RAG_BASE_URL` | `http://127.0.0.1:8001` | `http://kb-rag:8001` |
 | `QDRANT_URL` | `http://127.0.0.1:6333` | `http://qdrant:6333` |
@@ -97,6 +104,17 @@ SESSION_SECRET=
 | --- | --- |
 | QWEN_* | 内部 KM 对话 / 可选 VL·生图；Embedding 用 `QWEN_EMBED_MODEL` + `EMBED_DIM`。可为公共 DashScope 或百炼 MaaS 专属 `HOST`/`BASE_URL`/`WORKSPACE` |
 | RESEND_* | 管理员邀请、重置密码等事务邮件（**MVP-3** 闭环须真 Resend test/sandbox） |
+| `RESEND_FROM_EMAIL` | Resend 发件人（须已验证域）；本地默认可用 `onboarding@resend.dev` |
+| `EMAIL_TRANSPORT` | 空/`resend` 走真 API；`log` 仅 fixture/本地无 Key 时写日志（Done 门禁须真 Resend） |
+| `KB_IMPORT_MAX_FILES_PER_BATCH` | 批量导入单批最大文件数（默认 20） |
+| `KB_IMPORT_MAX_BYTES_PER_FILE` | 单文件上限字节（默认 5 MiB） |
+| `KB_IMPORT_MAX_BYTES_PER_BATCH` | 单批总字节上限（默认 20 MiB） |
+| `KB_EXTERNAL_SEARCH_RPM` | 每 Key 外部搜索每分钟上限（`agent-quota-01`） |
+| `KB_FETCH_RPM` | 每 Key URL fetch 每分钟上限（`agent-quota-01`） |
+| `TAVILY_API_KEY` | 外部搜索（Tavily）；**仅 kb-agent 服务端**（客户端不配，ADR-018）；无 Key 时可设 `KB_SOURCE_USE_FIXTURE=true` |
+| `KB_SOURCE_USE_FIXTURE` | `true` 时用夹具适配器（本地/CI） |
+| `CHAT_FACADE_ENABLED` | `true` 启用 `POST /v1/chat/completions` |
+| `CHAT_MAX_TOOL_ITERATIONS` | Chat 工具循环上限（默认 6） |
 | DATABASE_* | 优先使用完整 `DATABASE_URL`；凭证仅服务端，禁止 `NEXT_PUBLIC_*`；本地常见端口 **5434** |
 | QDRANT_* | 向量库；通常仅内网 URL（环境变量 `QDRANT_URL`） |
 | `USE_FAKE_EMBEDDER` | `true` 仅廉价测试；MVP-2+ 闭环交付门禁必须 `false` + 真 embed |
@@ -104,11 +122,11 @@ SESSION_SECRET=
 | MCP `/mcp` | Streamable HTTP（Cursor）；URL = `{基址}/mcp`；配置写法见 `deployment-plan.md` §7.1 |
 | MCP `/sse` | Legacy SSE（ChatBox http/sse）；URL = `{基址}/sse`；配套 `/messages/`；§7.1 |
 | `API_KEY_PEPPER` | 服务端 Key 哈希盐；stdio 的 `mcp.json` 必须与签发环境相同（勿填成 API Key） |
-| PUBLIC_BASE_URL | 生产公网基址：`https://kb.agent-mate.ai` |
-| NEXT_PUBLIC_APP_URL | 浏览器可见公网源；与 `PUBLIC_BASE_URL` 通常同域 |
+| PUBLIC_BASE_URL | 邮件/邀请链接公网基址。本地用 `http://localhost:3000`；生产 `https://kb.agent-mate.ai`。勿用 `127.0.0.1`（Safari 会升 HTTPS 并丢端口） |
+| NEXT_PUBLIC_APP_URL | 与 `PUBLIC_BASE_URL` 同域；生产须一并写入 compose |
 | BOOTSTRAP_ADMIN_EMAIL | 种子管理员联系邮箱（默认 `me@ethanhuang.com`）。首位账号为 `admin`/`admin` + 仅种子强制改密 |
 | SESSION_SECRET / API_KEY_PEPPER / API_KEY_ENCRYPTION_SECRET / RAG_SERVICE_TOKEN | 会话与 Key 盐/加密；生产勿用 `dev-*` |
-| TAVILY / EXA | 外部候选检索（MVP-4）；未启用前保持注释 |
+| TAVILY / EXA | 外部候选检索（`agent-source-01`）；生产在 **kb-agent** 配 `TAVILY_API_KEY`；IDE/ChatBox 不配；本地可用 fixture |
 
 ## 从旧草稿迁入时
 

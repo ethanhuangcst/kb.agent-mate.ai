@@ -2,8 +2,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import { BrandLockup, SiteFooter } from "../site-chrome";
+import { LocaleSwitcher } from "../locale-switcher";
 
-const MCP_JSON_SNIPPET = `{
+/** Product path: remote Streamable HTTP — no Tavily on the client (ADR-018). */
+const MCP_REMOTE_SNIPPET = `{
+  "mcpServers": {
+    "kb-agent": {
+      "url": "https://<PUBLIC_HOST>/mcp",
+      "headers": {
+        "Authorization": "Bearer <paste_plaintext_user_api_key>"
+      }
+    }
+  }
+}`;
+
+/** Optional contributor path: local stdio. No TAVILY_API_KEY — use remote for external search. */
+const MCP_STDIO_SNIPPET = `{
   "mcpServers": {
     "kb-agent": {
       "command": "<REPO>/.venv/bin/python",
@@ -12,8 +26,8 @@ const MCP_JSON_SNIPPET = `{
       "env": {
         "KB_API_KEY": "<paste_plaintext_user_api_key>",
         "API_KEY_PEPPER": "<same_as_agent_and_admin_dotenv>",
-        "DATABASE_URL": "postgresql+psycopg://kb:<password>@127.0.0.1:5434/kb_agent",
-        "RAG_BASE_URL": "http://127.0.0.1:8001",
+        "DATABASE_URL": "postgresql+psycopg://kb:<password>@<PG_HOST>:<PG_PORT>/kb_agent",
+        "RAG_BASE_URL": "http://<RAG_HOST>:<RAG_PORT>",
         "RAG_SERVICE_TOKEN": "<same_as_dotenv>",
         "BLOB_ROOT": "<REPO>/data/blob",
         "PYTHONPATH": "<REPO>/services/kb-agent"
@@ -33,7 +47,7 @@ const copy = {
     whoItems: [
       ["IDE", "如 Cursor、CodeBuddy 里的 Agent / 项目会话"],
       ["聊天客户端", "如 ChatBox"],
-      ["自有应用", "如 HCP Engagement Assistant"],
+      ["自有应用", "如 MyPoke.Trade"],
     ],
     whoNote: "以上都须自带大模型（或由宿主接入 LLM），用来理解意图、做业务判断、消费检索结果。",
     services: "kb.agent-mate.ai 提供什么",
@@ -45,7 +59,7 @@ const copy = {
     ],
     modes: "两种调用方式",
     mcpDesc:
-      "远程 MCP 工具面（检索、提案、确认、列表、内容概述 ≤400 字）。IDE 与第三方客户端传输不同，见第 3–4 节。",
+      "远程 MCP 工具面（检索、提案、确认、列表、内容概述 ≤400 字、外部候选）。IDE 与第三方客户端传输不同，见第 3–4 节。",
     modesNote:
       "MCP 与 REST 共用一把 Key、同一知识库；请求体里的用户标识不能覆盖 Key 身份。",
     llm: "大模型怎么分工",
@@ -68,12 +82,17 @@ const copy = {
     llmNoteMid: "，不替你",
     llmNoteStrong2: "做完生意",
     llmNoteAfter: "。要投放策略或业务结论，须由你侧模型结合业务数据完成；外部材料须确认后才入库。",
+    tavilyTitle: "外部搜索（Tavily）",
+    tavilyBody:
+      "kb_external_search 所需的 TAVILY_API_KEY 只配在 kb-agent 服务端（生产由本站运维）。IDE、ChatBox 等客户端一律不配置、不申请 Tavily；只需使用者 API Key。",
+    tavilyNote: "请用远程 MCP（§3）或 ChatBox SSE（§4）接入，即可使用库内与外部工具。",
     keyTitle: "2. 获取 API Key",
     keyIntro: "管理员在管理台签发使用者 Key；列表可再次「查看」完整明文。MCP 与 REST 使用同一把 Key。",
     keyRevoke: "吊销立即失效；重签换密钥，知识库保留。",
     ideTitle: "3. IDE 接入",
-    ideLead: "以 Cursor 与 CodeBuddy 为例。本地推荐 stdio（mcp.json）；也可使用远程 Streamable HTTP。",
-    ideCursor: "Cursor",
+    ideLead:
+      "推荐远程 Streamable HTTP（与生产一致，无需任何 Tavily）。以 Cursor 为例；CodeBuddy 字段相同。",
+    ideCursor: "Cursor · 远程（推荐）",
     ideSteps: [
       {
         title: "打开 Cursor Settings",
@@ -89,24 +108,27 @@ const copy = {
       },
       {
         title: "MCPs → New MCP Server",
-        body: "筛选 MCPs，点击 New MCP Server / Add a Custom MCP Server。",
+        body: "筛选 MCPs，点击 New MCP Server / Add a Custom MCP Server，打开 mcp.json。",
         img: "/guide/cursor-03-new-mcp.png",
         alt: "Customize 中 MCPs 分类与 New MCP Server",
       },
       {
-        title: "按模板填写 mcp.json",
-        body: "在打开的 mcp.json 中配置 kb-agent（stdio）。KB_API_KEY 填使用者 Key 明文；API_KEY_PEPPER 须与签发环境一致。",
+        title: "填写远程 URL 与 Bearer",
+        body: "用下方远程模板：url 指向 /mcp（本地或生产），headers 里 Authorization: Bearer <使用者 Key>。不要填 /sse，不要加 TAVILY_API_KEY。",
         img: "/guide/cursor-04-mcp-json.png",
-        alt: "mcp.json 中 kb-agent stdio 与 env 示例",
+        alt: "mcp.json 编辑界面（远程配置用 url + headers）",
       },
     ],
-    ideJsonCaption: "mcp.json 模板（占位符换成你本机路径与密钥；勿提交到 Git）",
-    ideRemote:
-      "远程备选：Transport = Streamable HTTP，URL 本地 http://127.0.0.1:8000/mcp，生产 https://kb.agent-mate.ai/mcp，鉴权 Authorization: Bearer <api_key>。不要填 /sse。",
+    ideRemoteCaption:
+      "远程 mcp.json 模板（将 <PUBLIC_HOST> 换成实际主机；本地可用 http://<HOST>:<AGENT_PORT>/mcp）",
+    ideLocalTitle: "可选：本地 stdio（贡献者 / 本机全栈）",
+    ideLocalLead:
+      "仅在本机已拉起 Postgres / RAG、需要不经 HTTP 调试时使用。客户端仍不配 Tavily；外部搜索请改用上方远程，或由运维在 kb-agent .env 配置后走远程。",
+    ideLocalCaption: "stdio 模板（勿提交密钥；无 TAVILY_API_KEY）",
     ideCodeBuddy:
-      "CodeBuddy：在 MCP / 插件设置中新增服务器，字段与上表相同——本地可用同类 mcp.json（command / args / cwd / env），或 Remote MCP 指向 /mcp。",
+      "CodeBuddy：优先 Remote MCP → /mcp + Bearer；本地 stdio 字段与上表可选模板相同。",
     toolsTitle: "4. 第三方工具接入",
-    toolsLead: "以 ChatBox 为例。须使用 Remote (http/sse) 与 /sse 路径，不能填 /mcp。",
+    toolsLead: "以 ChatBox 为例。须使用 Remote (http/sse) 与 /sse 路径，不能填 /mcp。同样不配置 Tavily。",
     chatboxSteps: [
       {
         title: "Settings → MCP",
@@ -122,15 +144,24 @@ const copy = {
       },
       {
         title: "填写服务器（注意 SSE）",
-        body: "Type = Remote (http/sse)。URL 本地 http://127.0.0.1:8000/sse，生产 https://kb.agent-mate.ai/sse。HTTP Header：Authorization=Bearer <api_key>。",
+        body: "Type = Remote (http/sse)。URL 本地 http://<HOST>:<AGENT_PORT>/sse，生产 https://<PUBLIC_HOST>/sse。HTTP Header：Authorization=Bearer <api_key>。",
         img: "/guide/chatbox-03-server-form.png",
         alt: "ChatBox Add MCP Server 表单，Type 为 Remote http/sse，URL 以 /sse 结尾",
       },
     ],
     chatboxSave: "点 Test，通过后再 Save；在会话中启用该 MCP。",
     chatboxWarn: "不要填 /mcp。ChatBox 会对 URL 发 SSE GET，/mcp 会报 404。",
-    connectCheck: "连通后可试：kb_list_knowledge → kb_internal_search →（可选）propose / confirm。",
+    chatboxTavily: "只需 Bearer 使用者 Key；Tavily 由 kb-agent 服务端提供。",
+    connectCheck:
+      "连通后可试：kb_list_knowledge → kb_internal_search →（可选）propose / confirm → kb_external_search。",
     diagramAria: "调用方经 MCP 或 REST，用同一把 Bearer Key 进入 kb.agent-mate.ai，再访问按用户隔离的私人知识库",
+    flowMcpClients: "IDE · ChatBox",
+    flowRestClients: "MyPoke.Trade",
+    flowAuth: "Bearer API Key",
+    flowHub: "kb.agent-mate.ai",
+    flowHubOps: "检索 · 提案 · 确认入库",
+    flowStore: "私人知识库",
+    flowIsolate: "user 隔离",
   },
   en: {
     tocArch: "1. Architecture",
@@ -142,7 +173,7 @@ const copy = {
     whoItems: [
       ["IDE", "e.g. Cursor / CodeBuddy Agent or project chat"],
       ["Chat clients", "e.g. ChatBox"],
-      ["Your apps", "e.g. HCP Engagement Assistant"],
+      ["Your apps", "e.g. MyPoke.Trade"],
     ],
     whoNote: "Callers bring their own LLM (or host-provided) for intent, judgment, and consuming hits.",
     services: "What kb.agent-mate.ai provides",
@@ -154,7 +185,7 @@ const copy = {
     ],
     modes: "Two call paths",
     mcpDesc:
-      "Remote MCP tools (search, propose, confirm, list, ≤400-char overview). IDE vs third-party transports differ — see §§3–4.",
+      "Remote MCP tools (search, propose, confirm, list, ≤400-char overview, external candidates). IDE vs third-party transports differ — see §§3–4.",
     modesNote: "MCP and REST share one key and one library; body user ids cannot override Bearer identity.",
     llm: "LLM split",
     yourModel: "Your model",
@@ -176,14 +207,18 @@ const copy = {
     llmNoteMid: ", not ",
     llmNoteStrong2: "run the business for you",
     llmNoteAfter: ". Strategy and conclusions stay on your side; external material indexes only after confirm.",
+    tavilyTitle: "External search (Tavily)",
+    tavilyBody:
+      "TAVILY_API_KEY for kb_external_search lives only on the kb-agent server (production ops). IDE, ChatBox, and other clients never configure or apply for Tavily — only the user API Key.",
+    tavilyNote: "Use remote MCP (§3) or ChatBox SSE (§4) for in-library and external tools.",
     keyTitle: "2. Get an API key",
     keyIntro:
       "Ask an admin to issue a user key; the list View action can show the full plaintext again. MCP and REST use the same key.",
     keyRevoke: "Revoke fails immediately; reissue rotates the secret, library kept.",
     ideTitle: "3. IDE setup",
     ideLead:
-      "Examples: Cursor and CodeBuddy. Prefer local stdio (mcp.json); Streamable HTTP is the remote alternative.",
-    ideCursor: "Cursor",
+      "Prefer remote Streamable HTTP (production path; no Tavily on the client). Cursor example; CodeBuddy uses the same fields.",
+    ideCursor: "Cursor · remote (recommended)",
     ideSteps: [
       {
         title: "Open Cursor Settings",
@@ -199,24 +234,27 @@ const copy = {
       },
       {
         title: "MCPs → New MCP Server",
-        body: "Filter MCPs, then New MCP Server / Add a Custom MCP Server.",
+        body: "Filter MCPs, then New MCP Server / Add a Custom MCP Server to open mcp.json.",
         img: "/guide/cursor-03-new-mcp.png",
         alt: "Customize MCPs chip and New MCP Server control",
       },
       {
-        title: "Fill mcp.json from the template",
-        body: "Configure kb-agent (stdio). KB_API_KEY is the user key plaintext; API_KEY_PEPPER must match the issuing environment.",
+        title: "Set remote URL and Bearer",
+        body: "Use the remote template below: url ends with /mcp (local or prod); headers Authorization: Bearer <user key>. Do not use /sse. Do not add TAVILY_API_KEY.",
         img: "/guide/cursor-04-mcp-json.png",
-        alt: "mcp.json kb-agent stdio and env example",
+        alt: "mcp.json editor (remote uses url + headers)",
       },
     ],
-    ideJsonCaption: "mcp.json template (replace placeholders; never commit secrets)",
-    ideRemote:
-      "Remote alternative: Transport = Streamable HTTP; URL local http://127.0.0.1:8000/mcp, prod https://kb.agent-mate.ai/mcp; Auth Authorization: Bearer <api_key>. Do not use /sse.",
+    ideRemoteCaption:
+      "Remote mcp.json template (replace <PUBLIC_HOST>; local may use http://<HOST>:<AGENT_PORT>/mcp)",
+    ideLocalTitle: "Optional: local stdio (contributors / full local stack)",
+    ideLocalLead:
+      "Only when Postgres/RAG are local and you need non-HTTP debugging. Still no Tavily in the client; use remote above for external search, or point remote at an agent whose .env already has the key.",
+    ideLocalCaption: "stdio template (never commit secrets; no TAVILY_API_KEY)",
     ideCodeBuddy:
-      "CodeBuddy: add a server in MCP / plugin settings with the same fields — local mcp.json (command / args / cwd / env) or Remote MCP to /mcp.",
+      "CodeBuddy: prefer Remote MCP → /mcp + Bearer; optional local stdio matches the secondary template.",
     toolsTitle: "4. Third-party tools",
-    toolsLead: "Example: ChatBox. Use Remote (http/sse) and the /sse path — not /mcp.",
+    toolsLead: "Example: ChatBox. Use Remote (http/sse) and /sse — not /mcp. No Tavily on the client.",
     chatboxSteps: [
       {
         title: "Settings → MCP",
@@ -232,15 +270,24 @@ const copy = {
       },
       {
         title: "Fill the server form (SSE)",
-        body: "Type = Remote (http/sse). URL local http://127.0.0.1:8000/sse, prod https://kb.agent-mate.ai/sse. HTTP Header: Authorization=Bearer <api_key>.",
+        body: "Type = Remote (http/sse). URL local http://<HOST>:<AGENT_PORT>/sse, prod https://<PUBLIC_HOST>/sse. HTTP Header: Authorization=Bearer <api_key>.",
         img: "/guide/chatbox-03-server-form.png",
         alt: "ChatBox Add MCP Server form with Remote http/sse and /sse URL",
       },
     ],
     chatboxSave: "Click Test, then Save when it passes; enable the MCP in the chat session.",
     chatboxWarn: "Do not use /mcp. ChatBox SSE-GETs the URL; /mcp returns 404.",
-    connectCheck: "Smoke: kb_list_knowledge → kb_internal_search → (optional) propose / confirm.",
+    chatboxTavily: "Bearer user key only; Tavily is provided by the kb-agent host.",
+    connectCheck:
+      "Smoke: kb_list_knowledge → kb_internal_search → (optional) propose / confirm → kb_external_search.",
     diagramAria: "Callers use MCP or REST with the same Bearer key into kb.agent-mate.ai, then a user-isolated library",
+    flowMcpClients: "IDE · ChatBox",
+    flowRestClients: "MyPoke.Trade",
+    flowAuth: "Bearer API Key",
+    flowHub: "kb.agent-mate.ai",
+    flowHubOps: "search · propose · confirm",
+    flowStore: "Private KB",
+    flowIsolate: "user isolate",
   },
 } as const;
 
@@ -281,9 +328,12 @@ export default async function GuidePage() {
     <div className="guide-shell">
       <header className="guide-header">
         <BrandLockup size="header" href="/" />
-        <Link className="btn-text" href="/">
-          {t("back")}
-        </Link>
+        <div className="header-end">
+          <Link className="btn-text" href="/">
+            {t("back")}
+          </Link>
+          <LocaleSwitcher />
+        </div>
       </header>
 
       <article className="guide-body">
@@ -325,24 +375,29 @@ export default async function GuidePage() {
           <h3 id="modes" className="guide-sub">
             {c.modes}
           </h3>
-          <figure className="guide-arch" aria-label="architecture">
-            <pre className="guide-arch-diagram" role="img" aria-label={c.diagramAria}>
-              <span className="arch-muted">IDE / ChatBox</span>
-              {"          "}
-              <span className="arch-muted">HCP / App</span>
-              {"\n      │ "}
-              <span className="arch-accent">MCP</span>
-              {"                     │ "}
-              <span className="arch-accent">REST</span>
-              {"\n      └───────────┬───────────────┘\n                  │ "}
-              <span className="arch-accent">Bearer API Key</span>
-              {"\n                  ▼\n         "}
-              <span className="arch-box">kb.agent-mate.ai</span>
-              {"\n         search · propose · confirm\n                  │\n                  ▼\n         "}
-              <span className="arch-box">{locale === "en" ? "Private KB" : "私人知识库"}</span>
-              {"  "}
-              <span className="arch-muted">user isolate</span>
-            </pre>
+          <figure className="guide-flow" aria-label={c.diagramAria}>
+            <div className="guide-flow-lanes" aria-hidden="true">
+              <div className="guide-flow-lane">
+                <p className="guide-flow-clients">{c.flowMcpClients}</p>
+                <p className="guide-flow-proto">MCP</p>
+              </div>
+              <div className="guide-flow-lane">
+                <p className="guide-flow-clients">{c.flowRestClients}</p>
+                <p className="guide-flow-proto">REST</p>
+              </div>
+            </div>
+            <div className="guide-flow-merge" aria-hidden="true">
+              <span className="guide-flow-auth">{c.flowAuth}</span>
+            </div>
+            <div className="guide-flow-hub" aria-hidden="true">
+              <p className="guide-flow-hub-name">{c.flowHub}</p>
+              <p className="guide-flow-hub-ops">{c.flowHubOps}</p>
+            </div>
+            <div className="guide-flow-store" aria-hidden="true">
+              <p className="guide-flow-store-name">{c.flowStore}</p>
+              <p className="guide-flow-store-meta">{c.flowIsolate}</p>
+            </div>
+            <figcaption className="sr-only">{c.diagramAria}</figcaption>
           </figure>
           <div className="guide-modes">
             <div className="guide-mode">
@@ -352,7 +407,7 @@ export default async function GuidePage() {
             </div>
             <div className="guide-mode">
               <p className="guide-mode-label">REST</p>
-              <p className="guide-mode-who">HCP · App</p>
+              <p className="guide-mode-who">MyPoke.Trade · App</p>
               <p>
                 HTTP <span className="mono">/api/v1/kb/*</span>
                 {locale === "en" ? "; same semantics as MCP." : "；与 MCP 同一套能力语义。"}
@@ -389,6 +444,12 @@ export default async function GuidePage() {
             <strong>{c.llmNoteStrong2}</strong>
             {c.llmNoteAfter}
           </p>
+
+          <h3 id="tavily" className="guide-sub">
+            {c.tavilyTitle}
+          </h3>
+          <p>{c.tavilyBody}</p>
+          <p className="guide-note">{c.tavilyNote}</p>
         </section>
 
         <section id="key" className="guide-section">
@@ -410,11 +471,16 @@ export default async function GuidePage() {
               <GuideStep key={step.img} step={step} index={i} />
             ))}
           </ol>
-          <p className="guide-code-label">{c.ideJsonCaption}</p>
+          <p className="guide-code-label">{c.ideRemoteCaption}</p>
           <pre className="guide-code">
-            <code>{MCP_JSON_SNIPPET}</code>
+            <code>{MCP_REMOTE_SNIPPET}</code>
           </pre>
-          <p className="guide-note">{c.ideRemote}</p>
+          <h3 className="guide-sub">{c.ideLocalTitle}</h3>
+          <p className="guide-note">{c.ideLocalLead}</p>
+          <p className="guide-code-label">{c.ideLocalCaption}</p>
+          <pre className="guide-code">
+            <code>{MCP_STDIO_SNIPPET}</code>
+          </pre>
           <p className="guide-note">{c.ideCodeBuddy}</p>
           <p className="guide-note">{c.connectCheck}</p>
         </section>
@@ -429,6 +495,7 @@ export default async function GuidePage() {
           </ol>
           <p>{c.chatboxSave}</p>
           <p className="guide-note">{c.chatboxWarn}</p>
+          <p className="guide-note">{c.chatboxTavily}</p>
           <p className="guide-note">{c.connectCheck}</p>
         </section>
       </article>

@@ -51,7 +51,7 @@ Mark these **done in app repo** before asking release-bot to deploy:
 ## 1. Architecture (runtime)
 
 ```text
-[Browser / Cursor / ChatBox / HCP]
+[Browser / Cursor / ChatBox / App]
     → Cloudflare DNS (prefer grey cloud until LE OK)
         → Nginx Proxy Manager on 野草云3 (:80/:443)
             → kb-web          (Admin UI; optional BFF)
@@ -158,6 +158,7 @@ services:
       PORT: "3000"
       HOSTNAME: "0.0.0.0"
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-https://kb.agent-mate.ai}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://kb.agent-mate.ai}
       DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
       SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET}
       API_KEY_PEPPER: ${API_KEY_PEPPER:?set API_KEY_PEPPER}
@@ -333,19 +334,34 @@ Pepper 与签发时不一致，或 Key 已吊销 → `UNAUTHORIZED`。
 
 本地默认 pepper（仅开发）：与仓库 `.env` / `.env.example` 一致，常见为 `dev-api-key-pepper-change-me`。生产须用随机长盐，且 **签发 Key 之后不要改 pepper**（见 §11）。
 
-#### A. Cursor — Streamable HTTP（远程，推荐手测）
+#### A. Cursor — Streamable HTTP（远程，**产品推荐**）
 
 | 字段 | 本地 | 生产 |
 | --- | --- | --- |
 | Transport | Streamable HTTP / Remote MCP | 同左 |
-| URL | `http://127.0.0.1:8000/mcp` | `https://kb.agent-mate.ai/mcp` |
+| URL | `http://<HOST>:<AGENT_PORT>/mcp` | `https://<PUBLIC_HOST>/mcp` |
 | Auth | Bearer = 使用者 API Key 明文 | 同左 |
 
-不要填 `/sse`。
+不要填 `/sse`。**不要**配置 `TAVILY_API_KEY`（仅 kb-agent 服务端；ADR-018）。
 
-#### B. Cursor — stdio（本机 spawn，`~/.cursor/mcp.json`）
+```json
+{
+  "mcpServers": {
+    "kb-agent": {
+      "url": "https://<PUBLIC_HOST>/mcp",
+      "headers": {
+        "Authorization": "Bearer <paste_plaintext_user_api_key>"
+      }
+    }
+  }
+}
+```
 
-适合本机已用 **`make up-daemon`**（或系统终端 `make up`）拉起依赖与 agent 时；进程入口：`python -m app.mcp_stdio`。
+本地可将 `url` 换成 `http://<HOST>:<AGENT_PORT>/mcp`。
+
+#### B. Cursor — stdio（可选，贡献者 / 本机全栈，`~/.cursor/mcp.json`）
+
+适合本机已用 **`make up-daemon`**（或系统终端 `make up`）拉起依赖时；进程入口：`python -m app.mcp_stdio`。客户端模板**不含** Tavily；需要 `kb_external_search` 时用路径 A。
 
 ```json
 {
@@ -357,8 +373,8 @@ Pepper 与签发时不一致，或 Key 已吊销 → `UNAUTHORIZED`。
       "env": {
         "KB_API_KEY": "<paste_plaintext_user_api_key>",
         "API_KEY_PEPPER": "<same_as_agent_and_admin_dotenv>",
-        "DATABASE_URL": "postgresql+psycopg://kb:<password>@127.0.0.1:5434/kb_agent",
-        "RAG_BASE_URL": "http://127.0.0.1:8001",
+        "DATABASE_URL": "postgresql+psycopg://kb:<password>@<PG_HOST>:<PG_PORT>/kb_agent",
+        "RAG_BASE_URL": "http://<RAG_HOST>:<RAG_PORT>",
         "RAG_SERVICE_TOKEN": "<same_as_dotenv>",
         "BLOB_ROOT": "<REPO>/data/blob",
         "PYTHONPATH": "<REPO>/services/kb-agent"
@@ -368,34 +384,38 @@ Pepper 与签发时不一致，或 Key 已吊销 → `UNAUTHORIZED`。
 }
 ```
 
+占位符：`<HOST>` / `<AGENT_PORT>`、`<PUBLIC_HOST>`、`<PG_HOST>` / `<PG_PORT>`、`<RAG_HOST>` / `<RAG_PORT>`、`<REPO>` 及密钥类字段 — 按本机或生产实际值替换；勿提交明文 Key。
+
 编写要点：
 
 1. **`KB_API_KEY`** = 管理台签发的使用者 Key 明文（不要加 `Bearer ` 前缀）。  
 2. **`API_KEY_PEPPER`** = 与根目录 `.env` 中 `API_KEY_PEPPER` **逐字相同**（勿把 Key 误填进 pepper）。  
 3. `DATABASE_URL` / `RAG_*` / `BLOB_ROOT` 指向本机真实栈。  
-4. 改 Key 或 pepper 后在 Cursor **重载 MCP**。  
-5. 日志若出现 `kb-agent mcp stdio: auth failed (UNAUTHORIZED)`：先查 Key 是否 active，再查 pepper 是否与签发环境一致。
+4. **不要**在 mcp.json 加 `TAVILY_API_KEY`；外部搜索走远程 MCP → 已配置 Tavily 的 kb-agent。  
+5. 改 Key 或 pepper 后在 Cursor **重载 MCP**。  
+6. 日志若出现 `kb-agent mcp stdio: auth failed (UNAUTHORIZED)`：先查 Key 是否 active，再查 pepper 是否与签发环境一致。
 
 #### C. ChatBox — Remote (http/sse)
 
 | 字段 | 本地 | 生产 |
 | --- | --- | --- |
 | Type | **Remote (http/sse)**（不要选 Local stdio） | 同左 |
-| URL | `http://127.0.0.1:8000/sse` | `https://kb.agent-mate.ai/sse` |
+| URL | `http://<HOST>:<AGENT_PORT>/sse` | `https://<PUBLIC_HOST>/sse` |
 | HTTP Header | `Authorization=Bearer <api_key>`（`NAME=VALUE` 一行） | 同左 |
 
 **不要**把 URL 写成 `/mcp`（ChatBox 会对 URL 发 SSE GET → `MCP SSE Transport Error: 404`）。  
+**不要**在客户端填写 `TAVILY_API_KEY`：由 kb-agent `.env` / 生产运维配置。  
 消息通道 `POST /messages/` 由握手下发，无需手填。NPM 须同时反代 `/sse` 与 `/messages/`（上表）。
 
 #### 对照速查
 
-| 客户端 | 传输 | URL / 入口 | 鉴权 |
-| --- | --- | --- | --- |
-| Cursor（远程） | Streamable HTTP | `…/mcp` | Bearer Key |
-| Cursor（本地 stdio） | stdio → `app.mcp_stdio` | `mcp.json` command/env | `KB_API_KEY` + 正确 `API_KEY_PEPPER` |
-| ChatBox | Legacy SSE | `…/sse` | Header `Authorization=Bearer …` |
+| 客户端 | 传输 | URL / 入口 | 鉴权 | 客户端 Tavily |
+| --- | --- | --- | --- | --- |
+| Cursor（远程，推荐） | Streamable HTTP | `…/mcp` | Bearer Key | 否 |
+| Cursor（本地 stdio，可选） | stdio → `app.mcp_stdio` | `mcp.json` command/env | `KB_API_KEY` + 正确 `API_KEY_PEPPER` | 否 |
+| ChatBox | Legacy SSE | `…/sse` | Header `Authorization=Bearer …` | 否 |
 
-工具集相同（含 `kb_internal_search` / `kb_propose_add` / `kb_confirm_add` / `kb_list_knowledge` / `kb_knowledge_summary`）；与 REST 同一把使用者 Key、同一知识库。
+工具集相同（含 `kb_internal_search` / `kb_propose_add` / `kb_confirm_add` / `kb_list_knowledge` / `kb_knowledge_summary` / `kb_external_search` 等）；与 REST 同一把使用者 Key、同一知识库。
 
 ---
 
@@ -448,7 +468,7 @@ After DB reachable → stack healthy → DNS → NPM:
 - **Default password:** change immediately in prod smoke; do not leave `admin`/`admin` after go-live.
 - **API keys:** issue/reissue store `key_hash` + `key_ciphertext`; admin may **view** plaintext again (ADR-007). Keep `API_KEY_PEPPER` and `API_KEY_ENCRYPTION_SECRET` stable after production keys exist.
 - **Local stack:** prefer `make up-daemon` when driving services from Cursor Agent (ADR-008; `knowledge/ops/local-apps-keep-dying.md`).
-- **LLM boundary:** DashScope Qwen is **internal KM only**; callers bring their own LLM (Cursor/ChatBox/HCP).
+- **LLM boundary:** DashScope Qwen is **internal KM only**; callers bring their own LLM (Cursor/ChatBox/App).
 - **No Gist storage;** originals on `kb_blob_data`; metadata Postgres; vectors Qdrant.
 - **Image pull:** Portainer “Update stack” often does **not** re-pull `latest` — use Recreate + Pull or pin sha tags.
 - **NPM domain:** must match DNS exactly (`kb.agent-mate.ai`).

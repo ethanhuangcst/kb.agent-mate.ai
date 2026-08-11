@@ -87,6 +87,26 @@ def test_sse_rejects_missing_bearer(api_client: TestClient):
     assert resp.json().get("code") == "UNAUTHORIZED"
 
 
+def test_mcp_bearer_auth_is_pure_asgi_not_base_http_middleware():
+    """ChatBox SSE dies if any BaseHTTPMiddleware wraps the app (AssertionError on stream)."""
+    import inspect
+
+    from starlette.middleware.base import BaseHTTPMiddleware
+
+    from app.mcp_server import mount_mcp
+
+    src = inspect.getsource(mount_mcp)
+    assert "class BearerAuthMiddleware" in src
+    assert "async def __call__(self, scope" in src
+    assert "do NOT use BaseHTTPMiddleware" in src
+
+    for m in app.user_middleware:
+        cls = m.cls
+        assert not issubclass(cls, BaseHTTPMiddleware), (
+            f"{cls.__name__} must not subclass BaseHTTPMiddleware (breaks /sse)"
+        )
+
+
 def test_mcp_mount_present():
     # Mounted route exists on app
     paths = []

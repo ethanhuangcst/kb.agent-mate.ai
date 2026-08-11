@@ -49,7 +49,7 @@
 │  ChatBox: http/sse → /sse (+ /messages/) │
 │  Header: Authorization: Bearer <api_key> │
 └────────────────────┬─────────────────────┘
-                     │ HTTPS or http://127.0.0.1:8000
+                     │ HTTPS or http://<HOST>:<AGENT_PORT>
                      ▼
 ┌──────────────────────────────────────────┐
 │ kb-agent (FastAPI, :8000)                │
@@ -67,7 +67,7 @@
 ```
 
 生产：Nginx Proxy Manager 将 `/mcp`、`/sse`、`/messages/`（及 `/api/v1/kb/*`）反代到 `kb-agent:8000`（见 `deployment-plan.md`）。  
-本地：Cursor `http://127.0.0.1:8000/mcp`；ChatBox `http://127.0.0.1:8000/sse`。起栈推荐 `make up-daemon`（见 `knowledge/ops/local-apps-keep-dying.md`）。
+本地：Cursor `http://<HOST>:<AGENT_PORT>/mcp`；ChatBox `http://<HOST>:<AGENT_PORT>/sse`。起栈推荐 `make up-daemon`（见 `knowledge/ops/local-apps-keep-dying.md`）。
 
 **进程模型：** MCP 与 REST **同进程同应用**（同一 uvicorn），共享连接池与配置；禁止单独起第二个「只有 MCP」的业务副本以免双实现。
 
@@ -135,7 +135,17 @@
 
 ### 5.2 全量路线图（unlock 时再注册）
 
-见 `agent-design.md` §4 全表。原则：每增工具 = 同批 REST + 契约更新 + 截断/越界检查。
+见 `agent-design.md` §4 / §4.0a。原则：每增工具 = 同批 REST + 契约更新 + 截断/越界检查。规范名锁定如下：
+
+| Tool（规范） | 故事 | REST | MVP-3 状态 |
+| --- | --- | --- | --- |
+| `kb_import_documents` / `kb_confirm_import_batch` / `kb_organize` | import / org / mcp-06 | `/imports*` `/organize` | Done |
+| `kb_fetch_url` | `agent-ingest-02` | `POST /fetch` | Done |
+| `kb_external_search` | `agent-source-01` | `POST /sources/search` | Done |
+| （无新工具） | `agent-source-02` | 编排策略 `search_prefer_internal` | Done |
+| （无 MCP 工具） | `agent-chat-01` | `POST /v1/chat/completions`（`CHAT_FACADE_ENABLED`） | Done |
+
+废弃别名勿新用：`kb_list`、`kb_fetch`、`kb_source_search`。
 
 ### 5.3 工具描述（schema `description` 必含）
 
@@ -227,27 +237,30 @@ REST route handler ─┘
 
 ### 7.1 Cursor / CodeBuddy（MVP-2 DoD 证据）
 
-UI 图文步骤见 Admin「接入指南」`/guide` §3（截图：Settings → Customize → MCPs → `mcp.json`）。
+UI 图文步骤见 Admin「接入指南」`/guide` §3。**产品默认：远程 Streamable HTTP**（客户端不配 `TAVILY_API_KEY`，见 [ADR-018](./adr/ADR-018-clients-no-tavily-key.md)）。
 
-**路径 A — 本地 stdio（与截图一致）**
-
-1. Cursor Settings → **Customize** → **MCPs** → **New MCP Server**  
-2. 按 [`deployment-plan.md`](./deployment-plan.md) §7.1 B 填写 `mcp.json`（`python -m app.mcp_stdio` + `KB_API_KEY` / `API_KEY_PEPPER` 等）  
-3. CodeBuddy：在 MCP / 插件设置中用同类 `mcp.json` 字段
-
-**路径 B — 远程 Streamable HTTP（手测备选）**
+**路径 A — 远程 Streamable HTTP（推荐）**
 
 1. Transport = Streamable HTTP / Remote MCP  
-2. URL：本地 `http://127.0.0.1:8000/mcp`；生产 `https://kb.agent-mate.ai/mcp`  
-3. Auth：`Authorization: Bearer <api_key>`（管理台签发；可列表「查看」；**勿**写入仓库或公开截图）
+2. URL：本地 `http://<HOST>:<AGENT_PORT>/mcp`；生产 `https://<PUBLIC_HOST>/mcp`  
+3. Auth：`Authorization: Bearer <api_key>`（管理台签发；可列表「查看」；**勿**写入仓库或公开截图）  
+4. **不要**在客户端配置 `TAVILY_API_KEY`
 
 | 项 | 值 |
 | --- | --- |
 | Transport | Streamable HTTP（或 Cursor 标注的等价 Remote MCP） |
-| URL | 本地 `http://127.0.0.1:8000/mcp`；生产 `https://kb.agent-mate.ai/mcp` |
+| URL | 本地 `http://<HOST>:<AGENT_PORT>/mcp`；生产 `https://<PUBLIC_HOST>/mcp` |
 | Auth | Bearer = 使用者 Key 明文（勿提交 git） |
 
-已实现工具（MVP-2）：`kb_internal_search`、`kb_propose_add`、`kb_confirm_add`、`kb_list_knowledge`、`kb_knowledge_summary`。均走同一 `KbService`。
+**路径 B — 本地 stdio（可选，贡献者 / 本机全栈）**
+
+1. Cursor Settings → **Customize** → **MCPs** → **New MCP Server**  
+2. 按 [`deployment-plan.md`](./deployment-plan.md) §7.1 B 填写 `mcp.json`（`python -m app.mcp_stdio` + `KB_API_KEY` / `API_KEY_PEPPER` 等；**无** Tavily）  
+3. 需要 `kb_external_search` 时改用路径 A（指向已配置 Tavily 的 kb-agent）  
+4. CodeBuddy：优先 Remote MCP；stdio 用同类 `mcp.json` 字段
+
+已实现工具：MVP-2 五件套 + MVP-3 `kb_import_documents` / `kb_confirm_import_batch` / `kb_organize` / `kb_fetch_url` / `kb_external_search`。均走同一 `KbService`。  
+Chat 门面：`POST /v1/chat/completions`（`CHAT_FACADE_ENABLED`）；非 MCP 工具。
 
 手测剧本（与 `mvp-2-3-delivery.md` §3.2 一致）：
 
@@ -261,19 +274,19 @@ Admin「接入指南」页（`/guide`）§3–§4 为图文步骤；完整模板
 
 ### 7.2 ChatBox
 
-UI 图文步骤见 `/guide` §4。自定义 MCP：**Remote (http/sse)**（遗留 SSE，不是 Streamable HTTP）。
+UI 图文步骤见 `/guide` §4。自定义 MCP：**Remote (http/sse)**（遗留 SSE，不是 Streamable HTTP）。客户端**不**配置 Tavily。
 
 | 字段 | 值 |
 | --- | --- |
 | Type | Remote (http/sse) |
-| URL | `http://127.0.0.1:8000/sse`（**不要**填 `/mcp`） |
+| URL | `http://<HOST>:<AGENT_PORT>/sse`（生产 `https://<PUBLIC_HOST>/sse`；**不要**填 `/mcp`） |
 | HTTP Header | `Authorization=Bearer <api_key>` |
 
 工具集与 Cursor 相同。消息通道：`POST /messages/`（由 SSE 握手下发，无需手填）。
 
-> Cursor 继续用 Streamable HTTP：`http://127.0.0.1:8000/mcp`。ChatBox 的 http/sse 模式会对 `/mcp` 发 SSE GET → **404**；须改用 `/sse`。
+> Cursor 继续用 Streamable HTTP：`http://<HOST>:<AGENT_PORT>/mcp`。ChatBox 的 http/sse 模式会对 `/mcp` 发 SSE GET → **404**；须改用 `/sse`。
 
-### 7.3 HCP / 应用
+### 7.3 MyPoke.Trade / 自有应用
 
 优先 **REST**；若嵌入 MCP Client，同一 Key、同一工具语义。
 
@@ -293,19 +306,19 @@ UI 图文步骤见 `/guide` §4。自定义 MCP：**Remote (http/sse)**（遗留
 
 ### 8.2 审计
 
-至少：`kb_confirm_add` 成功；日后 `import_confirm` / `organize(apply=true)`。
+至少：`kb_confirm_add` 成功；`kb_confirm_import_batch` / `kb_organize(apply=true)`（MVP-3 已交付）。
 
 ### 8.3 滥用与成本
 
 | 风险 | 缓解 |
 | --- | --- |
 | 大 `text` propose | 请求体大小上限（与 REST 同） |
-| 高频 search | 可选每 Key 速率限制（MVP-2 可先日志；MVP-3+ 再硬限） |
+| 高频 search / 外部 search / fetch | 每 Key 速率限制（`agent-quota-01`；MVP-3） |
 | 结果撑爆宿主上下文 | 强制 top_k / 每 hit 字符上限 |
 
 ### 8.4 SSRF / 出站
 
-MVP-2 无 `kb_fetch_url`。日后 fetch 工具须走 Source Router 的 URL 允许规则（architecture §7），与 REST 同。
+MVP-3 `agent-ingest-02` 注册 `kb_fetch_url` 时须走 Source Router 的 URL 允许规则（architecture §7），与 REST `POST /api/v1/kb/fetch` 同。
 
 ---
 
@@ -398,4 +411,4 @@ CI：可用 MCP SDK 内存/HTTP 客户端打 `/mcp`；**Done 门禁**禁止 Fake
 
 ## 14. 小结
 
-kb-agent 的 MCP = **双传输薄工具门面**：Cursor 走 Streamable HTTP（`/mcp`）；ChatBox 走遗留 SSE（`/sse`）；Bearer 一人一库、当前 **5** 个工具、与 REST 共享 `KbService`。智能留在调用方模型；本服务保证可引用、可确认、可多客户端共用一把 Key。
+kb-agent 的 MCP = **双传输薄工具门面**：Cursor **推荐** Streamable HTTP（`/mcp`）；ChatBox 走遗留 SSE（`/sse`）；Bearer 一人一库、与 REST 共享 `KbService`。`TAVILY_API_KEY` 仅服务端（ADR-018）。智能留在调用方模型；本服务保证可引用、可确认、可多客户端共用一把 Key。
