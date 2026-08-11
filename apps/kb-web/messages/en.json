@@ -1,0 +1,97 @@
+{
+  "brand": "kb.agent-mate.ai",
+  "footerCopyright": "copyright ® Ethan Huang",
+  "common": {
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "cancel": "Cancel"
+  },
+  "home": {
+    "tagline": "Private knowledge-base agent. Callers bring their own model; we manage knowledge and index after confirm.",
+    "guide": "Integration guide",
+    "adminLogin": "Admin login"
+  },
+  "login": {
+    "eyebrow": "Admin",
+    "title": "Sign in",
+    "lead": "Open registration is closed. <contact>Contact an admin</contact> for an api-key",
+    "wechatQrAlt": "Admin WeChat QR code",
+    "wechatQrCaption": "Scan with WeChat",
+    "loginLabel": "Username or email",
+    "passwordLabel": "Password",
+    "submit": "Sign in",
+    "forgot": "Reset password",
+    "backHome": "Back to home",
+    "error": "Sign-in failed. Check username or password."
+  },
+  "forgot": {
+    "eyebrow": "Reset",
+    "title": "Reset password",
+    "lead": "If the email matches an admin account, a Resend reset link will be sent.",
+    "emailLabel": "Email",
+    "submit": "Send link",
+    "backLogin": "Back to sign-in",
+    "backHome": "Back to home"
+  },
+  "changePassword": {
+    "eyebrow": "Admin · first sign-in",
+    "title": "Change password",
+    "lead": "Default seed password detected. Change it before issuing keys or invites. Admins who set a password via invite or reset never see this page.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "submit": "Save and continue",
+    "backLogin": "Back to sign-in",
+    "mismatch": "Passwords do not match.",
+    "tooShort": "Password must be at least 8 characters."
+  },
+  "admin": {
+    "users": "Users",
+    "admins": "Admins",
+    "logout": "Sign out",
+    "hello": "Hello, {name}",
+    "navLabel": "Admin navigation",
+    "usersEyebrow": "Keys",
+    "usersTitle": "Users",
+    "usersLead": "One active key per user. MCP and apps share the same key.",
+    "issueKey": "Issue new key",
+    "displayName": "Name",
+    "userName": "Display name",
+    "nameEnglishOnly": "English letters only",
+    "namePlaceholder": "Daniel Foster",
+    "nameInvalid": "Name must be English (letters and spaces).",
+    "keyPrefix": "Prefix",
+    "status": "Status",
+    "issuedAt": "Issued",
+    "actions": "Actions",
+    "reissue": "Reissue",
+    "revoke": "Revoke",
+    "revokeConfirmTitle": "Revoke this secret key?",
+    "revokeConfirmBody": "The secret key stops working immediately and leaves this list. Knowledge data is kept, but the user can no longer access it.",
+    "revokeConfirmAction": "Revoke",
+    "empty": "No users yet.",
+    "issueEyebrow": "Issue",
+    "issueTitle": "Issue new key",
+    "issueLead": "Create a user and generate an API key. Name is for identification.",
+    "issueHint": "Plaintext is shown once on the next screen. Each user has an isolated knowledge base.",
+    "issueSubmit": "Generate key",
+    "cancel": "Cancel",
+    "issuedEyebrow": "Issued",
+    "issuedTitle": "Key issued",
+    "issuedWarn": "Plaintext is visible only once. You cannot view the full key after leaving this page.",
+    "issuedWarnStrong": "Copy and store it securely now. Closing this page hides the plaintext permanently.",
+    "copy": "Copy",
+    "backList": "Back to list",
+    "active": "active",
+    "revoked": "revoked",
+    "adminsSoon": "Admin list opens in a later release."
+  },
+  "guide": {
+    "title": "Integration guide",
+    "back": "Back to home",
+    "eyebrow": "Connect",
+    "lead": "Bring your own model. One API key, two integration paths."
+  },
+  "locale": {
+    "label": "Language"
+  }
+}

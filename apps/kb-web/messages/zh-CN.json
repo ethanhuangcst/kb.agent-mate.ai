@@ -1,0 +1,97 @@
+{
+  "brand": "kb.agent-mate.ai",
+  "footerCopyright": "copyright ® Ethan Huang",
+  "common": {
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码",
+    "cancel": "取消"
+  },
+  "home": {
+    "tagline": "私人知识库智能体。调用方自带模型；这里管好知识、确认后入库。",
+    "guide": "接入指南",
+    "adminLogin": "管理员登录"
+  },
+  "login": {
+    "eyebrow": "Admin",
+    "title": "登录",
+    "lead": "开放注册已关闭。<contact>联系管理员</contact>获得 api-key",
+    "wechatQrAlt": "管理员微信二维码",
+    "wechatQrCaption": "微信扫码联系",
+    "loginLabel": "用户名或邮箱",
+    "passwordLabel": "密码",
+    "submit": "登录",
+    "forgot": "重设密码",
+    "backHome": "返回首页",
+    "error": "登录失败，请检查用户名或密码。"
+  },
+  "forgot": {
+    "eyebrow": "Reset",
+    "title": "重设密码",
+    "lead": "若邮箱对应管理员账号，将收到 Resend 重置链接。",
+    "emailLabel": "邮箱",
+    "submit": "发送链接",
+    "backLogin": "返回登录",
+    "backHome": "返回首页"
+  },
+  "changePassword": {
+    "eyebrow": "Admin · 首次登录",
+    "title": "修改密码",
+    "lead": "检测到默认种子口令，须更换后方可使用签发 Key、邀请等能力。经邀请或重置自设密码的管理员不会进入本页。",
+    "newPassword": "新密码",
+    "confirmPassword": "确认新密码",
+    "submit": "保存并继续",
+    "backLogin": "返回登录",
+    "mismatch": "两次密码不一致。",
+    "tooShort": "密码至少 8 位。"
+  },
+  "admin": {
+    "users": "使用者",
+    "admins": "管理员",
+    "logout": "退出",
+    "hello": "Hello, {name}",
+    "navLabel": "管理导航",
+    "usersEyebrow": "Keys",
+    "usersTitle": "使用者",
+    "usersLead": "一人一把有效 Key。MCP 与 App 使用同一把。",
+    "issueKey": "签发新 Key",
+    "displayName": "姓名",
+    "userName": "使用者姓名",
+    "nameEnglishOnly": "仅允许输入英文",
+    "namePlaceholder": "Daniel Foster",
+    "nameInvalid": "姓名须为英文（字母与空格等）。",
+    "keyPrefix": "前缀",
+    "status": "状态",
+    "issuedAt": "签发",
+    "actions": "操作",
+    "reissue": "重签",
+    "revoke": "吊销",
+    "revokeConfirmTitle": "确认吊销该秘钥？",
+    "revokeConfirmBody": "吊销后该秘钥立即失效，并从此列表移除。知识数据仍保留，但使用者将无法再访问。",
+    "revokeConfirmAction": "确认吊销",
+    "empty": "尚无使用者。",
+    "issueEyebrow": "Issue",
+    "issueTitle": "签发新 Key",
+    "issueLead": "创建使用者并生成一把 API Key。姓名用于识别。",
+    "issueHint": "明文 Key 仅在下一页显示一次。该使用者拥有独立全局知识库。",
+    "issueSubmit": "生成 Key",
+    "cancel": "取消",
+    "issuedEyebrow": "Issued",
+    "issuedTitle": "Key 已生成",
+    "issuedWarn": "明文仅此一次可见。离开本页后无法再查看完整 Key。",
+    "issuedWarnStrong": "请立即复制并安全存放。关闭本页后无法再次显示明文。",
+    "copy": "复制",
+    "backList": "返回列表",
+    "active": "active",
+    "revoked": "revoked",
+    "adminsSoon": "管理员列表将在后续版本开放。"
+  },
+  "guide": {
+    "title": "接入指南",
+    "back": "返回首页",
+    "eyebrow": "Connect",
+    "lead": "你带着自己的模型来用私人知识库。一把 API Key，两种接入方式。"
+  },
+  "locale": {
+    "label": "语言"
+  }
+}

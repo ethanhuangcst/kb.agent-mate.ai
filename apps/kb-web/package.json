@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "dotenv": "^17.4.2",
+    "jose": "^6.2.8",
     "next": "15.5.2",
     "next-intl": "^4.3.4",
     "postgres": "^3.4.7",
@@ -21,7 +23,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@playwright/test": "^1.54.1",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",

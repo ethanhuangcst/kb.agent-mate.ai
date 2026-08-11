@@ -16,7 +16,19 @@
         </a>
         <p class="eyebrow">Admin</p>
         <h1>登录</h1>
-        <p class="lead">开放注册已关闭。初始化默认账号 <code>admin</code> / <code>admin</code> 须改密；经邀请自设密码者登录后无需再改。</p>
+        <p class="lead">
+          开放注册已关闭。
+          <span class="contact-admin">
+            <button type="button" class="contact-admin-trigger" aria-describedby="login-wechat-qr">
+              联系管理员
+            </button>
+            <span id="login-wechat-qr" class="contact-admin-pop" role="tooltip">
+              <img src="EthanWeChat.png" alt="管理员微信二维码" width="180" height="180" />
+              <span class="contact-admin-caption">微信扫码联系</span>
+            </span>
+          </span>
+          获得 api-key
+        </p>
         <hr class="rule" />
         <form class="form" action="change-password.html" method="get">
           <label>
@@ -25,7 +37,15 @@
           </label>
           <label>
             密码
-            <input type="password" name="password" autocomplete="current-password" placeholder="••••••••••••" />
+            <span class="password-field">
+              <input type="password" name="password" autocomplete="current-password" placeholder="••••••••••••" />
+              <button type="button" class="password-toggle" aria-label="显示密码" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </span>
           </label>
           <div class="form-actions btn-row">
             <button type="submit" class="btn">登录</button>

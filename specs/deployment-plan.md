@@ -1,8 +1,10 @@
 # Deployment plan — kb-agent
 
 **Consumer:** release-bot (野草云3 semi-auto release).  
-**Spec sources:** `specs/architecture.md`, `specs/req.md`, `specs/keys.md`, `specs/release-bot-instruction.md`.  
+**Spec sources:** `specs/architecture.md`, `specs/req.md`, `specs/keys.md`, `specs/release-bot-instruction.md`, `specs/mvp-2-3-delivery.md` (batch DoD; MCP first in MVP-2).  
 **Secrets:** never in this file — use Portainer env / node `.env` / local key store (see `specs/keys.md` / `.env.prod.example`).
+
+**Local vs prod:** local Postgres often **`:5434`**; production `USE_FAKE_EMBEDDER=false`. MCP public path (e.g. `/mcp`) is fixed when `agent-mcp-01` lands — see architecture path table / agent-design §4.0.
 
 ---
 
@@ -160,7 +162,7 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:?set RESEND_API_KEY}
       AGENT_BASE_URL: ${AGENT_BASE_URL:-http://kb-agent:8000}
       RAG_BASE_URL: ${RAG_BASE_URL:-http://kb-rag:8001}
-      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-me@ethanhuang.com}
     networks:
       - default
 
@@ -240,7 +242,7 @@ Names only. Values live in Portainer / node env. Template: `specs/keys.md` → c
 | `DATABASE_HOST` / `PORT` / `USER` / `PASSWORD` / `NAME` | optional | Prefer single `DATABASE_URL` |
 | `SESSION_SECRET` | yes | Admin cookie signing |
 | `API_KEY_PEPPER` | yes | API key hashing; do not rotate casually after keys issued |
-| `BOOTSTRAP_ADMIN_EMAIL` | no | Optional contact email on seed admin; first account is always `admin`/`admin` + forced password change |
+| `BOOTSTRAP_ADMIN_EMAIL` | no | Seed admin contact email; **default `me@ethanhuang.com`**. First account is always `admin`/`admin` + forced password change |
 | `RESEND_API_KEY` | yes | Invite / password-reset mail |
 | `RESEND_HOST` / `RESEND_BASE_URL` | no | Defaults OK |
 | `SMTP_URL` | no | Leave empty if using Resend |
@@ -353,7 +355,7 @@ After DB reachable → stack healthy → DNS → NPM:
 
 ## 11. Ops caveats (app-specific)
 
-- **First admin:** on empty DB, seed **`admin` / `admin`** with `must_change_password`; seed login must change password before Key/invite ops. Invite/reset self-chosen passwords set `must_change_password=false` (no second forced change). Thereafter invite-only (R2). Optional `BOOTSTRAP_ADMIN_EMAIL` for seed contact email. Confirm Resend domain/sender for invite/reset links under `https://kb.agent-mate.ai/...`.
+- **First admin:** on empty DB, seed **`admin` / `admin`** with default email **`me@ethanhuang.com`** (`BOOTSTRAP_ADMIN_EMAIL`) and `must_change_password`; seed login must change password before Key/invite ops. Invite/reset self-chosen passwords set `must_change_password=false` (no second forced change). Thereafter invite-only (R2). Confirm Resend domain/sender for invite/reset links under `https://kb.agent-mate.ai/...`.
 - **Default password:** change immediately in prod smoke; do not leave `admin`/`admin` after go-live.
 - **API keys:** shown once at issue/reissue; pepper `API_KEY_PEPPER` must stay stable after production keys exist.
 - **LLM boundary:** DashScope Qwen is **internal KM only**; callers bring their own LLM (Cursor/ChatBox/HCP).

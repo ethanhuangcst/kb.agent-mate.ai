@@ -203,6 +203,100 @@ h3 {
   font-size: 0.9em;
 }
 
+/* Login: WeChat QR on “联系管理员” hover / focus */
+.contact-admin {
+  position: relative;
+  display: inline;
+}
+
+.contact-admin-trigger {
+  appearance: none;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--line-strong);
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  line-height: inherit;
+}
+
+.contact-admin-trigger:hover,
+.contact-admin-trigger:focus-visible {
+  border-bottom-color: var(--ink);
+  outline: none;
+}
+
+.contact-admin-trigger:focus-visible {
+  box-shadow: 0 0 0 2px var(--bg-elevated), 0 0 0 3px var(--ink);
+}
+
+.contact-admin-pop {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.55rem);
+  transform: translateX(-50%) translateY(4px);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  width: max-content;
+  max-width: min(220px, 70vw);
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease,
+    visibility 0.16s;
+}
+
+.contact-admin-pop::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 0.65rem;
+}
+
+.contact-admin:hover .contact-admin-pop,
+.contact-admin:focus-within .contact-admin-pop {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.contact-admin-pop img {
+  display: block;
+  width: 180px;
+  height: 180px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.contact-admin-caption {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-admin-pop {
+    transition: none;
+  }
+}
+
 /* —— App shell (图2)：顶栏撑满 + 左侧导航 —— */
 .app-shell {
   min-height: 100vh;
@@ -357,6 +451,116 @@ input::placeholder {
 
 input:focus {
   border-bottom-color: var(--ink);
+}
+
+.password-field {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 2.5rem;
+  box-sizing: border-box;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0;
+  bottom: 0.55rem;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--mute);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle:hover,
+.password-toggle[aria-pressed="true"] {
+  color: var(--ink);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.password-toggle svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  display: block;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.field-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mute);
+  font-weight: 500;
+}
+
+.field-note {
+  margin: 0;
+  font-family: var(--font-cn);
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--mute-soft);
+  line-height: 1.4;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(10, 10, 10, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.dialog {
+  width: 100%;
+  max-width: 22rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  padding: 1.5rem 1.5rem 1.35rem;
+}
+
+.dialog-title {
+  font-family: var(--font-ui);
+  font-size: 1.15rem;
+  font-weight: 500;
+  margin: 0 0 0.65rem;
+}
+
+.dialog-body {
+  margin: 0 0 1.5rem;
+  color: var(--mute);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
 }
 
 .btn {
@@ -545,7 +749,7 @@ td {
   position: relative;
   border: 1.5px solid var(--line-strong);
   background: #f4f4f4;
-  max-width: 36rem;
+  max-width: min(100%, 44rem);
 }
 
 .code-block pre {
@@ -560,8 +764,9 @@ td {
   font-weight: 400;
   line-height: 1.65;
   color: var(--ink);
-  word-break: break-all;
-  white-space: pre-wrap;
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 .code-block .btn-copy {

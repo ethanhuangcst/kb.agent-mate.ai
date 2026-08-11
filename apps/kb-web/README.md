@@ -1,36 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# kb-web（Admin）
 
-## Getting Started
+Next.js 管理面：登录、强制改密、使用者 Key、i18n、接入指南。
 
-First, run the development server:
+## 本地运行
+
+根目录先起依赖并迁移：
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+make up-deps && make migrate
+cd apps/kb-web && npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+打开 [http://127.0.0.1:3000](http://127.0.0.1:3000)（与 `localhost` 勿混用 Cookie）。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+种子账号：`admin` / `admin`（须强制改密）。若 E2E 改过密，可 `POST /api/admin/test/reset-seed`（非生产）。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+环境变量从仓库根 `.env` 加载（见 `next.config.ts` + `specs/keys.md`）。Postgres 本地常为 `127.0.0.1:5434`。
 
-## Learn More
+## 测试
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm test          # vitest
+npm run test:e2e  # Playwright（需 Postgres + ENABLE_TEST_RESET）
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 文档
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- UI：`specs/web-ui-design.md`、`specs/mockup/`
+- 故事与批次：`specs/story-mapping.md`
+- MVP-2/3 闭环：`specs/mvp-2-3-delivery.md`

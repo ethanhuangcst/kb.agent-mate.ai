@@ -33,11 +33,26 @@
                 <p>创建使用者并生成一把 API Key。姓名用于识别。</p>
               </div>
             </div>
-            <form class="form" action="key-issued.html" method="get" style="max-width: 420px">
-              <label>
-                使用者姓名
-                <input type="text" name="display_name" placeholder="Ethan Huang" required />
-              </label>
+            <form class="form" action="key-issued.html" method="get" style="max-width: 420px" autocomplete="off">
+              <div class="field">
+                <span class="field-label">使用者姓名</span>
+                <p class="field-note">仅允许输入英文</p>
+                <input
+                  type="text"
+                  name="kbUserLabel"
+                  placeholder="Daniel Foster"
+                  required
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  data-1p-ignore
+                  data-lpignore="true"
+                  data-form-type="other"
+                  pattern="[A-Za-z]+([ .'\-][A-Za-z]+)*"
+                  title="仅允许输入英文"
+                />
+              </div>
               <p class="hint">明文 Key 仅在下一页显示一次。该使用者拥有独立全局知识库。</p>
               <div class="form-actions btn-row">
                 <button type="submit" class="btn">生成 Key</button>

@@ -1,6 +1,8 @@
 # 架构设计 — kb-agent（私人 AI 知识库智能体）
 
-本文档与 `specs/req.md` 对齐，采纳**方案 2**：调用方自带 LLM 做知识消费与业务推理；kb-agent 负责知识管理、受控外部补给与确认后入库。不含实施优先级与排期。
+本文档与 `specs/req.md` 对齐，采纳**方案 2**：调用方自带 LLM 做知识消费与业务推理；kb-agent 负责知识管理、受控外部补给与确认后入库。
+
+实施批次（MVP-1…）与闭环 DoD 见 `specs/story-mapping.md`「MVP 规划」、`specs/mvp-2-3-delivery.md`；MCP 工具表面见 `specs/agent-design.md` §4。本文不含排期日期。
 
 ---
 
@@ -83,7 +85,7 @@ Admin Web (/admin)
 | 调用无关 | MCP 与 App 使用**同一把** Key |
 | 明文 | 仅签发（或重签）时显示一次；库内只存 `key_hash` + 可展示的 `key_prefix` |
 | 重签 | 吊销旧 Key + 签发新 Key，**同一 `user_id`**，知识不断；姓名在签发时确定，管理台不提供改姓名 |
-| 吊销 | 立即 401；数据保留除非另做删除 |
+| 吊销 | 确认后立即 401；管理列表移除该行；知识数据保留（使用者无法再经该 Key 访问） |
 
 请求中的 `user_id` / 姓名**不可信**，不得覆盖 Key 解析出的身份。
 
@@ -91,15 +93,15 @@ Admin Web (/admin)
 
 | 能力 | 行为 |
 | --- | --- |
-| 初始化默认管理员 | 库中无 `AdminUser` 时自动种子账号：登录名 **`admin`**、密码 **`admin`**，并标记 `must_change_password=true`。**关闭**开放注册 |
+| 初始化默认管理员 | 库中无 `AdminUser` 时自动种子账号：登录名 **`admin`**、密码 **`admin`**、默认邮箱 **`me@ethanhuang.com`**（`BOOTSTRAP_ADMIN_EMAIL` 可覆盖），并标记 `must_change_password=true`。**关闭**开放注册 |
 | 种子账号强制改密 | **仅** `must_change_password=true`（种子默认口令）登录成功后须先改密；未改密不得访问 Key / 邀请等管理能力。**不适用于**邀请设密或忘记密码重置成功的账号（二者设密后即为 `false`，登录不再强制改密） |
 | 邀请（R2） | 已登录且已完成改密的管理员输入邮箱 → Resend 发邀请链接 → 对方设**英文姓名**与密码（`must_change_password=false`）→ 成为管理员；顶栏 `Hello, {display_name}` |
 | 开放注册 | **关闭** |
-| 登录 | 用户名或邮箱 + 密码 → HttpOnly Secure Cookie 会话 |
+| 登录 | 用户名或邮箱 + 密码 → HttpOnly Secure Cookie 会话；登录说明含「联系管理员」悬停微信二维码 |
 | 重设密码 | 邮箱 → Resend 重置链接（短时、一次性）→ 设新密码（成功后 `must_change_password=false`）；可使旧会话失效 |
-| 管理台 | **管理员**列表 / 邀请 / 删除（禁删自己、禁删最后一名）；**使用者**列表；签发 / 吊销 / 重签 Key（不提供改姓名） |
+| 管理台 | **管理员**列表 / 邀请 / 删除（禁删自己、禁删最后一名）；**使用者**列表（仅有效 Key）；签发（英文姓名）/ 确认后吊销（列表移除）/ 重签（不提供改姓名） |
 
-可选：`BOOTSTRAP_ADMIN_EMAIL` 仅用于给种子账号绑定联系邮箱（便于日后重置邮件）；**不**再作为创建首位管理员的唯一方式。未配置时种子账号仍可先用 `admin` / `admin` 登录并强制改密。
+可选：`BOOTSTRAP_ADMIN_EMAIL` 绑定种子联系邮箱，**默认 `me@ethanhuang.com`**；**不**再作为创建首位管理员的唯一方式。未配置时仍落默认邮箱，可用 `admin` / `admin` 登录并强制改密。
 
 管理员账号表与使用者 API Key 表分离。管理员**不**用自己的登录会话直接调知识工具；若管理员也要当使用者，另签一把使用者 Key。
 
@@ -709,7 +711,7 @@ QDRANT_COLLECTION=
 AGENT_BASE_URL=
 RAG_BASE_URL=
 PUBLIC_BASE_URL=https://kb.agent-mate.ai
-BOOTSTRAP_ADMIN_EMAIL=   # 可选：绑定种子管理员联系邮箱；首位账号固定为 admin/admin + 仅种子强制改密
+BOOTSTRAP_ADMIN_EMAIL=me@ethanhuang.com   # 种子管理员联系邮箱（默认）；首位账号固定为 admin/admin + 仅种子强制改密
 API_KEY_PEPPER=
 SESSION_SECRET=
 ```
@@ -764,7 +766,7 @@ https://kb.agent-mate.ai (:443)
        →（内网）kb-rag · qdrant · postgres
 ```
 
-配置项详见 **tech-stack** 环境变量；另含 Pending TTL、源适配器配额等。首位管理员：初始化 **`admin` / `admin`** + 仅种子强制改密（`BOOTSTRAP_ADMIN_EMAIL` 可选）。详见 `specs/release-bot-instruction.md`。
+配置项详见 **tech-stack** 环境变量；另含 Pending TTL、源适配器配额等。首位管理员：初始化 **`admin` / `admin`** + 默认邮箱 **`me@ethanhuang.com`**（`BOOTSTRAP_ADMIN_EMAIL`）+ 仅种子强制改密。详见 `specs/release-bot-instruction.md`。
 
 备份：PostgreSQL + Qdrant 卷 + 原文 BlobStore 一致快照。恢复：停写 → 还原 → 启动。
 
@@ -797,16 +799,21 @@ https://kb.agent-mate.ai (:443)
 
 ## 16. 质量与测试（扩展 common-test-strategy）
 
-完整策略见 **[`specs/test-strategy.md`](./test-strategy.md)**（扩展公共基线，不削弱）。摘要：
+完整策略见 **[`specs/test-strategy.md`](./test-strategy.md)**（扩展公共基线，不削弱）。交付批次与闭环定义见 **[`specs/mvp-2-3-delivery.md`](./mvp-2-3-delivery.md)**。摘要：
 
 | 层级 | 重点 |
 | --- | --- |
 | 单元 | 分块、哈希幂等、RRF、路由预算、越界码、SSRF 拒绝、提案状态机、Key 哈希与一人一 Key 约束；Admin 改密/删管理员门禁 |
 | 集成 | 真实 Qdrant+PostgreSQL：search、propose→confirm→再 search；批量导入→提案→confirm batch；跨 `user_id` 不可见；Admin 签发/吊销；管理员列表与删除约束 |
 | 契约 | MCP 工具 schema 与 REST 对齐；越界示例必须拒绝策略部分；禁止无确认自动索引 |
-| E2E | Playwright Admin 旅程；知识 confirm→search；外部搜索 CI 打桩；可选 online 套件 |
+| E2E | Playwright Admin 旅程；知识 confirm→search；Cursor 手测 MCP（MVP-2）；外部搜索 CI 可打桩；可选 online 套件 |
 
-关键路径不得仅靠假检索冒充有知识；CI 使用本地 Qdrant。外部搜索与 DashScope 在 CI 默认打桩，另设可选在线套件。
+**CI vs 批交付门禁：** CI 默认可保留 Fake Embedder / 假邮件等廉价车道。标某批 **Done** 时：
+
+- **MVP-2+：** 禁止 Fake Embedder / mock agent↔rag / 假 KM 充当闭环；须真 DashScope embed（+ KM chat）与真 Qdrant。  
+- **MVP-3：** 邀请/重置须 Resend 官方 test/sandbox 真调用，禁止假 Outbox 充当 Done。
+
+关键路径不得仅靠假检索冒充有知识。
 
 ---
 
@@ -815,7 +822,7 @@ https://kb.agent-mate.ai (:443)
 | 决策 | 选择 | 原因 |
 | --- | --- | --- |
 | LLM 边界 | 方案 2：调用方消费，kb 做 KM + 补给 | 与 Cursor/ChatBox/HCP 形态一致；避免业务中台化 |
-| 主接入 | MCP + REST 共领域层 | ChatBox 支持自定义 MCP；HCP 要结构化 API |
+| 主接入 | MCP + REST 共领域层；**MVP-2** 先交付最小 MCP 工具集供 Cursor 手测 | ChatBox/Cursor 自定义 MCP；HCP 要结构化 API |
 | 获新知 | 注册表 + 库内优先 + 小并行/级联 + 证据排序 | 「最优源」来自路由与验证，非单引擎 |
 | 写入 | propose / confirm；批量导入同确认态 | 需求强制确认；禁止静默进库 |
 | 内部 LLM | Qwen 仅 KM | 控制职责与成本 |

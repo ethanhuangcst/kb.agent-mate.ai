@@ -20,6 +20,8 @@ node_modules/
 data/blob/
 data/raw/
 apps/kb-web/.next/
+apps/kb-web/test-results/
+apps/kb-web/playwright-report/
 *.egg-info/
 dist/
 build/

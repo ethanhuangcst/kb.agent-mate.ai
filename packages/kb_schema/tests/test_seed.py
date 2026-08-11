@@ -32,6 +32,7 @@ def test_ensure_seed_admin_creates_once(session):
     created = ensure_seed_admin(session)
     assert created is not None
     assert created.username == "admin"
+    assert created.email == "me@ethanhuang.com"
     assert created.must_change_password is True
     assert verify_password("admin", created.password_hash)
 

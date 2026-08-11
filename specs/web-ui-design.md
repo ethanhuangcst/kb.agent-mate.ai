@@ -95,6 +95,8 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 | 壳 | `.auth-shell` + `.auth-main` + `.auth-card` |
 | 背景 / 顶距 / 水平 | 与 §4.1 相同 |
 | 锁头 | `.logo-auth`：规格同首页 `.logo-home`（56px、站名 `1.35rem`、黄泡光学左对齐） |
+| 说明 | 「开放注册已关闭。」+ 可交互「联系管理员」+「获得 api-key」；hover / focus 浮层显示微信二维码 `EthanWeChat.png`（零圆角、发丝边、上浮） |
+| 密码 | 密码框右侧眼睛图标切换显示/隐藏（`.password-field` / `.password-toggle`） |
 | 内容宽 | `max-width: 26rem`（与首页卡同宽） |
 | 页脚 | 见 §4.4 |
 
@@ -228,8 +230,10 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 ## 6. 表单与表格
 
 - 标签：mono 大写追踪；输入为底边线（无盒）。
+- 签发姓名：输入框**上方**提示「仅允许输入英文」；placeholder `Daniel Foster`；前后端校验拉丁字母姓名；输入控件须抑制 macOS Contacts 自动填充干扰（勿用可见 honeypot 假字段）。
 - 表头：mono 大写；行操作右对齐文本按钮。
-- Key 明文：`.code-block` + 右上角复制图标；警告句用 `--mute`。
+- Key 明文：`.code-block` + 右上角复制图标；`white-space: nowrap` + 横向滚动，禁止断行；警告句用 `--mute`。
+- 吊销：确认对话框文案「确认吊销该秘钥？」→ Key 立即失效 → 列表只保留有效 Key 行；知识数据仍保留，但使用者无法再访问。
 
 ---
 

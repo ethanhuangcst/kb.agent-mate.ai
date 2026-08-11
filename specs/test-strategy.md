@@ -61,14 +61,15 @@
 - 密钥：仅 CI secrets / `.env.test`（gitignore）；规格与仓库无真实 Key。  
 - Fixture 允许本地 JSON **仅作测试种子**，不得作为产品持久化路径。
 
-**第三方打桩（CI 默认）：**
+**第三方打桩（CI 默认廉价车道 — 不得单独作为 MVP 批交付门禁）：**
 
-| 依赖 | CI | 说明 |
+| 依赖 | CI fixture 车道 | MVP 闭环交付门禁（见 `specs/mvp-2-3-delivery.md`） |
 | --- | --- | --- |
-| DashScope chat / embed | Fake Embedder（固定维随机或 hash 向量）+ Fake KM | 维度与 `EMBED_DIM` 一致；另设 online 套件验真模型 |
-| Resend | 内存 Outbox / 记录「已发」 | 邀请/重置测断言「发送意图」与 token 落地 |
-| Tavily / Exa | Stub SourceAdapter | 返回固定候选；online 可选 |
-| 出站 fetch | 本地 httpx mock / 内嵌静态 HTML 服务器 | SSRF 用例用非法 URL |
+| DashScope chat / embed | 可暂用 Fake Embedder / Fake KM 保 PR 绿灯 | **MVP-2+ Done 禁止**：必须真 DashScope + 真 Qdrant；`USE_FAKE_EMBEDDER=false` |
+| Resend | 可记录「发送意图」 | **MVP-3 Done 禁止**假 Outbox：须 Resend 官方 test/sandbox 真调用 |
+| Tavily / Exa | Stub（能力属 MVP-4） | MVP-4 闭环再定；不得提前用 stub 宣称 source Done |
+| 出站 fetch | 内嵌静态 HTML 服务器（非业务 stub） | SSRF / URL 批用本地真 HTTP 服务即可 |
+| Agent→RAG | — | **禁止** mock `httpx` 伪装 RAG；一律真服务 HTTP |
 
 ---
 

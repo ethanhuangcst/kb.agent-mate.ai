@@ -72,10 +72,11 @@ migrate: ## Run Alembic migrations
 	  $(ROOT)/.venv/bin/alembic upgrade head
 	@echo "Migrations applied."
 
-test: ## Run unit/integration tests (Python)
+test: ## Run unit/integration tests (Python + kb-web vitest)
 	@cd $(ROOT)/packages/kb_schema && $(VENV)/bin/pytest tests -q
 	@cd $(ROOT)/services/kb-rag && PYTHONPATH=. $(VENV)/bin/pytest tests -q
 	@cd $(ROOT)/services/kb-agent && PYTHONPATH=. $(VENV)/bin/pytest tests -q
+	@cd $(ROOT)/apps/kb-web && npm test
 
 lint: ## Lint web + Python (basic)
 	@cd $(ROOT)/apps/kb-web && npm run lint || true

@@ -1,6 +1,6 @@
 # kb-schema
 
-Shared SQLAlchemy 2 models and Alembic migrations for **kb.agent-mate.ai** (MVP-1).
+Shared SQLAlchemy 2 models and Alembic migrations for **kb.agent-mate.ai**.
 
 ## Install (editable)
 
@@ -14,12 +14,22 @@ pip install -e ../../packages/kb_schema
 
 | Variable | Required | Description |
 | --- | --- | --- |
-| `DATABASE_URL` | yes | SQLAlchemy URL (e.g. `postgresql+psycopg://…` or `sqlite+pysqlite:///…` for tests) |
+| `DATABASE_URL` | yes | SQLAlchemy URL (Postgres for product path; e.g. `postgresql+psycopg://…`) |
+
+Local Compose often maps Postgres to **`127.0.0.1:5434`** (see `specs/keys.md`, `specs/knowledge/ops/local-postgres-5434.md`).
 
 ## Migrate
 
+From repo root (preferred):
+
 ```bash
-export DATABASE_URL=postgresql+psycopg://kb:kb@localhost:5432/kb
+make migrate
+```
+
+Or:
+
+```bash
+export DATABASE_URL=postgresql+psycopg://kb:kb_dev_password@127.0.0.1:5434/kb_agent
 cd packages/kb_schema
 alembic upgrade head
 ```
@@ -38,4 +48,4 @@ If no `admin_users` rows exist, creates `username=admin` / `password=admin` with
 
 ## Exports
 
-`Base`, models (`AdminUser`, `User`, `ApiKey`, `KnowledgeItem`), `get_engine`, `get_session`, `ensure_seed_admin`.
+`Base`, models (`AdminUser`, `User`, `ApiKey`, `KnowledgeItem`, …), `get_engine`, `get_session`, `ensure_seed_admin`.
