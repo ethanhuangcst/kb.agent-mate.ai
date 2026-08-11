@@ -39,7 +39,7 @@ Mark these **done in app repo** before asking release-bot to deploy:
 - [ ] `docker/Dockerfile.rag` (FastAPI RAG)
 - [ ] `docker-compose.prod.yml` (image-only; external `portainer_network`)
 - [ ] `.github/workflows/ghcr.yml` (or equivalent) builds/pushes three images
-- [ ] `.env.prod.example` (names only, no secrets)
+- [x] `.env.prod.example` (names only, no secrets) — 仓库根目录
 - [ ] Migrate command or boot-migrate documented
 - [ ] Exact public paths for MCP + Admin + health confirmed in code
 

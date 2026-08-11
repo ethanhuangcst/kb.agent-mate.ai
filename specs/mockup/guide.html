@@ -16,40 +16,98 @@
         </a>
         <a class="btn-text" href="index.html">返回首页</a>
       </header>
+
       <article class="guide-body">
         <p class="eyebrow">Connect</p>
         <h1>接入指南</h1>
-        <p class="lead">用同一把 API Key 连接 Cursor、ChatBox 或自有应用。调用方自带大模型；本服务提供知识工具。</p>
+        <p class="lead">你带着自己的模型来用私人知识库。一把 API Key，两种接入方式。</p>
 
-        <h2>1. 获取 API Key</h2>
-        <ol>
-          <li>请管理员在管理台签发一把使用者 Key（明文仅显示一次）。</li>
-          <li>妥善保存；吊销后立即失效，重签会更换密钥但知识库保留。</li>
-        </ol>
+        <nav class="guide-toc" aria-label="章节">
+          <a href="#architecture">1. 架构</a>
+          <a href="#key">2. 获取 Key</a>
+        </nav>
 
-        <h2>2. 鉴权</h2>
-        <p>所有知识面请求使用：</p>
-        <pre>Authorization: Bearer &lt;api_key&gt;</pre>
+        <section id="architecture" class="guide-section">
+          <h2>1. 架构指南</h2>
 
-        <h2>3. MCP（Cursor / ChatBox）</h2>
-        <ul>
-          <li>配置远程 MCP，指向本站公开的 MCP 端点（上线后见部署说明）。</li>
-          <li>工具含检索、列表、提案、确认、批量导入等；不提供业务策略工具。</li>
-          <li>写入必须确认后才会索引。</li>
-        </ul>
+          <h3 id="who" class="guide-sub">调用者是谁</h3>
+          <ul class="guide-list">
+            <li><strong>IDE</strong> — 如 Cursor 里的 Agent / 项目会话</li>
+            <li><strong>聊天客户端</strong> — 如 ChatBox</li>
+            <li><strong>自有应用</strong> — 如 HCP Engagement Assistant</li>
+          </ul>
+          <p class="guide-note">以上都须自带大模型（或由宿主接入 LLM），用来理解意图、做业务判断、消费检索结果。</p>
 
-        <h2>4. REST（如 HCP）</h2>
-        <ul>
-          <li>与 MCP 工具语义对齐，路径形如 <span class="mono">/api/v1/kb/*</span>。</li>
-          <li>同样使用 Bearer Key；请求体中的用户标识不能覆盖 Key 身份。</li>
-        </ul>
+          <h3 id="services" class="guide-sub">kb.agent-mate.ai 提供什么</h3>
+          <ul class="guide-list">
+            <li>管理你在各项目中沉淀的知识（一人一库，按 user 隔离）</li>
+            <li>按输入检索已有知识，返回可引用片段</li>
+            <li>按需从外部找候选材料；你确认后才入库</li>
+            <li>归纳整理知识体系（分类、标签、项目归属）</li>
+          </ul>
 
-        <h2>5. 边界</h2>
-        <ul>
-          <li>可帮你找到并管好知识；不替你做投放策略或业务决策。</li>
-          <li>外部材料须提案并确认后入库；禁止无确认自动进库。</li>
-        </ul>
+          <h3 id="modes" class="guide-sub">两种调用方式</h3>
+          <figure class="guide-arch" aria-label="系统结构">
+            <pre class="guide-arch-diagram" role="img" aria-label="调用方经 MCP 或 REST，用同一把 Bearer Key 进入 kb.agent-mate.ai，再访问按用户隔离的私人知识库">
+<span class="arch-muted">Cursor / ChatBox</span>          <span class="arch-muted">HCP / 自有 App</span>
+      │ <span class="arch-accent">MCP</span>                     │ <span class="arch-accent">REST</span>
+      └───────────┬───────────────┘
+                  │ <span class="arch-accent">Bearer API Key</span>
+                  ▼
+         <span class="arch-box">kb.agent-mate.ai</span>
+         检索 · 提案 · 确认入库
+                  │
+                  ▼
+         <span class="arch-box">私人知识库</span>  <span class="arch-muted">user 隔离</span></pre>
+          </figure>
+          <div class="guide-modes">
+            <div class="guide-mode">
+              <p class="guide-mode-label">MCP</p>
+              <p class="guide-mode-who">Cursor · ChatBox</p>
+              <p>远程 MCP 接入；你的宿主模型按工具描述调用检索 / 提案 / 确认等。</p>
+            </div>
+            <div class="guide-mode">
+              <p class="guide-mode-label">REST</p>
+              <p class="guide-mode-who">HCP · 自有应用</p>
+              <p>HTTP 调 <span class="mono">/api/v1/kb/*</span>；与 MCP 同一套能力语义。</p>
+            </div>
+          </div>
+          <p class="guide-note">两种方式共用一把 Key、同一知识库；请求体里的用户标识不能覆盖 Key 身份。</p>
+
+          <h3 id="llm-boundary" class="guide-sub">大模型怎么分工</h3>
+          <div class="guide-modes guide-roles">
+            <div class="guide-mode">
+              <p class="guide-mode-label">你自带的模型</p>
+              <ul>
+                <li>理解意图与任务目标</li>
+                <li>决定要不要外部补给、如何解读命中</li>
+                <li>按业务逻辑筛选、组合知识</li>
+                <li>产出洞察、策略、文案等下游结果</li>
+              </ul>
+            </div>
+            <div class="guide-mode">
+              <p class="guide-mode-label">本站内嵌模型</p>
+              <ul>
+                <li>库内检索、列表、体系整理辅助</li>
+                <li>外部候选检索与正文拉取</li>
+                <li>入库提案：摘要、分类建议、查重</li>
+                <li>确认后的持久化与向量化</li>
+              </ul>
+            </div>
+          </div>
+          <p class="guide-note">本站帮你<strong>找到并管好知识</strong>，不替你<strong>做完生意</strong>。要投放策略或业务结论，须由你侧模型结合业务数据完成；外部材料须确认后才入库。</p>
+        </section>
+
+        <section id="key" class="guide-section">
+          <h2>2. 获取 API Key</h2>
+          <ol>
+            <li>请管理员在管理台签发使用者 Key（明文仅显示一次）。</li>
+            <li>请求头：<span class="mono">Authorization: Bearer &lt;api_key&gt;</span></li>
+            <li>吊销立即失效；重签换密钥，知识库保留。</li>
+          </ol>
+        </section>
       </article>
+
       <footer class="site-footer">
         <p>copyright ® Ethan Huang</p>
       </footer>

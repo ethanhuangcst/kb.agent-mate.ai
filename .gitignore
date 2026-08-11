@@ -10,5 +10,16 @@ keys.cn.md
 *.pem
 .DS_Store
 __pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 node_modules/
 .venv/
+.pids/
+data/blob/
+data/raw/
+apps/kb-web/.next/
+*.egg-info/
+dist/
+build/

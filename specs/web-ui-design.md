@@ -69,7 +69,7 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 | 壳 | `.home-shell` + `.home-main` + `.home-card` |
 | 垂直 | `align-items: flex-start`；顶距 `clamp(4.5rem, 14vh, 7.5rem)`（偏上，非死居中） |
 | 水平 | 内容块居中；卡内全部左对齐 |
-| 锁头 | logo 56×56 + 站名；左缘与说明文左缘对齐 |
+| 锁头 | logo 56×56 + 站名；**黄色灯泡左缘**与说明文左缘光学对齐（射线可伸出；`--logo-optical-shift`，见 ADR-001） |
 | 操作 | 「接入指南」文字链 +「管理员登录」`.btn.btn-page` |
 | 页脚 | 见 §4.4 |
 
@@ -94,7 +94,7 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 | --- | --- |
 | 壳 | `.auth-shell` + `.auth-main` + `.auth-card` |
 | 背景 / 顶距 / 水平 | 与 §4.1 相同 |
-| 锁头 | `.logo-auth`：规格同首页 `.logo-home`（56px、站名 `1.35rem`、左对齐） |
+| 锁头 | `.logo-auth`：规格同首页 `.logo-home`（56px、站名 `1.35rem`、黄泡光学左对齐） |
 | 内容宽 | `max-width: 26rem`（与首页卡同宽） |
 | 页脚 | 见 §4.4 |
 
@@ -127,11 +127,35 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 └──────────────────────────────────────────┘
 ```
 
+- 顶栏品牌：`.logo-header-mark` 36×36 + 站名；与公网锁头共用 `--logo-optical-shift`（黄泡光学对齐）。
 - 侧栏**无** logo、**无** ADMIN 角标；宽度约 `200px`。  
 - 顶栏右侧：`Hello, {display_name}`（种子账号可用 `Admin`）。  
 - 邀请不占侧栏，从管理员页 CTA 进入。  
 - 接入指南：独立静态页 `guide.html`（可新标签打开）。  
 - 移动：顶栏保留；侧栏改横排；`active` 用底边线而非左侧条。
+
+### 4.5 接入指南 `guide.html`
+
+| 项 | 规格 |
+| --- | --- |
+| 壳 | `.guide-shell` + 顶栏品牌 + `.guide-body` + 页脚 |
+| 内容宽 | `max-width: 42rem` |
+| 章节 | 1 架构 → 2 获取 Key；顶 TOC 锚点跳转 |
+| 架构四段 | 调用者是谁 → 提供什么 → 两种调用方式 → 大模型怎么分工 |
+| 结构图 | `.guide-arch-diagram`：MCP / REST 汇合 → Bearer → kb → 私人库；左边 3px 墨线 |
+| 双栏 | `.guide-modes`：调用方式（MCP \| REST）；模型分工（你自带 \| 本站内嵌）；发丝分割、非卡片 |
+| 文风 | 使用者视角、极简；`.guide-note` 收束要点 |
+
+```text
+┌─ 顶栏 logo · 返回首页 ──────────────┐
+│  Connect / 接入指南 / lead           │
+│  TOC: 1 架构 · 2 Key                 │
+│  谁 → 提供什么 → 结构图+双门面       │
+│  你的模型 | 本站内嵌模型             │
+│  获取 Key                            │
+│              copyright ® Ethan Huang │
+└──────────────────────────────────────┘
+```
 
 ### 4.4 全站页脚
 
