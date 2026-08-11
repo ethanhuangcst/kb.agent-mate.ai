@@ -2,7 +2,7 @@
 
 本文是本仓库的**项目测试策略**。它**扩展** Cursor 规则中的 `common-test-strategy`（公共基线），不得削弱该基线的金字塔、门禁或质量清单。冲突时取**更严**解释。
 
-对齐：`specs/req.md`、`specs/architecture.md`、`specs/story-mapping.md`、`specs/rag-design.md`、`specs/agent-design.md`、`specs/web-ui-design.md`、`specs/deployment-plan.md`。
+对齐：`specs/req.md`、`specs/architecture.md`、`specs/story-mapping.md`、`specs/rag-design.md`、`specs/agent-design.md`、`specs/mcp-design.md`、`specs/web-ui-design.md`、`specs/deployment-plan.md`、`specs/mvp-2-3-delivery.md`。
 
 验收用例来源：`story-mapping.md` 中 Gherkin AC（ATDD）。实现前先写失败测试，再写生产代码（TDD / ATDD）。
 
@@ -25,8 +25,8 @@
 2. **租户安全**：跨 `user_id` 不可见；请求体伪造身份无效；吊销 Key 立即 401。  
 3. **职责边界**：越界请求稳定拒绝；不捏造库内引用；内部 Qwen 仅 KM。  
 4. **管理面可用**：种子 `admin`/`admin`→强制改密；邀请设密不二次强制改密；管理员删除约束；Key 签发明文一次。  
-5. **契约一致**：MCP 工具与 REST 同领域层语义。  
-6. **可部署**：健康检查与冒烟路径与 `deployment-plan.md` 对齐。
+5. **契约一致**：MCP 工具与 REST 同领域层语义（见 `mcp-design.md`；工件 `contracts/mcp-tools.json`）。  
+6. **可部署**：健康检查与冒烟路径与 `deployment-plan.md` 对齐；MCP 公网路径 **`/mcp`**。
 
 ---
 
@@ -111,11 +111,11 @@
 | 批量导入 → 逐条/一键 confirm | agent-import-* | 无静默全量索引；失败文件不阻塞同批可确认项 |
 | 跨租户 | agent-auth-03, rag-isolate-01 | A 的 hit 永不含 B |
 | 吊销 / 重签 Key | web-keys-03/04, agent-auth-01 | 旧 Key 401；新 Key 同库可读 |
-| MCP ↔ REST | agent-mcp-01, agent-rest-01 | 同输入同语义 `code` / hit shape |
+| MCP ↔ REST | mcp-04, agent-rest-01 | 同输入同语义 `code` / hit shape；传输 `/mcp` Streamable HTTP + Bearer（`mcp-design.md`；`mcp-01`…`05`） |
 | 越界 | agent-scope-* | 策略类请求拒绝；可附带候选但不给策略正文 |
 | Admin 删管理员 | web-acct-08 | DB 约束与 API 一致 |
 
-**契约工件：** 维护 `contracts/mcp-tools.json`（或等价）与 OpenAPI/REST 路由表的生成或 diff 检查，防止双门面漂移。
+**契约工件：** [`contracts/mcp-tools.json`](../contracts/mcp-tools.json)（工具名 / 入参 / REST 映射）与 [`contracts/search-response.schema.json`](../contracts/search-response.schema.json)；对 OpenAPI/REST 路由表做生成或 diff，防止双门面漂移。细则见 [`mcp-design.md`](./mcp-design.md) §6、§10。
 
 ### 5.3 E2E（真浏览器 + 关键知识旅程）
 

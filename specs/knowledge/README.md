@@ -1,7 +1,7 @@
 # Knowledge Base
 
 Reusable research conclusions, ops lessons, and domain notes (not code truth).
-Product requirements live under `specs/`. Architecture decisions live under `specs/adr/`.
+Product requirements and design specs: see [`specs/README.md`](../README.md). Architecture decisions live under `specs/adr/`.
 
 ## Index
 

@@ -29,3 +29,5 @@ npm run test:e2e  # Playwright（需 Postgres + ENABLE_TEST_RESET）
 - UI：`specs/web-ui-design.md`、`specs/mockup/`
 - 故事与批次：`specs/story-mapping.md`
 - MVP-2/3 闭环：`specs/mvp-2-3-delivery.md`
+- MCP 接入：`specs/mcp-design.md`（路径 `/mcp`）
+- 规格索引：`specs/README.md`

@@ -1,6 +1,6 @@
 # MVP-2 / MVP-3 闭环交付规划
 
-对齐：`specs/story-mapping.md`、`specs/test-strategy.md`、`common-test-strategy`。  
+对齐：`specs/story-mapping.md`、`specs/test-strategy.md`、`common-test-strategy`、[`specs/mcp-design.md`](./mcp-design.md)。  
 前提：**MVP-1 Done**（Admin Key、Bearer、空检索、Blob/PG、禁提案索引）。
 
 ---
@@ -26,20 +26,20 @@
 
 | 批 | 一句话 | 为何能闭环 |
 | --- | --- | --- |
-| **MVP-2 知识闭环 + MCP** | MCP 薄封装 + 粘贴→提案→确认→真索引→可引用检索；Cursor 可手挂 MCP 验真 | 领域管道真栈；MCP 仅门面，与 REST 同 `KbService` |
-| **MVP-3 操作面扩展** | 批量导入、体系整理、多管理员、对话向越界；MCP 工具面可扩展 | 建立在 MVP-2 真索引与最小 MCP 之上 |
+| **MVP-2 知识闭环 + MCP** | MCP 模块 `mcp-01`…`05` + 粘贴→提案→确认→真索引→可引用检索；Cursor 可手挂 MCP 验真 | 领域管道真栈；MCP 仅门面，与 REST 同 `KbService` |
+| **MVP-3 操作面扩展** | 批量导入、体系整理、多管理员、对话向越界；**mcp-06** 扩展工具面 | 建立在 MVP-2 真索引与最小 MCP 之上 |
 
 **仍延后（MVP-4）：** `agent-ingest-02`（URL）、`agent-source-01/02`、`agent-chat-01`。
 
 ---
 
-## 3. MVP-2 — 知识闭环 + MCP 薄封装
+## 3. MVP-2 — 知识闭环 + MCP 门面
 
 ### 3.1 范围（故事）
 
 | ID | 名称 | 角色 |
 | --- | --- | --- |
-| **agent-mcp-01** | MCP 一等接入（最小工具集） | Cursor/ChatBox 门面；先于批量/org |
+| **mcp-01…05** | MCP 门面（传输 `/mcp`、鉴权、最小工具、契约、Cursor 手测） | 见 `mcp-design.md`；先于批量/org |
 | agent-ingest-01 | 粘贴 / 单文件提案 | 入口 |
 | agent-km-01 | 内部 Qwen 仅 KM | 提案摘要/分类/查重辅助（真 DashScope chat） |
 | agent-ingest-03 | 确认单条入库 | 持久化 + 触发索引 |
@@ -58,7 +58,7 @@
 | `kb_confirm_ingest` | 确认 → 索引 |
 | `kb_list_knowledge` | 可选；列表已确认条目 |
 
-**硬约束：** MCP 只调领域层；`USE_FAKE_EMBEDDER=false`；不得 mock agent↔rag。  
+**硬约束：** MCP 只调领域层；`USE_FAKE_EMBEDDER=false`；不得 mock agent↔rag。MCP 传输/鉴权/工具注册见 [`specs/mcp-design.md`](./mcp-design.md)。  
 **移出本批：** `agent-scope-01` / `02` → MVP-3；批量 import → MVP-3。
 
 ### 3.2 闭环旅程（验收剧本）
@@ -101,7 +101,7 @@
 | web-acct-04/05 | 邀请 + 接受设密 | 真邮件 |
 | web-acct-07/08 | 管理员列表 / 删除 | 约束齐全 |
 
-MCP：在 MVP-2 最小集上**扩展** import/org 等工具，不重写门面。
+MCP：在 MVP-2 最小集上由 **`mcp-06`** 扩展 import/org 等工具，不重写门面（复用 `mcp-01`/`mcp-02`）。
 
 ### 4.2 闭环旅程
 
@@ -146,7 +146,8 @@ MVP-1 Done
 
 | 故事 | 现批次 | 说明 |
 | --- | --- | --- |
-| agent-mcp-01 | **MVP-2** | 提前：Cursor 手测优先；最小工具集 |
+| mcp-01…05（取代 agent-mcp-01） | **MVP-2** | 传输/鉴权/最小工具/契约/Cursor 手测 |
+| mcp-06 | **MVP-3** | 工具面扩展 import/org |
 | agent-list-01 | MVP-2 | 确认后可观测 |
 | agent-scope-01/02 | MVP-3 | 对话向越界 |
 | agent-scope-03/04 | MVP-2 | 入库/引用诚实性 |

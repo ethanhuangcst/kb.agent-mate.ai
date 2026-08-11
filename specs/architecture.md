@@ -2,7 +2,7 @@
 
 本文档与 `specs/req.md` 对齐，采纳**方案 2**：调用方自带 LLM 做知识消费与业务推理；kb-agent 负责知识管理、受控外部补给与确认后入库。
 
-实施批次（MVP-1…）与闭环 DoD 见 `specs/story-mapping.md`「MVP 规划」、`specs/mvp-2-3-delivery.md`；MCP 工具表面见 `specs/agent-design.md` §4。本文不含排期日期。
+实施批次（MVP-1…）与闭环 DoD 见 `specs/story-mapping.md`「MVP 规划」、`specs/mvp-2-3-delivery.md`；MCP 工具语义见 `specs/agent-design.md` §4；**MCP 传输与接入专文**见 [`specs/mcp-design.md`](./mcp-design.md)。本文不含排期日期。
 
 ---
 
@@ -504,7 +504,7 @@ SourceChannel / SourceConfig
 
 鉴权：`Authorization: Bearer <api_key>`（`/healthz` 除外）。越界与校验失败返回稳定 `code`。
 
-MCP：使用 Streamable HTTP 或 ChatBox / Cursor 所支持的远程 MCP 传输；工具 schema 与上表语义一致；**配置同一把使用者 Key**。
+MCP：使用 Streamable HTTP（路径 **`/mcp`**）或 ChatBox / Cursor 所支持的远程 MCP 传输；工具 schema 与上表语义一致；**配置同一把使用者 Key**。细则见 [`specs/mcp-design.md`](./mcp-design.md)。
 
 ### 11.2 管理员 Web / Admin API（会话）
 

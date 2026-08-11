@@ -64,7 +64,7 @@
             <div class="guide-mode">
               <p class="guide-mode-label">MCP</p>
               <p class="guide-mode-who">Cursor · ChatBox</p>
-              <p>远程 MCP 接入；你的宿主模型按工具描述调用检索 / 提案 / 确认等。</p>
+              <p>远程 MCP（Streamable HTTP）：URL <span class="mono">/mcp</span>（本地 <span class="mono">http://127.0.0.1:8000/mcp</span>；生产 <span class="mono">https://kb.agent-mate.ai/mcp</span>）。宿主模型按工具调用检索 / 提案 / 确认；与 REST 同一把 Key。</p>
             </div>
             <div class="guide-mode">
               <p class="guide-mode-label">REST</p>
@@ -102,7 +102,8 @@
           <h2>2. 获取 API Key</h2>
           <ol>
             <li>请管理员在管理台签发使用者 Key（明文仅显示一次）。</li>
-            <li>请求头：<span class="mono">Authorization: Bearer &lt;api_key&gt;</span></li>
+            <li>请求头：<span class="mono">Authorization: Bearer &lt;api_key&gt;</span>（MCP 与 REST 相同）。</li>
+            <li>Cursor / ChatBox：Transport = Streamable HTTP，URL = <span class="mono">…/mcp</span>，粘贴上述 Bearer。</li>
             <li>吊销立即失效；重签换密钥，知识库保留。</li>
           </ol>
         </section>

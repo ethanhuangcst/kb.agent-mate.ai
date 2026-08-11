@@ -1,8 +1,10 @@
 # Agent 技术设计 — kb-agent
 
-对齐文档：`specs/req.md`、`specs/architecture.md`、`specs/rag-design.md`、`specs/story-mapping.md`、`specs/mvp-2-3-delivery.md`。
+对齐文档：`specs/req.md`、`specs/architecture.md`、`specs/rag-design.md`、`specs/mcp-design.md`、`specs/story-mapping.md`、`specs/mvp-2-3-delivery.md`。
 
 本文描述：**如何把能力交给调用方侧的模型**（MCP 为主），以及服务端工具实现与越界护栏。采纳 agent-builder 原则——**模型在调用方；kb-agent 是 harness（工具 + 知识管道），不做业务工作流引擎**。
+
+**MCP 传输、挂载、Cursor 配置、契约文件**见专文 [`specs/mcp-design.md`](./mcp-design.md)。本文保留全量工具语义与越界策略。
 
 实施批次与闭环 DoD 见 `specs/mvp-2-3-delivery.md` / `specs/story-mapping.md`「MVP 规划」。不含排期日期。
 
@@ -82,10 +84,11 @@ MCP Server 与 REST 调用**同一** `KbService` 方法，避免双实现。
 
 硬约束：
 
-- MCP 与 REST **同一** `KbService`；禁止第二套业务逻辑。  
-- 传输：Streamable HTTP（推荐本地 `http://127.0.0.1:8000/...`）或 Cursor 支持的等价远程 MCP；Bearer = 管理台签发的使用者 Key。  
-- DoD：`USE_FAKE_EMBEDDER=false`；真 Qdrant；Cursor 手测 propose→confirm→search。  
-- **不**在 MVP-2 暴露 import / source_search / fetch / organize（属 MVP-3 / MVP-4）。
+- MCP 与 REST **同一** `KbService`；禁止第二套业务逻辑（故事 `mcp-04`）。  
+- 传输：Streamable HTTP，路径固定 **`/mcp`**（本地 `http://127.0.0.1:8000/mcp`；生产 `https://kb.agent-mate.ai/mcp`）。细则与故事见 [`mcp-design.md`](./mcp-design.md)、`mcp-01`…`mcp-05`。  
+- Bearer = 管理台签发的使用者 Key（`mcp-02`）。  
+- DoD：`USE_FAKE_EMBEDDER=false`；真 Qdrant；Cursor 手测 propose→confirm→search（`mcp-05`）。  
+- **不**在 MVP-2 暴露 import / source_search / fetch / organize（属 MVP-3 / MVP-4；`mcp-06` 扩展）。
 
 ### 4.1 工具描述要点（写入 MCP schema description）
 

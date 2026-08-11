@@ -4,7 +4,7 @@
 **Spec sources:** `specs/architecture.md`, `specs/req.md`, `specs/keys.md`, `specs/release-bot-instruction.md`, `specs/mvp-2-3-delivery.md` (batch DoD; MCP first in MVP-2).  
 **Secrets:** never in this file — use Portainer env / node `.env` / local key store (see `specs/keys.md` / `.env.prod.example`).
 
-**Local vs prod:** local Postgres often **`:5434`**; production `USE_FAKE_EMBEDDER=false`. MCP public path (e.g. `/mcp`) is fixed when `agent-mcp-01` lands — see architecture path table / agent-design §4.0.
+**Local vs prod:** local Postgres often **`:5434`**; production `USE_FAKE_EMBEDDER=false`. MCP path fixed as **`/mcp`** (see [`mcp-design.md`](./mcp-design.md)); NPM location when `mcp-01` lands.
 
 ---
 
@@ -87,7 +87,7 @@ Mark these **done in app repo** before asking release-bot to deploy:
 
 ### Public vs private
 
-- **Public (via NPM on `kb.agent-mate.ai`):** `kb-web` + path routes to `kb-agent` (Admin `/admin`, REST `/api/v1/kb/*`, MCP endpoint once fixed in code, `/healthz`).
+- **Public (via NPM on `kb.agent-mate.ai`):** `kb-web` + path routes to `kb-agent` (Admin `/admin`, REST `/api/v1/kb/*`, MCP **`/mcp`**, `/healthz`). See `specs/mcp-design.md`.
 - **Not public:** `kb-rag`, `kb-qdrant`, Postgres. Host port publish is for debug only; prefer Docker DNS between services.
 
 Internal URLs (compose / Portainer env):
@@ -297,14 +297,14 @@ Names only. Values live in Portainer / node env. Template: `specs/keys.md` → c
 | Forward port | `3000` (container port, **not** host port) |
 | SSL | Force SSL; certificate for `kb.agent-mate.ai` |
 
-**Path routing to agent** (required for same-origin MCP/REST; implement via NPM Custom locations / Advanced once final paths exist in code):
+**Path routing to agent** (required for same-origin MCP/REST; NPM Custom locations — paths fixed in `mcp-design.md`):
 
-| Path prefix (confirm in code) | Upstream |
-| --- | --- |
-| `/api/v1/kb/` | `http://kb-agent:8000` |
-| `/mcp` or documented MCP path | `http://kb-agent:8000` |
-| `/healthz` (agent) | `http://kb-agent:8000` (or web health if aggregated) |
-| `/admin` | `kb-web:3000` (Next routes) |
+| Path prefix | Upstream | Notes |
+| --- | --- | --- |
+| `/api/v1/kb/` | `http://kb-agent:8000` | Knowledge REST |
+| `/mcp` | `http://kb-agent:8000` | Streamable HTTP MCP |
+| `/healthz` (agent) | `http://kb-agent:8000` | Or aggregated health on web |
+| `/admin` | `kb-web:3000` | Next Admin routes |
 
 If Admin is only on web and API only on agent, do **not** point the whole host at agent.
 

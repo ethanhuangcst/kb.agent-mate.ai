@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kb.agent-mate.ai/contracts/mcp-tools.json",
+  "title": "KbAgentMcpTools",
+  "description": "MCP tool surface ↔ REST mapping. Drift checks for mcp-03/mcp-04 (MVP-2). See specs/mcp-design.md and specs/story-mapping.md module MCP.",
+  "transport": {
+    "primary": "streamable-http",
+    "path": "/mcp",
+    "auth": "Authorization: Bearer <api_key>"
+  },
+  "mvp": "MVP-2",
+  "tools": [
+    {
+      "name": "kb_search",
+      "rest": { "method": "POST", "path": "/api/v1/kb/search" },
+      "side_effect": "none",
+      "required": true,
+      "input": {
+        "type": "object",
+        "required": ["query"],
+        "properties": {
+          "query": { "type": "string" },
+          "project": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "top_k": { "type": "integer", "minimum": 1, "maximum": 50 }
+        },
+        "additionalProperties": false
+      },
+      "output_ref": "search-response.schema.json",
+      "forbidden_params": ["user_id"]
+    },
+    {
+      "name": "kb_propose_ingest",
+      "rest": { "method": "POST", "path": "/api/v1/kb/proposals" },
+      "side_effect": "pending",
+      "required": true,
+      "input": {
+        "type": "object",
+        "required": ["text"],
+        "properties": {
+          "text": { "type": "string", "minLength": 1 },
+          "title": { "type": "string" },
+          "project": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      },
+      "forbidden_params": ["user_id", "skip_confirm", "auto_ingest"]
+    },
+    {
+      "name": "kb_confirm_ingest",
+      "rest": { "method": "POST", "path": "/api/v1/kb/proposals/{id}/confirm" },
+      "side_effect": "write_index",
+      "required": true,
+      "input": {
+        "type": "object",
+        "required": ["pending_id"],
+        "properties": {
+          "pending_id": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "forbidden_params": ["user_id", "skip_confirm"]
+    },
+    {
+      "name": "kb_list_knowledge",
+      "rest": { "method": "GET", "path": "/api/v1/kb/items" },
+      "side_effect": "none",
+      "required": false,
+      "note": "Optional in same MVP-2 batch",
+      "input": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string" },
+          "tag": { "type": "string" },
+          "knowledge_type": { "type": "string" },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100 }
+        },
+        "additionalProperties": false
+      },
+      "forbidden_params": ["user_id"]
+    }
+  ],
+  "not_in_mvp2": [
+    "kb_list",
+    "kb_organize",
+    "kb_source_search",
+    "kb_fetch",
+    "kb_import_documents",
+    "kb_confirm_import_batch"
+  ]
+}

@@ -50,7 +50,8 @@ USE_FAKE_EMBEDDER=
 AGENT_BASE_URL=
 RAG_BASE_URL=
 RAG_SERVICE_TOKEN=
-# MCP：实现后记录公开或本地 Streamable HTTP 路径（如 /mcp）；Cursor 配置 Bearer = 使用者 Key
+# MCP：实现后记录公开或本地 Streamable HTTP 路径（固定 `/mcp`）；Cursor 配置 Bearer = 使用者 Key
+# 详见 specs/mcp-design.md
 # MCP_PUBLIC_PATH=/mcp
 PUBLIC_BASE_URL=https://kb.agent-mate.ai
 NEXT_PUBLIC_APP_URL=https://kb.agent-mate.ai
@@ -94,6 +95,7 @@ SESSION_SECRET=
 | QDRANT_* | 向量库；通常仅内网 URL（环境变量 `QDRANT_URL`） |
 | `USE_FAKE_EMBEDDER` | `true` 仅廉价测试；MVP-2+ 闭环交付门禁必须 `false` + 真 embed |
 | `AGENT_BASE_URL` / `RAG_BASE_URL` | 服务间调用；环境变量配置，生产用服务名而非 `127.0.0.1` |
+| MCP `/mcp` | Streamable HTTP 挂载路径（固定）；Cursor URL = `{AGENT 公网或本地基址}/mcp`；见 `mcp-design.md` |
 | PUBLIC_BASE_URL | 生产公网基址：`https://kb.agent-mate.ai` |
 | NEXT_PUBLIC_APP_URL | 浏览器可见公网源；与 `PUBLIC_BASE_URL` 通常同域 |
 | BOOTSTRAP_ADMIN_EMAIL | 种子管理员联系邮箱（默认 `me@ethanhuang.com`）。首位账号为 `admin`/`admin` + 仅种子强制改密 |

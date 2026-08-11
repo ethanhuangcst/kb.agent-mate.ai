@@ -1,8 +1,8 @@
 # RAG 技术设计 — kb-agent
 
-对齐文档：`specs/req.md`、`specs/architecture.md`、`specs/mvp-2-3-delivery.md`。本文细化**库内检索增强生成管道**与确认后索引；外部源路由见架构 §7，本文只定义与 RAG 相交的接口。
+对齐文档：`specs/req.md`、`specs/architecture.md`、`specs/mcp-design.md`、`specs/mvp-2-3-delivery.md`。本文细化**库内检索增强生成管道**与确认后索引；外部源路由见架构 §7，本文只定义与 RAG 相交的接口。
 
-应用元数据与 Pending 状态在 **PostgreSQL**；向量在 **Qdrant**。MVP-2 闭环交付须 `USE_FAKE_EMBEDDER=false` + 真 DashScope embed（见 `specs/mvp-2-3-delivery.md`）。不含排期日期。
+应用元数据与 Pending 状态在 **PostgreSQL**；向量在 **Qdrant**。检索结果经 MCP/REST 同一 `KbService` 暴露（见 `mcp-design.md`）。MVP-2 闭环交付须 `USE_FAKE_EMBEDDER=false` + 真 DashScope embed（见 `specs/mvp-2-3-delivery.md`）。不含排期日期。
 
 ---
 

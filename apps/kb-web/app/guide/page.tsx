@@ -22,9 +22,11 @@ const copy = {
       "归纳整理知识体系（分类、标签、项目归属）",
     ],
     modes: "两种调用方式",
-    mcpDesc: "远程 MCP 接入；你的宿主模型按工具描述调用检索 / 提案 / 确认等。",
+    mcpDesc:
+      "远程 MCP（Streamable HTTP）：URL 为 /mcp（本地 http://127.0.0.1:8000/mcp；生产 https://kb.agent-mate.ai/mcp）。宿主模型按工具调用检索 / 提案 / 确认；与 REST 同一把 Key。",
     restDesc: "HTTP 调 /api/v1/kb/*；与 MCP 同一套能力语义。",
-    modesNote: "两种方式共用一把 Key、同一知识库；请求体里的用户标识不能覆盖 Key 身份。",
+    modesNote:
+      "两种方式共用一把 Key、同一知识库；请求体里的用户标识不能覆盖 Key 身份。",
     llm: "大模型怎么分工",
     yourModel: "你自带的模型",
     yourItems: [
@@ -48,7 +50,8 @@ const copy = {
     keyTitle: "2. 获取 API Key",
     keySteps: [
       "请管理员在管理台签发使用者 Key（明文仅显示一次）。",
-      "请求头：Authorization: Bearer <api_key>",
+      "请求头：Authorization: Bearer <api_key>（MCP 与 REST 相同）。",
+      "Cursor / ChatBox：Transport = Streamable HTTP，URL = …/mcp，粘贴上述 Bearer。",
       "吊销立即失效；重签换密钥，知识库保留。",
     ],
     diagramAria: "调用方经 MCP 或 REST，用同一把 Bearer Key 进入 kb.agent-mate.ai，再访问按用户隔离的私人知识库",
@@ -72,7 +75,8 @@ const copy = {
       "Organize taxonomy (types, tags, projects)",
     ],
     modes: "Two call paths",
-    mcpDesc: "Remote MCP; your host model invokes search / propose / confirm tools.",
+    mcpDesc:
+      "Remote MCP (Streamable HTTP) at /mcp (local http://127.0.0.1:8000/mcp; prod https://kb.agent-mate.ai/mcp). Host model calls search / propose / confirm; same key as REST.",
     restDesc: "HTTP to /api/v1/kb/*; same capability semantics as MCP.",
     modesNote: "Both share one key and one library; body user ids cannot override Bearer identity.",
     llm: "LLM split",
@@ -98,7 +102,8 @@ const copy = {
     keyTitle: "2. Get an API key",
     keySteps: [
       "Ask an admin to issue a user key (plaintext once).",
-      "Header: Authorization: Bearer <api_key>",
+      "Header: Authorization: Bearer <api_key> (same for MCP and REST).",
+      "Cursor / ChatBox: Streamable HTTP, URL …/mcp, paste the Bearer key.",
       "Revoke fails immediately; reissue rotates the secret, library kept.",
     ],
     diagramAria: "Callers use MCP or REST with the same Bearer key into kb.agent-mate.ai, then a user-isolated library",

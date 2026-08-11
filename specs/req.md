@@ -99,7 +99,7 @@
 - 部署在香港 VPS 上；公网域名 **`kb.agent-mate.ai`**（HTTPS）
 - 后台是 RAG 服务
 - 知识存储放在 VPS 服务器上（本地目录或数据库）
-- 对 Cursor / ChatBox 等：以 **MCP** 为一等接入；对 HCP 等：提供结构化 **REST**（与 MCP 工具共用领域层）
+- 对 Cursor / ChatBox 等：以 **MCP** 为一等接入（Streamable HTTP，路径 **`/mcp`**；设计见 `specs/mcp-design.md`）；对 HCP 等：提供结构化 **REST**（与 MCP 工具共用领域层）
 - 可选提供 OpenAI 兼容门面，但仅作为「调用同一套知识工具」的薄封装，**不**扩展为无边界业务 Agent
 - 提供 Admin Web App（同域不同路径即可，如 `https://kb.agent-mate.ai/admin`）
 

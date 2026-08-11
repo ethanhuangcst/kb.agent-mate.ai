@@ -146,6 +146,7 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 | 架构四段 | 调用者是谁 → 提供什么 → 两种调用方式 → 大模型怎么分工 |
 | 结构图 | `.guide-arch-diagram`：MCP / REST 汇合 → Bearer → kb → 私人库；左边 3px 墨线 |
 | 双栏 | `.guide-modes`：调用方式（MCP \| REST）；模型分工（你自带 \| 本站内嵌）；发丝分割、非卡片 |
+| MCP 接入 | Streamable HTTP；URL **`/mcp`**（本地 `http://127.0.0.1:8000/mcp`，生产 `https://kb.agent-mate.ai/mcp`）；Bearer = 使用者 Key。见 `specs/mcp-design.md` |
 | 文风 | 使用者视角、极简；`.guide-note` 收束要点 |
 
 ```text
