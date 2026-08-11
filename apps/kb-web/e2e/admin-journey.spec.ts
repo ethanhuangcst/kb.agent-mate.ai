@@ -114,3 +114,34 @@ test("should_toggle_password_visibility_on_login", async ({ page }) => {
   await page.getByTestId("password-toggle-password").click();
   await expect(input).toHaveAttribute("type", "text");
 });
+
+test("should_list_admins_and_forbid_delete_self", async ({ page }) => {
+  await loginAndUnlock(page);
+  await page.goto("/admin/admins");
+  await expect(page.getByRole("heading", { name: /管理员|Admins/ })).toBeVisible();
+  await expect(page.getByText(/当前账号|Current account/)).toBeVisible();
+  await expect(page.getByRole("button", { name: /邀请管理员|Invite admin/ })).toBeVisible();
+});
+
+test("should_reset_password_via_debug_token_when_test_reset_enabled", async ({
+  page,
+  request,
+}) => {
+  test.skip(process.env.ENABLE_TEST_RESET !== "1", "requires ENABLE_TEST_RESET=1 + EMAIL_TRANSPORT=log");
+  await request.post("/api/admin/test/reset-seed");
+  const forgot = await request.post("/api/auth/forgot-password", {
+    data: { email: "me@ethanhuang.com" },
+  });
+  expect(forgot.ok()).toBeTruthy();
+  const token = forgot.headers()["x-debug-reset-token"];
+  expect(token).toBeTruthy();
+  await page.goto(`/reset-password?token=${encodeURIComponent(token!)}`);
+  await page.locator('input[name="password"]').fill("newpass12345");
+  await page.locator('input[name="confirm"]').fill("newpass12345");
+  await page.locator('button[type="submit"]').click();
+  await page.waitForURL(/login/);
+  await page.getByTestId("login-form").locator('input[name="login"]').fill("admin");
+  await page.getByTestId("login-form").locator('input[name="password"]').fill("newpass12345");
+  await page.getByTestId("login-form").locator('button[type="submit"]').click();
+  await page.waitForURL(/admin\/users/);
+});

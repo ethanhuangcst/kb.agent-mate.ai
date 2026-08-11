@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { BrandLockup, SiteFooter } from "../site-chrome";
+import { BrandLockup, ShellLocale, SiteFooter } from "../site-chrome";
 import { LoginForm } from "./login-form";
 import { LoginLead } from "./login-lead";
 
@@ -9,6 +9,7 @@ export default async function LoginPage() {
 
   return (
     <div className="auth-shell">
+      <ShellLocale />
       <main className="auth-main">
         <div className="auth-card">
           <BrandLockup size="auth" />

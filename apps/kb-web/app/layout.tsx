@@ -8,6 +8,13 @@ import { ensureSeedAdmin } from "@/lib/seed";
 export const metadata: Metadata = {
   title: "kb.agent-mate.ai",
   description: "Private knowledge-base agent",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.png", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

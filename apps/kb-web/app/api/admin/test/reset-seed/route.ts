@@ -22,13 +22,14 @@ export async function POST() {
       UPDATE admin_users
       SET password_hash = ${passwordHash},
           must_change_password = true,
-          email = ${email}
+          email = ${email},
+          status = 'active'
       WHERE username = 'admin'
     `;
   } else {
     await sql`
-      INSERT INTO admin_users (id, username, email, display_name, password_hash, must_change_password)
-      VALUES (gen_random_uuid(), 'admin', ${email}, 'Admin', ${passwordHash}, true)
+    INSERT INTO admin_users (id, username, email, display_name, password_hash, must_change_password, status, session_version)
+    VALUES (gen_random_uuid(), 'admin', ${email}, 'Admin', ${passwordHash}, true, 'active', 0)
     `;
   }
 

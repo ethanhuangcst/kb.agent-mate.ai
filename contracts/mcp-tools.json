@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://kb.agent-mate.ai/contracts/mcp-tools.json",
   "title": "KbAgentMcpTools",
-  "description": "MCP tool surface ↔ REST mapping. Drift checks for mcp-03/mcp-04 (MVP-2). See specs/mcp-design.md and specs/story-mapping.md module MCP.",
+  "description": "MCP tool surface ↔ REST mapping. MVP-3 adds import/org (mcp-06). See specs/mcp-design.md.",
   "transport": {
     "primary": "streamable-http",
     "path": "/mcp",
@@ -13,7 +13,7 @@
     },
     "auth": "Authorization: Bearer <api_key>"
   },
-  "mvp": "MVP-2",
+  "mvp": "MVP-3",
   "tools": [
     {
       "name": "kb_internal_search",
@@ -46,7 +46,8 @@
           "text": { "type": "string", "minLength": 1 },
           "title": { "type": "string" },
           "project": { "type": "string" },
-          "tags": { "type": "array", "items": { "type": "string" } }
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "notes": { "type": "string" }
         },
         "additionalProperties": false
       },
@@ -72,7 +73,7 @@
       "rest": { "method": "GET", "path": "/api/v1/kb/items" },
       "side_effect": "none",
       "required": false,
-      "note": "Optional in same MVP-2 batch; items include summary (<=400 chars overview)",
+      "note": "Items include summary (<=400 chars overview)",
       "input": {
         "type": "object",
         "properties": {
@@ -94,7 +95,7 @@
       },
       "side_effect": "metadata_write_on_refresh",
       "required": true,
-      "note": "Content overview; max 400 Unicode chars. See specs/knowledge-summary.md",
+      "note": "Content overview; max 400 Unicode chars",
       "input": {
         "type": "object",
         "properties": {
@@ -105,20 +106,118 @@
         "additionalProperties": false
       },
       "forbidden_params": ["user_id"]
+    },
+    {
+      "name": "kb_import_documents",
+      "rest": { "method": "POST", "path": "/api/v1/kb/imports" },
+      "side_effect": "pending_batch",
+      "required": true,
+      "note": "MCP: [{filename,text|content_base64}]; REST prefers multipart for large batches",
+      "input": {
+        "type": "object",
+        "required": ["files"],
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["filename"],
+              "properties": {
+                "filename": { "type": "string" },
+                "text": { "type": "string" },
+                "content_base64": { "type": "string" }
+              }
+            }
+          },
+          "default_project": { "type": "string" },
+          "default_tags": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      },
+      "forbidden_params": ["user_id", "skip_confirm", "auto_ingest"]
+    },
+    {
+      "name": "kb_confirm_import_batch",
+      "rest": { "method": "POST", "path": "/api/v1/kb/imports/{batch_id}/confirm" },
+      "side_effect": "write_index",
+      "required": true,
+      "input": {
+        "type": "object",
+        "required": ["batch_id"],
+        "properties": {
+          "batch_id": { "type": "string" },
+          "pending_ids": { "type": "array", "items": { "type": "string" } },
+          "confirm_all_viable": { "type": "boolean", "default": false }
+        },
+        "additionalProperties": false
+      },
+      "forbidden_params": ["user_id", "skip_confirm", "auto_ingest"]
+    },
+    {
+      "name": "kb_organize",
+      "rest": { "method": "POST", "path": "/api/v1/kb/organize" },
+      "side_effect": "metadata_write_on_apply",
+      "required": true,
+      "input": {
+        "type": "object",
+        "required": ["action"],
+        "properties": {
+          "action": { "type": "string", "enum": ["summarize", "retag", "reclassify"] },
+          "project": { "type": "string" },
+          "tag": { "type": "string" },
+          "knowledge_type": { "type": "string" },
+          "instruction": { "type": "string" },
+          "apply": { "type": "boolean", "default": false },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100 }
+        },
+        "additionalProperties": false
+      },
+      "forbidden_params": ["user_id"]
+    },
+    {
+      "name": "kb_fetch_url",
+      "rest": { "method": "POST", "path": "/api/v1/kb/fetch" },
+      "side_effect": "pending",
+      "required": true,
+      "input": {
+        "type": "object",
+        "required": ["url"],
+        "properties": {
+          "url": { "type": "string" },
+          "title": { "type": "string" },
+          "project": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "propose": { "type": "boolean", "default": true }
+        },
+        "additionalProperties": false
+      },
+      "forbidden_params": ["user_id", "skip_confirm", "auto_ingest"]
+    },
+    {
+      "name": "kb_external_search",
+      "rest": { "method": "POST", "path": "/api/v1/kb/sources/search" },
+      "side_effect": "none",
+      "required": true,
+      "input": {
+        "type": "object",
+        "required": ["query"],
+        "properties": {
+          "query": { "type": "string" },
+          "project": { "type": "string" },
+          "top_k": { "type": "integer", "minimum": 1, "maximum": 20 }
+        },
+        "additionalProperties": false
+      },
+      "forbidden_params": ["user_id"]
     }
   ],
-  "not_in_mvp2": [
-    "kb_list",
-    "kb_organize",
-    "kb_external_search",
-    "kb_fetch_url",
-    "kb_import_documents",
-    "kb_confirm_import_batch"
-  ],
+  "not_in_mvp3": [],
+  "note": "MVP-3 tools registered including kb_fetch_url and kb_external_search. agent-chat-01 is REST Chat only (no kb_chat_*). agent-source-02 adds no new tool name.",
   "renamed_from": {
     "kb_internal_search": "kb_search",
     "kb_propose_add": "kb_propose_ingest",
     "kb_confirm_add": "kb_confirm_ingest",
+    "kb_list_knowledge": "kb_list",
     "kb_external_search": "kb_source_search",
     "kb_fetch_url": "kb_fetch"
   }

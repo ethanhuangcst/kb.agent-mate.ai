@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>管理员 · kb.agent-mate.ai</title>
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="icon" href="logo.png" type="image/png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -14,7 +16,13 @@
           <img class="logo-header-mark" src="logo.png" alt="" width="36" height="36" />
           <span class="logo-word">kb.agent-mate.ai</span>
         </a>
-        <p class="hello">Hello, <span class="hello-name">Admin</span></p>
+        <div class="header-end">
+          <p class="hello">Hello, <span class="hello-name">Admin</span></p>
+          <div class="locale-switch" role="group" aria-label="语言">
+            <button type="button" class="is-active">中文</button>
+            <button type="button">EN</button>
+          </div>
+        </div>
       </header>
       <div class="app-body">
         <aside class="sidebar">
@@ -39,7 +47,7 @@
               <table>
                 <thead>
                   <tr>
-                    <th>登录名</th>
+                    <th>用户名</th>
                     <th>姓名</th>
                     <th>邮箱</th>
                     <th>状态</th>

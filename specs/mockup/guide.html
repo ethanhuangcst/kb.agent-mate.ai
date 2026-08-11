@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>接入指南 · kb.agent-mate.ai</title>
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="icon" href="logo.png" type="image/png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -20,7 +22,7 @@
       <article class="guide-body">
         <p class="eyebrow">Connect</p>
         <h1>接入指南</h1>
-        <p class="lead">你带着自己的模型来用私人知识库。一把 API Key；IDE 与第三方工具传输不同。</p>
+        <p class="lead">私人知识库智能体。你自己的个人知识智能助理，包罗万象，一网打尽，一站获取。支持 IDE 和第三方工具通过 MCP 调用，以及在个人应用开发中通过 REST API 调用。</p>
 
         <nav class="guide-toc" aria-label="章节">
           <a href="#architecture">1. 架构</a>
@@ -36,7 +38,7 @@
           <ul class="guide-list">
             <li><strong>IDE</strong> — 如 Cursor、CodeBuddy 里的 Agent / 项目会话</li>
             <li><strong>聊天客户端</strong> — 如 ChatBox</li>
-            <li><strong>自有应用</strong> — 如 HCP Engagement Assistant</li>
+            <li><strong>自有应用</strong> — 如 MyPoke.Trade</li>
           </ul>
           <p class="guide-note">以上都须自带大模型（或由宿主接入 LLM），用来理解意图、做业务判断、消费检索结果。</p>
 
@@ -49,18 +51,28 @@
           </ul>
 
           <h3 id="modes" class="guide-sub">两种调用方式</h3>
-          <figure class="guide-arch" aria-label="系统结构">
-            <pre class="guide-arch-diagram" role="img" aria-label="调用方经 MCP 或 REST，用同一把 Bearer Key 进入 kb.agent-mate.ai，再访问按用户隔离的私人知识库">
-<span class="arch-muted">IDE / ChatBox</span>          <span class="arch-muted">HCP / 自有 App</span>
-      │ <span class="arch-accent">MCP</span>                     │ <span class="arch-accent">REST</span>
-      └───────────┬───────────────┘
-                  │ <span class="arch-accent">Bearer API Key</span>
-                  ▼
-         <span class="arch-box">kb.agent-mate.ai</span>
-         检索 · 提案 · 确认入库
-                  │
-                  ▼
-         <span class="arch-box">私人知识库</span>  <span class="arch-muted">user 隔离</span></pre>
+          <figure class="guide-flow" aria-label="调用方经 MCP 或 REST，用同一把 Bearer Key 进入 kb.agent-mate.ai，再访问按用户隔离的私人知识库">
+            <div class="guide-flow-lanes" aria-hidden="true">
+              <div class="guide-flow-lane">
+                <p class="guide-flow-clients">IDE · ChatBox</p>
+                <p class="guide-flow-proto">MCP</p>
+              </div>
+              <div class="guide-flow-lane">
+                <p class="guide-flow-clients">MyPoke.Trade</p>
+                <p class="guide-flow-proto">REST</p>
+              </div>
+            </div>
+            <div class="guide-flow-merge" aria-hidden="true">
+              <span class="guide-flow-auth">Bearer API Key</span>
+            </div>
+            <div class="guide-flow-hub" aria-hidden="true">
+              <p class="guide-flow-hub-name">kb.agent-mate.ai</p>
+              <p class="guide-flow-hub-ops">检索 · 提案 · 确认入库</p>
+            </div>
+            <div class="guide-flow-store" aria-hidden="true">
+              <p class="guide-flow-store-name">私人知识库</p>
+              <p class="guide-flow-store-meta">user 隔离</p>
+            </div>
           </figure>
           <div class="guide-modes">
             <div class="guide-mode">
@@ -70,7 +82,7 @@
             </div>
             <div class="guide-mode">
               <p class="guide-mode-label">REST</p>
-              <p class="guide-mode-who">HCP · 自有应用</p>
+              <p class="guide-mode-who">MyPoke.Trade · 自有应用</p>
               <p>HTTP 调 <span class="mono">/api/v1/kb/*</span>；与 MCP 同一套能力语义。</p>
             </div>
           </div>
@@ -167,7 +179,7 @@
             </li>
           </ol>
 
-          <p class="guide-code-label">mcp.json 模板（占位符换成你本机路径与密钥；勿提交到 Git）</p>
+          <p class="guide-code-label">mcp.json 模板（将 &lt;REPO&gt;、&lt;PG_HOST&gt;、&lt;RAG_HOST&gt; 等占位符换成实际值；勿提交密钥）</p>
           <pre class="guide-code"><code>{
   "mcpServers": {
     "kb-agent": {
@@ -177,8 +189,8 @@
       "env": {
         "KB_API_KEY": "&lt;paste_plaintext_user_api_key&gt;",
         "API_KEY_PEPPER": "&lt;same_as_agent_and_admin_dotenv&gt;",
-        "DATABASE_URL": "postgresql+psycopg://kb:&lt;password&gt;@127.0.0.1:5434/kb_agent",
-        "RAG_BASE_URL": "http://127.0.0.1:8001",
+        "DATABASE_URL": "postgresql+psycopg://kb:&lt;password&gt;@&lt;PG_HOST&gt;:&lt;PG_PORT&gt;/kb_agent",
+        "RAG_BASE_URL": "http://&lt;RAG_HOST&gt;:&lt;RAG_PORT&gt;",
         "RAG_SERVICE_TOKEN": "&lt;same_as_dotenv&gt;",
         "BLOB_ROOT": "&lt;REPO&gt;/data/blob",
         "PYTHONPATH": "&lt;REPO&gt;/services/kb-agent"
@@ -186,7 +198,7 @@
     }
   }
 }</code></pre>
-          <p class="guide-note">远程备选：Transport = Streamable HTTP，URL 本地 <span class="mono">http://127.0.0.1:8000/mcp</span>，生产 <span class="mono">https://kb.agent-mate.ai/mcp</span>，鉴权 <span class="mono">Authorization: Bearer &lt;api_key&gt;</span>。不要填 <span class="mono">/sse</span>。</p>
+          <p class="guide-note">远程备选：Transport = Streamable HTTP，URL 本地 <span class="mono">http://&lt;HOST&gt;:&lt;AGENT_PORT&gt;/mcp</span>，生产 <span class="mono">https://&lt;PUBLIC_HOST&gt;/mcp</span>，鉴权 <span class="mono">Authorization: Bearer &lt;api_key&gt;</span>。不要填 <span class="mono">/sse</span>。</p>
           <p class="guide-note">CodeBuddy：在 MCP / 插件设置中新增服务器，字段与上表相同——本地可用同类 mcp.json，或 Remote MCP 指向 <span class="mono">/mcp</span>。</p>
           <p class="guide-note">连通后可试：<span class="mono">kb_list_knowledge</span> → <span class="mono">kb_internal_search</span> →（可选）propose / confirm。</p>
         </section>
@@ -227,7 +239,7 @@
                 <p class="guide-step-index">03</p>
                 <div class="guide-step-copy">
                   <h3 class="guide-step-title">填写服务器（注意 SSE）</h3>
-                  <p>Type = Remote (http/sse)。URL 本地 <span class="mono">http://127.0.0.1:8000/sse</span>，生产 <span class="mono">https://kb.agent-mate.ai/sse</span>。HTTP Header：<span class="mono">Authorization=Bearer &lt;api_key&gt;</span>。</p>
+                  <p>Type = Remote (http/sse)。URL 本地 <span class="mono">http://&lt;HOST&gt;:&lt;AGENT_PORT&gt;/sse</span>，生产 <span class="mono">https://&lt;PUBLIC_HOST&gt;/sse</span>。HTTP Header：<span class="mono">Authorization=Bearer &lt;api_key&gt;</span>。</p>
                 </div>
               </div>
               <figure class="guide-figure">

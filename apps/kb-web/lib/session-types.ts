@@ -3,4 +3,5 @@ export type SessionPayload = {
   username: string | null;
   displayName: string | null;
   mustChangePassword: boolean;
+  sessionVersion: number;
 };

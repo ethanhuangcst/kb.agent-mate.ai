@@ -69,7 +69,7 @@
 | --- | --- | --- |
 | DashScope chat / embed | 可暂用 Fake Embedder / Fake KM 保 PR 绿灯 | **MVP-2+ Done 禁止**：必须真 DashScope + 真 Qdrant；`USE_FAKE_EMBEDDER=false` |
 | Resend | 可记录「发送意图」 | **MVP-3 Done 禁止**假 Outbox：须 Resend 官方 test/sandbox 真调用 |
-| Tavily / Exa | Stub（能力属 MVP-4） | MVP-4 闭环再定；不得提前用 stub 宣称 source Done |
+| Tavily / Exa | Stub（能力属 MVP-3 source） | MVP-3 source 闭环再定；不得提前用 stub 宣称 source Done |
 | 出站 fetch | 内嵌静态 HTML 服务器（非业务 stub） | SSRF / URL 批用本地真 HTTP 服务即可 |
 | Agent→RAG | — | **禁止** mock `httpx` 伪装 RAG；一律真服务 HTTP |
 

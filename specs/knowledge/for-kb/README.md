@@ -19,11 +19,19 @@
 | [04-admin-forms-autofill.md](./04-admin-forms-autofill.md) | macOS Contacts 与签发表单 | 前端 |
 | [05-guide-layout-figures.md](./05-guide-layout-figures.md) | 接入指南截图全宽对齐 | 前端 |
 | [06-logo-optical-align.md](./06-logo-optical-align.md) | Logo 黄泡光学对齐 | 设计/前端 |
+| [07-safari-email-localhost.md](./07-safari-email-localhost.md) | 重置/邀请邮件：localhost 与 Safari HTTPS-First | 运维、管理员 |
+| [08-admin-username.md](./08-admin-username.md) | 邀请须用户名；用户名 ≠ 姓名 | 管理员 |
+| [09-locale-switcher.md](./09-locale-switcher.md) | 语言切换顶栏灰链 | 前端 |
+| [10-config-placeholders.md](./10-config-placeholders.md) | 配置模板用占位符 | 调用方、文档 |
+| [11-product-positioning.md](./11-product-positioning.md) | 产品定位与 MCP/REST 分界 | 调用方、产品 |
+| [12-content-overview.md](./12-content-overview.md) | 内容概述 summary ≤400 字 | 调用方、运维 |
+| [13-mcp-bare-path.md](./13-mcp-bare-path.md) | 裸 `/mcp` 与尾斜杠改写 | 调用方、运维 |
 
 ## 不入库（留在仓库 knowledge/）
 
 | 原因 | 示例 |
 | --- | --- |
 | 纯流程/编号约定 | `ops/adr-numbering.md` |
-| 已与上表合并 | `ops/chatbox-mcp-sse.md`、`ops/mcp-stdio-auth.md` 等 → 见 01/02/03 |
+| 已与上表合并 | `ops/chatbox-mcp-sse.md`、`ops/mcp-stdio-auth.md`、`ops/safari-…`、`ops/content-overview.md`、`ops/mcp-mount-trailing-slash.md`、`frontend/locale-…` 等 |
 | 决策原文 | `specs/adr/*`（检索决策用 ADR，不重复灌库） |
+| 易变营销句 | 首页/指南 slogan 的逐字文案（以 `messages/*.json` 为准；定位见 11） |

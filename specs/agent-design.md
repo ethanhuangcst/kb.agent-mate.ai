@@ -14,7 +14,7 @@
 
 | 角色 | 谁 | 做什么 |
 | --- | --- | --- |
-| Agent（推理循环） | Cursor / ChatBox / HCP 内的 LLM | 理解意图、选工具、消费命中、写业务结论 |
+| Agent（推理循环） | Cursor / ChatBox / 自有 App 内的 LLM | 理解意图、选工具、消费命中、写业务结论 |
 | Harness（本服务） | kb-agent MCP + REST + 领域服务 | 鉴权、执行工具、RAG、提案确认、外部补给、越界拒绝 |
 | 内部 KM LLM | Qwen（DashScope） | 仅分类 / 摘要 / organize 建议 / 可选改写 |
 
@@ -37,7 +37,7 @@
 
 ```text
 ┌─────────────────────────────────────┐
-│ 调用方宿主（ChatBox / Cursor / HCP） │
+│ 调用方宿主（ChatBox / Cursor / App） │
 │  LLM Agent Loop                     │
 │   think → tool_call → observe → …   │
 └─────────────────┬───────────────────┘
@@ -59,18 +59,37 @@ MCP Server 与 REST 调用**同一** `KbService` 方法，避免双实现。
 
 控制在「检索 / 补给 / 写入确认 / 整理」；不增加业务策略工具。
 
-| 工具名 | 简述 | 副作用 |
-| --- | --- | --- |
-| `kb_internal_search` | 库内混合检索，返回 hits + sufficiency | 无 |
-| `kb_list` | 按 project/tag/type/时间列表 | 无 |
-| `kb_organize` | 体系摘要或标签/分类调整建议；写操作需明确 flag | 视参数 |
-| `kb_external_search` | 源路由外部候选（不入库） | 无（出站） |
-| `kb_fetch_url` | URL 拉正文 | 无（出站） |
-| `kb_propose_add` | 粘贴/正文 → Pending（KM 生成 ≤400 字内容概述写入 `summary`） | Pending |
-| `kb_confirm_add` | 确认单条 Pending → 索引 | **写库** |
-| `kb_knowledge_summary` | 按 id 读取内容概述；可选 `refresh` 重生并写回 | 仅 refresh 写元数据 |
-| `kb_import_documents` | 多文件 → ImportBatch + Pendings | Pending |
-| `kb_confirm_import_batch` | 批确认 | **写库** |
+| 工具名 | 简述 | 副作用 | 调用示例 | 自然语言调用示例 |
+| --- | --- | --- | --- | --- |
+| `kb_internal_search` | 库内混合检索，返回 hits + sufficiency | 无 | `{"query":"HCP合规边界","project":"cn-pharma","top_k":8}` | 「在知识库里查一下 HCP 合规边界，优先 cn-pharma 项目」 |
+| `kb_list_knowledge` | 按 project/tag/type/时间列表（曾用名 `kb_list`，已废弃） | 无 | `{"project":"cn-pharma","tag":"rdpac","limit":20}` | 「列出 cn-pharma 里带 rdpac 标签的知识条目」 |
+| `kb_organize` | 体系摘要或标签/分类调整建议；写操作需明确 flag | 视参数 | `{"action":"summarize","project":"cn-pharma"}` → 预览；写库加 `"apply":true` | 「先概括一下 cn-pharma 的知识结构」；确认后再说「按建议改标签并落库」 |
+| `kb_external_search` | 源路由外部候选（不入库） | 无（出站） | `{"query":"医药代表管理办法 要点","project":"cn-pharma"}` | 「库内不够的话，到外部源搜一下《医药代表管理办法》要点，先别入库」 |
+| `kb_fetch_url` | URL 拉正文 | 无（出站） | `{"url":"https://example.com/policy.pdf"}` | 「把这个链接的正文拉下来：https://example.com/policy.pdf」 |
+| `kb_propose_add` | 粘贴/正文 → Pending（KM 生成 ≤400 字内容概述写入 `summary`） | Pending | `{"text":"……原文……","title":"会议纪要","project":"cn-pharma","tags":["meeting"]}` | 「把下面这段先提案入库（先不要正式索引）：……」 |
+| `kb_confirm_add` | 确认单条 Pending → 索引 | **写库** | `{"pending_id":"<uuid>"}` | 「确认刚才那条提案，正式写入知识库」 |
+| `kb_knowledge_summary` | 按 id 读取内容概述；可选 `refresh` 重生并写回 | 仅 refresh 写元数据 | `{"knowledge_id":"<uuid>"}`；重生加 `"refresh":true` | 「看这条知识的内容概述」；「重新生成这条概述」 |
+| `kb_import_documents` | 多文件 → ImportBatch + 提案（`KnowledgeItem.status=proposed`） | Pending | `{"files":[{"filename":"a.md","text":"# …"}],"default_project":"cn-pharma"}` | 「批量导入这些文件到 cn-pharma，先出提案让我确认」 |
+| `kb_confirm_import_batch` | 批确认 | **写库** | `{"batch_id":"<uuid>","confirm_all_viable":true}` 或指定 `pending_ids` | 「这批导入里能确认的全部确认入库」 |
+
+调用示例为 MCP `tools/call` 的 **arguments**（JSON）；自然语言示例是给宿主对话里说的话，由调用方模型选工具执行。完整参数见 §4.2 与 `contracts/mcp-tools.json`。
+
+**非 MCP 工具：** `agent-chat-01` 为 OpenAI 兼容 **REST Chat 门面**（如 `/v1/chat/completions`），内部调用上表同一 `KbService` / 工具语义，**不**另增 `kb_chat_*` MCP 工具名。
+
+### 4.0a 故事 ↔ 规范工具名（无命名冲突）
+
+故事编号（`agent-*`）与工具名（`kb_*`）为**不同命名空间**，无冲突。规范映射如下（实现与契约必须用右列名）：
+
+| 故事 | 规范 MCP 工具 | 规范 REST | 说明 |
+| --- | --- | --- | --- |
+| `agent-ingest-02` | `kb_fetch_url` | `POST /api/v1/kb/fetch` | 拉正文；提案走既有 `kb_propose_add` / proposals |
+| `agent-source-01` | `kb_external_search` | `POST /api/v1/kb/sources/search` | 仅候选；不入库 |
+| `agent-source-02` | （无新工具） | （编排策略） | 先 `kb_internal_search`，不足或显式再 `kb_external_search` |
+| `agent-chat-01` | （无新 MCP 工具） | OpenAI 兼容 Chat 路径 | 薄门面；越界码同 MCP/REST |
+| `agent-import-*` | `kb_import_documents` / `kb_confirm_import_batch` | `/api/v1/kb/imports*` | 已交付 |
+| `agent-org-01` | `kb_organize` | `POST /api/v1/kb/organize` | 已交付 |
+
+**废弃别名（勿新用）：** `kb_list` → `kb_list_knowledge`；`kb_fetch` / `kb_source_search` → 分别为 `kb_fetch_url` / `kb_external_search`（见 `contracts/mcp-tools.json` `renamed_from`）。
 
 ### 4.0 MVP-2 最小表面（Cursor 手测优先）
 
@@ -89,11 +108,11 @@ MCP Server 与 REST 调用**同一** `KbService` 方法，避免双实现。
 硬约束：
 
 - MCP 与 REST **同一** `KbService`；禁止第二套业务逻辑（故事 `mcp-04`）。  
-- 传输：Cursor = Streamable HTTP **`/mcp`**；ChatBox = legacy SSE **`/sse`**（本地 `http://127.0.0.1:8000/sse`）。细则见 [`mcp-design.md`](./mcp-design.md)、`mcp-01`…`mcp-05`。  
+- 传输：Cursor = Streamable HTTP **`/mcp`**；ChatBox = legacy SSE **`/sse`**（本地 `http://<HOST>:<AGENT_PORT>/sse`）。细则见 [`mcp-design.md`](./mcp-design.md)、`mcp-01`…`mcp-05`。  
 - Bearer = 管理台签发的使用者 Key（`mcp-02`）。  
 - 本地起栈推荐 **`make up-daemon`**（[`knowledge/ops/local-apps-keep-dying.md`](./knowledge/ops/local-apps-keep-dying.md)）。  
 - DoD：`USE_FAKE_EMBEDDER=false`；真 Qdrant；Cursor 手测 propose→confirm→search（`mcp-05`）。  
-- **不**在 MVP-2 暴露 import / source_search / fetch / organize（属 MVP-3 / MVP-4；`mcp-06` 扩展）。
+- **不**在 MVP-2 暴露 import / source_search / fetch / organize（属 MVP-3；`mcp-06` 及后续工具注册）。
 
 ### 4.1 工具描述要点（写入 MCP schema description）
 
@@ -109,11 +128,11 @@ MCP Server 与 REST 调用**同一** `KbService` 方法，避免双实现。
 
 ```text
 kb_internal_search(query, project?=, tags?=, top_k?=)
-kb_list(project?=, tag?=, knowledge_type?=, limit?=)
+kb_list_knowledge(project?=, tag?=, knowledge_type?=, limit?=)
 kb_organize(action=summarize|retag|reclassify, …, apply?=false)
 kb_external_search(query, constraints?=, project?=)
 kb_fetch_url(url)
-kb_propose_add(text, title?=, project?=, tags?=)
+kb_propose_add(text, title?=, project?=, tags?=, notes?=)
 kb_confirm_add(pending_id)
 kb_knowledge_summary(knowledge_id?=, pending_id?=, refresh?=false)
 kb_import_documents(files[], default_project?=, default_tags?=)  # MCP 侧或走 REST multipart
@@ -214,7 +233,7 @@ User/LLM → kb_confirm_import_batch(..., confirm_all_viable=true)
 ### 7.4 体系整理
 
 ```text
-LLM → kb_list / kb_organize(action=summarize)
+LLM → kb_list_knowledge / kb_organize(action=summarize)
 LLM → 展示建议
 LLM → kb_organize(..., apply=true)  # 或先提案再确认（若破坏性变更）
 ```

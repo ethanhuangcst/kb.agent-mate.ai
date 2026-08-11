@@ -88,3 +88,25 @@ class QdrantVectorStore:
                 )
             )
         return hits
+
+    def delete_by_knowledge_id(self, user_id: str, knowledge_id: str) -> int:
+        result = self.client.delete(
+            collection_name=self.collection,
+            points_selector=self._qm.FilterSelector(
+                filter=self._qm.Filter(
+                    must=[
+                        self._qm.FieldCondition(
+                            key="user_id",
+                            match=self._qm.MatchValue(value=user_id),
+                        ),
+                        self._qm.FieldCondition(
+                            key="knowledge_id",
+                            match=self._qm.MatchValue(value=knowledge_id),
+                        ),
+                    ]
+                )
+            ),
+        )
+        # Qdrant may not return a count; treat as success
+        _ = result
+        return 0

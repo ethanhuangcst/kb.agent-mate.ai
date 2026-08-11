@@ -1,7 +1,8 @@
 # MVP-2 / MVP-3 闭环交付规划
 
 对齐：`specs/story-mapping.md`、`specs/test-strategy.md`、`common-test-strategy`、[`specs/mcp-design.md`](./mcp-design.md)。  
-前提：**MVP-1 Done**（Admin Key、Bearer、空检索、Blob/PG、禁提案索引）。
+前提：**MVP-1 Done**（Admin Key、Bearer、空检索、Blob/PG、禁提案索引）。  
+说明：原「MVP-4」四条（URL / 外部源 / Chat）已于 2026-08-11 **并入 MVP-3**；仓库不再规划独立 MVP-4 批次。
 
 ---
 
@@ -27,9 +28,9 @@
 | 批 | 一句话 | 为何能闭环 |
 | --- | --- | --- |
 | **MVP-2 知识闭环 + MCP** | MCP 模块 `mcp-01`…`05` + 粘贴→提案→确认→真索引→可引用检索；Cursor 可手挂 MCP 验真 | 领域管道真栈；MCP 仅门面，与 REST 同 `KbService` |
-| **MVP-3 操作面扩展** | 批量导入、体系整理、多管理员、对话向越界；**mcp-06** 扩展工具面 | 建立在 MVP-2 真索引与最小 MCP 之上 |
+| **MVP-3 操作面 + 补给/Chat** | 批量导入、体系整理、多管理员、越界、**mcp-06**；以及 URL 拉取、外部源、库内优先补给、可选 Chat 门面 | 建立在 MVP-2 真索引与最小 MCP 之上；URL/外部源须真出站或官方沙箱 |
 
-**仍延后（MVP-4）：** `agent-ingest-02`（URL）、`agent-source-01/02`、`agent-chat-01`。
+**已并入 MVP-3（原称 MVP-4，2026-08-11）：** `agent-ingest-02`、`agent-source-01/02`、`agent-chat-01`。**不再单独设 MVP-4。**
 
 ---
 
@@ -88,7 +89,7 @@
 
 ---
 
-## 4. MVP-3 — 操作面扩展
+## 4. MVP-3 — 操作面扩展 + URL / 外部源 / Chat
 
 ### 4.1 范围（故事）
 
@@ -101,8 +102,24 @@
 | web-acct-03 | 忘记密码 / 重置 | 真 Resend |
 | web-acct-04/05 | 邀请 + 接受设密 | 真邮件 |
 | web-acct-07/08 | 管理员列表 / 删除 | 约束齐全 |
+| agent-ingest-02 | URL 拉取提案 | `kb_fetch_url` / `POST /fetch` |
+| agent-source-01 | 外部搜索候选 | `kb_external_search` / `POST /sources/search` |
+| agent-source-02 | 库内优先补给 | 无新工具；编排 internal→external |
+| agent-chat-01 | 可选 OpenAI 兼容门面 | REST Chat；无 `kb_chat_*` |
+| agent-item-01 | 知识条目详情 | `GET /items/{id}` |
+| agent-item-02 | 知识条目更新 / 软删 | `PATCH`/`DELETE /items/{id}` |
+| agent-quota-01 | 出站与导入配额 | RATE_LIMITED / 导入限额 |
+| mcp-06 | 工具面扩展 | import/org/fetch/external 已注册 |
 
-MCP：在 MVP-2 最小集上由 **`mcp-06`** 扩展 import/org 等工具，不重写门面（复用 `mcp-01`/`mcp-02`）。
+**管理面切片（2026-08-11）：** web-acct-03/04/05/07/08 已落地（Alembic `004`、`session_version` 吊销、软禁用、Resend）。
+
+**Agent/MCP 切片（2026-08-11）：** scope-01/02、import-01/02/03、org-01、mcp-06 已落地。
+
+**MVP-3 收尾（2026-08-11）：** URL / 外部源 / Chat / 条目 CRUD / 配额 **Done**。规范工具名见 [`agent-design.md`](./agent-design.md) §4.0a。**不再设 MVP-4。**
+
+**用户确认可用（2026-08-11）：** 是 — MVP-3 整批完工，交付分支 `3-mvp03`。
+
+MCP：在 MVP-2 最小集上由 **`mcp-06`** 扩展工具面，不重写门面（复用 `mcp-01`/`mcp-02`）。
 
 ### 4.2 闭环旅程
 
@@ -110,6 +127,9 @@ MCP：在 MVP-2 最小集上由 **`mcp-06`** 扩展 import/org 等工具，不�
 A. 批量：上传 md/txt/pdf → 逐条或一键 confirm → search/list 可见
 B. 管理：Resend 邀请/重置 → 设密 → 列表/删除约束
 C. 越界：策略/开放决策经 MCP 与 REST 均拒绝（scope-01/02）
+D. URL：fetch → propose → confirm → search 可见（SSRF 防护）
+E. 补给：库内不足或显式要求 → 外部候选（不自动入库）→ 可选 confirm
+F. Chat（可选）：OpenAI 兼容门面调用同一工具集，越界规则同等
 ```
 
 ### 4.3 闭环验收套件（无 mock）
@@ -119,6 +139,10 @@ C. 越界：策略/开放决策经 MCP 与 REST 均拒绝（scope-01/02）
 | 批量旅程 | 真文件 → 真 confirm → 真 Qdrant |
 | Web E2E | Playwright + 真 Postgres + Resend test/sandbox |
 | 越界 | 固定用例打真 Agent |
+| URL / 外部源 | 真出站或厂商沙箱；工具名 `kb_fetch_url` / `kb_external_search` |
+| Chat（若交付） | 同 Key 调门面；越界码与 REST/MCP 一致；无 `kb_chat_*` |
+| 条目 CRUD | GET/PATCH/DELETE items；软删后 search 无命中 |
+| 配额 | 超限返回稳定码 |
 
 ---
 
@@ -127,17 +151,17 @@ C. 越界：策略/开放决策经 MCP 与 REST 均拒绝（scope-01/02）
 ```text
 MVP-1 Done
     → MVP-2：领域闭环 + MCP 薄封装（Cursor 可手测）
-        → MVP-3：批量 / 多管理员 / scope-01/02 / MCP 工具扩展
-            → MVP-4：URL / 外部源 / Chat 门面
+        → MVP-3：批量 / 多管理员 / scope / MCP 扩展
+               + URL / 外部源 / 库内优先补给 / 可选 Chat
 ```
 
 ---
 
-## 6. 明确不做（两批内）
+## 6. 明确不做（MVP-2 / MVP-3 门禁内）
 
 - Fake Embedder / Fake KM 作为交付门禁  
 - Mock `httpx` 伪装 RAG  
-- Stub 外部搜索冒充 source（延后 MVP-4）  
+- Stub 外部搜索冒充 source Done（source 故事须真 API 或官方沙箱）  
 - 无 confirm 的「导入即入库」  
 - MCP 与 REST 双实现  
 
@@ -148,8 +172,9 @@ MVP-1 Done
 | 故事 | 现批次 | 说明 |
 | --- | --- | --- |
 | mcp-01…05（取代 agent-mcp-01） | **MVP-2** | 传输/鉴权/最小工具/契约/Cursor 手测 |
-| mcp-06 | **MVP-3** | 工具面扩展 import/org |
+| mcp-06 | **MVP-3** | 工具面扩展 import/org（及后续 source/fetch） |
 | agent-list-01 | MVP-2 | 确认后可观测 |
 | agent-scope-01/02 | MVP-3 | 对话向越界 |
 | agent-scope-03/04 | MVP-2 | 入库/引用诚实性 |
-| MVP-4 四条 | MVP-4 | 不变 |
+| agent-ingest-02 / source-01/02 / chat-01 | **MVP-3** | 原 MVP-4 并入；工具名见 agent-design §4.0a |
+| agent-item-01/02 / agent-quota-01 | **MVP-3** | 补全架构缺口（详情、软删、配额） |

@@ -18,23 +18,29 @@ export function LocaleSwitcher() {
   }
 
   return (
-    <div className="locale-switch" data-testid="locale-switcher">
-      <span className="sr-only">{t("label")}</span>
+    <div
+      className="locale-switch"
+      role="group"
+      aria-label={t("label")}
+      data-testid="locale-switcher"
+    >
       <button
         type="button"
-        className={locale === "zh-CN" ? "active" : undefined}
+        className={locale === "zh-CN" ? "is-active" : undefined}
+        aria-pressed={locale === "zh-CN"}
         data-testid="locale-zh"
         onClick={() => setLocale("zh-CN")}
       >
-        中文
+        {t("zh")}
       </button>
       <button
         type="button"
-        className={locale === "en" ? "active" : undefined}
+        className={locale === "en" ? "is-active" : undefined}
+        aria-pressed={locale === "en"}
         data-testid="locale-en"
         onClick={() => setLocale("en")}
       >
-        EN
+        {t("en")}
       </button>
     </div>
   );

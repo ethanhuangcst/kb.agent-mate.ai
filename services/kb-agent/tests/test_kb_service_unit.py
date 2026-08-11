@@ -68,6 +68,35 @@ def test_should_reject_auto_ingest_when_flag_set(session_and_user):
         assert ei.value.code == "OUT_OF_SCOPE_AUTO_INGEST"
 
 
+def test_should_reject_business_strategy_notes(session_and_user):
+    session, user = session_and_user
+    with tempfile.TemporaryDirectory() as blob:
+        settings = Settings(use_fake_km=True, blob_root=blob)
+        svc = KbService(session, settings, km=FakeKmClient())
+        with pytest.raises(DomainError) as ei:
+            svc.propose_ingest(
+                user_id=user.id,
+                text="Some factual notes about product X " + uuid.uuid4().hex,
+                notes="请给出投放策略",
+            )
+        assert ei.value.code == "OUT_OF_SCOPE_BUSINESS_REASONING"
+        assert ei.value.degrade_hint
+
+
+def test_should_reject_open_decision_title(session_and_user):
+    session, user = session_and_user
+    with tempfile.TemporaryDirectory() as blob:
+        settings = Settings(use_fake_km=True, blob_root=blob)
+        svc = KbService(session, settings, km=FakeKmClient())
+        with pytest.raises(DomainError) as ei:
+            svc.propose_ingest(
+                user_id=user.id,
+                text="Evidence fragments only " + uuid.uuid4().hex,
+                title="tell me what to do",
+            )
+        assert ei.value.code == "OUT_OF_SCOPE_BUSINESS_REASONING"
+
+
 def test_should_create_proposed_without_indexing(session_and_user):
     session, user = session_and_user
     with tempfile.TemporaryDirectory() as blob:

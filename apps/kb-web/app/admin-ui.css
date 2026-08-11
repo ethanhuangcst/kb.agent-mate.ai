@@ -154,6 +154,7 @@ h3 {
 
 /* —— Auth（与首页同：偏上居中） —— */
 .auth-shell {
+  position: relative;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -315,6 +316,66 @@ h3 {
   border-bottom: 1px solid var(--line);
   background: var(--bg-elevated);
   flex-shrink: 0;
+}
+
+.header-end {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Locale: quiet gray links — Outfit tracking, hairline underline when active */
+.locale-switch {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.95rem;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+}
+
+.locale-switch button {
+  appearance: none;
+  margin: 0;
+  padding: 0.2rem 0 0.15rem;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: var(--mute-soft);
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.locale-switch button.is-active {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+.locale-switch button:hover {
+  color: var(--ink);
+}
+
+.locale-switch button:focus-visible {
+  outline: 1px solid var(--ink);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .locale-switch button {
+    transition: none;
+  }
+}
+
+.shell-locale {
+  position: absolute;
+  top: 1rem;
+  right: 1.75rem;
+  z-index: 5;
 }
 
 .app-header .logo-word {
@@ -886,12 +947,6 @@ td {
   background: transparent;
 }
 
-.site-footer .locale-switch {
-  display: block;
-  text-align: right;
-  margin-bottom: 0.35rem;
-}
-
 .site-footer p {
   margin: 0;
 }
@@ -908,6 +963,7 @@ td {
 
 /* —— Public home —— */
 .home-shell {
+  position: relative;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -1087,6 +1143,204 @@ td {
   font-size: 0.95rem;
   font-weight: 500;
   margin: 1.75rem 0 0.85rem;
+}
+
+.guide-flow {
+  margin: 0 0 1.25rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--ink);
+  background:
+    linear-gradient(180deg, #f7f7f7 0%, #fafafa 42%, #ffffff 100%);
+  overflow: hidden;
+}
+
+.guide-flow-lanes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  position: relative;
+}
+
+.guide-flow-lane {
+  padding: 1.15rem 1.1rem 1.35rem;
+  text-align: center;
+  position: relative;
+}
+
+.guide-flow-lane + .guide-flow-lane {
+  border-left: 1px solid var(--line);
+}
+
+.guide-flow-clients {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.guide-flow-proto {
+  margin: 0 auto;
+  display: inline-block;
+  min-width: 4.5rem;
+  padding: 0.45rem 0.85rem;
+  border: 1.5px solid var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  background: var(--bg-elevated);
+}
+
+.guide-flow-lane::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 1px;
+  height: 0.85rem;
+  background: var(--ink);
+  transform: translateX(-50%);
+}
+
+.guide-flow-merge {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 1.1rem 1rem 0.35rem;
+  border-top: 1px solid var(--line);
+}
+
+.guide-flow-merge::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 25%;
+  right: 25%;
+  height: 1px;
+  background: var(--ink);
+}
+
+.guide-flow-merge::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 1.1rem;
+  background: var(--ink);
+  transform: translateX(-50%);
+}
+
+.guide-flow-auth {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.85rem;
+  padding: 0.35rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  background: var(--ink);
+  color: #fafafa;
+}
+
+.guide-flow-hub {
+  margin: 0.85rem 1.1rem 0;
+  padding: 1rem 1.1rem 1.05rem;
+  border: 1.5px solid var(--ink);
+  background: var(--bg-elevated);
+  text-align: center;
+}
+
+.guide-flow-hub-name {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-ui);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.guide-flow-hub-ops {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--mute);
+}
+
+.guide-flow-store {
+  margin: 0;
+  padding: 1rem 1.1rem 1.2rem;
+  text-align: center;
+  position: relative;
+}
+
+.guide-flow-store::before {
+  content: "";
+  display: block;
+  width: 1px;
+  height: 0.85rem;
+  margin: 0 auto 0.75rem;
+  background: var(--ink);
+}
+
+.guide-flow-store-name {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-cn);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.guide-flow-store-meta {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .guide-flow-lane,
+  .guide-flow-auth,
+  .guide-flow-hub,
+  .guide-flow-store {
+    animation: guide-flow-rise 0.55s ease both;
+  }
+
+  .guide-flow-lane:nth-child(2) {
+    animation-delay: 0.06s;
+  }
+
+  .guide-flow-auth {
+    animation-delay: 0.12s;
+  }
+
+  .guide-flow-hub {
+    animation-delay: 0.18s;
+  }
+
+  .guide-flow-store {
+    animation-delay: 0.24s;
+  }
+}
+
+@keyframes guide-flow-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .guide-arch {
@@ -1338,6 +1592,21 @@ td {
 
   .guide-arch-diagram {
     font-size: 0.65rem;
+  }
+
+  .guide-flow-lanes {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-flow-lane + .guide-flow-lane {
+    border-left: none;
+    border-top: 1px solid var(--line);
+  }
+
+  .guide-flow-merge::before {
+    left: 50%;
+    right: auto;
+    width: 0;
   }
 
   .guide-step-head {

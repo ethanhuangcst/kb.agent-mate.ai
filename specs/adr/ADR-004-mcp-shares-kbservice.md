@@ -17,7 +17,7 @@ Mount MCP in the same kb-agent process as REST. Tools call the shared `KbService
 ## Consequences
 - MCP SDK upgrades (e.g. `mcp` 2.x `MCPServer`) stay in the facade; domain tests remain REST/KbService-centric.
 - Parent FastAPI lifespan must run the StreamableHTTP session manager when mounting.
-- Cursor / ChatBox and HCP REST stay on one Key and one library (ChatBox uses `/sse`; see ADR-006).
+- Cursor / ChatBox and App REST stay on one Key and one library (ChatBox uses `/sse`; see ADR-006).
 
 ## Date
 2026-08-11

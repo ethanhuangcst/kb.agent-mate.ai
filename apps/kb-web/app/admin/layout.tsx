@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/session";
 import { BrandLockup, SiteFooter } from "../site-chrome";
+import { LocaleSwitcher } from "../locale-switcher";
 import { LogoutLink } from "./logout-link";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -17,9 +18,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="app-shell">
       <header className="app-header">
         <BrandLockup size="header" href="/" />
-        <p className="hello">
-          Hello, <span className="hello-name">{name}</span>
-        </p>
+        <div className="header-end">
+          <p className="hello">
+            Hello, <span className="hello-name">{name}</span>
+          </p>
+          <LocaleSwitcher />
+        </div>
       </header>
       <div className="app-body">
         <aside className="sidebar">

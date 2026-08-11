@@ -31,10 +31,10 @@ Expect `TRUE_STACK_JOURNEY_PASSED` (propose → confirm → search citation → 
 Registered MCP tools (after reload): `kb_internal_search`, `kb_propose_add`, `kb_confirm_add`, `kb_list_knowledge`, `kb_knowledge_summary`.
 
 ## Cursor hand-test
-Settings → Customize → MCPs → + New → Streamable HTTP → `http://127.0.0.1:8000/mcp` + Bearer (never commit the key).
+Settings → Customize → MCPs → + New → Streamable HTTP → `http://<HOST>:<AGENT_PORT>/mcp` + Bearer (never commit the key).
 
 ## ChatBox hand-test
-Add MCP Server → Type **Remote (http/sse)** → URL **`http://127.0.0.1:8000/sse`** → HTTP Header `Authorization=Bearer <key>` → Test → Save.  
+Add MCP Server → Type **Remote (http/sse)** → URL **`http://<HOST>:<AGENT_PORT>/sse`** → HTTP Header `Authorization=Bearer <key>` → Test → Save.  
 Do **not** use `/mcp` in ChatBox (SSE GET → 404). Same tools as Cursor. See [`../mcp-design.md`](../mcp-design.md) §7.2.
 
 Optional: `kb_knowledge_summary(knowledge_id=…, refresh=true)` to backfill a short overview (see [content-overview.md](./content-overview.md)).

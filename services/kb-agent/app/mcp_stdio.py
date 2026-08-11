@@ -180,6 +180,178 @@ def main() -> None:
         finally:
             svc.close()
 
+    @mcp.tool(
+        name="kb_import_documents",
+        description=(
+            "Import multiple small documents as an ImportBatch of pending proposals. "
+            "Each file becomes a propose-only item — never auto-confirms. "
+            "Pass files as [{filename, text}] or [{filename, content_base64}]. "
+            "Large batches should use REST multipart POST /api/v1/kb/imports. "
+            "Does not generate business strategy."
+        ),
+    )
+    def kb_import_documents(
+        files: list[dict],
+        default_project: str | None = None,
+        default_tags: list[str] | None = None,
+    ) -> str:
+        import base64
+
+        svc = _svc()
+        try:
+            payloads: list[tuple[str, bytes]] = []
+            for f in files or []:
+                name = str(f.get("filename") or "untitled.txt")
+                if f.get("text") is not None:
+                    data = str(f["text"]).encode("utf-8")
+                elif f.get("content_base64"):
+                    data = base64.b64decode(str(f["content_base64"]))
+                else:
+                    return _tool_error(
+                        DomainError(
+                            "IMPORT_FILE_REJECTED",
+                            f"file {name} needs text or content_base64",
+                        )
+                    )
+                payloads.append((name, data))
+            return json.dumps(
+                svc.create_import_batch(
+                    user_id=auth.user_id,
+                    files=payloads,
+                    default_project=default_project,
+                    default_tags=default_tags,
+                ),
+                ensure_ascii=False,
+            )
+        except DomainError as exc:
+            return _tool_error(exc)
+        finally:
+            svc.close()
+
+    @mcp.tool(
+        name="kb_confirm_import_batch",
+        description=(
+            "Confirm pending items from an import batch. "
+            "confirm_all_viable=true confirms every proposed item — still explicit confirm. "
+            "Does not generate business strategy."
+        ),
+    )
+    def kb_confirm_import_batch(
+        batch_id: str,
+        pending_ids: list[str] | None = None,
+        confirm_all_viable: bool = False,
+    ) -> str:
+        svc = _svc()
+        try:
+            return json.dumps(
+                svc.confirm_import_batch(
+                    user_id=auth.user_id,
+                    batch_id=batch_id,
+                    pending_ids=pending_ids,
+                    confirm_all_viable=confirm_all_viable,
+                ),
+                ensure_ascii=False,
+            )
+        except DomainError as exc:
+            return _tool_error(exc)
+        finally:
+            svc.close()
+
+    @mcp.tool(
+        name="kb_organize",
+        description=(
+            "Suggest or apply taxonomy (summarize|retag|reclassify). apply=false by default. "
+            "Does not generate business strategy."
+        ),
+    )
+    def kb_organize(
+        action: str,
+        project: str | None = None,
+        tag: str | None = None,
+        knowledge_type: str | None = None,
+        instruction: str | None = None,
+        apply: bool = False,
+        limit: int = 50,
+    ) -> str:
+        svc = _svc()
+        try:
+            return json.dumps(
+                svc.organize(
+                    user_id=auth.user_id,
+                    action=action,
+                    project=project,
+                    tag=tag,
+                    knowledge_type=knowledge_type,
+                    instruction=instruction,
+                    apply=apply,
+                    limit=limit,
+                ),
+                ensure_ascii=False,
+            )
+        except DomainError as exc:
+            return _tool_error(exc)
+        finally:
+            svc.close()
+
+    @mcp.tool(
+        name="kb_fetch_url",
+        description=(
+            "Fetch a public http(s) URL into a pending proposal (confirm separately). "
+            "SSRF-blocked URLs fail with FETCH_BLOCKED."
+        ),
+    )
+    def kb_fetch_url(
+        url: str,
+        title: str | None = None,
+        project: str | None = None,
+        tags: list[str] | None = None,
+        propose: bool = True,
+    ) -> str:
+        svc = _svc()
+        try:
+            return json.dumps(
+                svc.fetch_url(
+                    user_id=auth.user_id,
+                    url=url,
+                    title=title,
+                    project=project,
+                    tags=tags,
+                    propose=propose,
+                ),
+                ensure_ascii=False,
+            )
+        except DomainError as exc:
+            return _tool_error(exc)
+        finally:
+            svc.close()
+
+    @mcp.tool(
+        name="kb_external_search",
+        description=(
+            "External source candidates only (no ingest). Prefer kb_internal_search first."
+        ),
+    )
+    def kb_external_search(
+        query: str,
+        project: str | None = None,
+        top_k: int = 5,
+    ) -> str:
+        svc = _svc()
+        try:
+            return json.dumps(
+                svc.external_search(
+                    user_id=auth.user_id,
+                    query=query,
+                    project=project,
+                    top_k=top_k,
+                ),
+                ensure_ascii=False,
+            )
+        except DomainError as exc:
+            return _tool_error(exc)
+        finally:
+            svc.close()
+
     asyncio.run(mcp.run_stdio_async())
 
 

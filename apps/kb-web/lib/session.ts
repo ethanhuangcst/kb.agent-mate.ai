@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { sql } from "./db";
 import type { SessionPayload } from "./session-types";
 
 export type { SessionPayload } from "./session-types";
@@ -39,6 +40,7 @@ export async function readSessionToken(token: string): Promise<SessionPayload | 
       username: (payload.username as string | null) ?? null,
       displayName: (payload.displayName as string | null) ?? null,
       mustChangePassword: Boolean(payload.mustChangePassword),
+      sessionVersion: Number(payload.sessionVersion ?? 0),
     };
   } catch {
     return null;
@@ -49,7 +51,34 @@ export async function getSession(): Promise<SessionPayload | null> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  return readSessionToken(token);
+  const session = await readSessionToken(token);
+  if (!session) return null;
+
+  const rows = await sql<
+    {
+      status: string;
+      session_version: number;
+      must_change_password: boolean;
+      username: string | null;
+      display_name: string | null;
+    }[]
+  >`
+    SELECT status, session_version, must_change_password, username, display_name
+    FROM admin_users
+    WHERE id = ${session.adminId}::uuid
+    LIMIT 1
+  `;
+  const row = rows[0];
+  if (!row || row.status !== "active") return null;
+  if (Number(row.session_version) !== session.sessionVersion) return null;
+
+  return {
+    adminId: session.adminId,
+    username: row.username,
+    displayName: row.display_name,
+    mustChangePassword: row.must_change_password,
+    sessionVersion: Number(row.session_version),
+  };
 }
 
 /** Attach session cookie on a Route Handler response (reliable in Next 15). */

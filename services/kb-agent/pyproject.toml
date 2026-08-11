@@ -17,6 +17,7 @@ dependencies = [
   "bcrypt>=4.2.0",
   "openai>=1.60.0",
   "mcp>=1.8.0",
+  "pypdf>=5.0.0",
   "kb-schema",
 ]
 

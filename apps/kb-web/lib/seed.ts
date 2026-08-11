@@ -18,8 +18,8 @@ export async function ensureSeedAdmin(): Promise<{ created: boolean }> {
   const passwordHash = await hashPassword("admin");
   const email = seedAdminEmail();
   await sql`
-    INSERT INTO admin_users (id, username, email, display_name, password_hash, must_change_password)
-    VALUES (gen_random_uuid(), 'admin', ${email}, 'Admin', ${passwordHash}, true)
+    INSERT INTO admin_users (id, username, email, display_name, password_hash, must_change_password, status, session_version)
+    VALUES (gen_random_uuid(), 'admin', ${email}, 'Admin', ${passwordHash}, true, 'active', 0)
   `;
   return { created: true };
 }

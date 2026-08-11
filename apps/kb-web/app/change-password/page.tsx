@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/session";
-import { BrandLockup, SiteFooter } from "../site-chrome";
+import { BrandLockup, ShellLocale, SiteFooter } from "../site-chrome";
 import { ChangePasswordForm } from "./change-password-form";
 
 export default async function ChangePasswordPage() {
@@ -14,6 +14,7 @@ export default async function ChangePasswordPage() {
 
   return (
     <div className="auth-shell">
+      <ShellLocale />
       <main className="auth-main">
         <div className="auth-card">
           <BrandLockup size="auth" />

@@ -2,14 +2,22 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { LocaleSwitcher } from "./locale-switcher";
 
-/** Site footer matching mockup: copyright inside each shell. */
-export async function SiteFooter({ withLocale = true }: { withLocale?: boolean }) {
+/** Site footer matching mockup: copyright only (locale lives in header). */
+export async function SiteFooter() {
   const t = await getTranslations();
   return (
     <footer className="site-footer">
-      {withLocale ? <LocaleSwitcher /> : null}
       <p>{t("footerCopyright")}</p>
     </footer>
+  );
+}
+
+/** Top-right locale for shells without a full app header (home / auth). */
+export function ShellLocale() {
+  return (
+    <div className="shell-locale">
+      <LocaleSwitcher />
+    </div>
   );
 }
 

@@ -7,6 +7,16 @@
 **受众：** 调用方开发者（读接入指南）与受邀管理员。  
 **单页任务：** 首页二选一（指南 / 登录）；管理列表页「看清状态 → 点主操作」。
 
+### 品牌资产
+
+| 用途 | 资产 | 说明 |
+| --- | --- | --- |
+| 页内锁头 | `apps/kb-web/public/logo.png`（mockup：`specs/mockup/logo.png`） | 透明底手绘黄泡 +「M」芯；光学对齐见 ADR-001 |
+| 浏览器标签 favicon | `apps/kb-web/app/favicon.ico` + `app/icon.png` + `app/apple-icon.png`；`public/favicon.png` / `public/favicon.ico` 同源 | 与锁头同图，替换 Next 默认三角标 |
+| 透明源稿 | `specs/mockup/logo-transparent.png` | 与 `logo.png` 同像素；入库/导出用 |
+
+实现：`layout.tsx` 的 `metadata.icons` 指向 `/favicon.ico`、`/favicon.png`、`/apple-icon.png`。勿再使用脚手架默认 `favicon.ico`。
+
 ---
 
 ## 1. 方向（签名）
@@ -72,6 +82,7 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 | 垂直 | `align-items: flex-start`；顶距 `clamp(4.5rem, 14vh, 7.5rem)`（偏上，非死居中） |
 | 水平 | 内容块居中；卡内全部左对齐 |
 | 锁头 | logo 56×56 + 站名；**黄色灯泡左缘**与说明文左缘光学对齐（射线可伸出；`--logo-optical-shift`，见 ADR-001） |
+| 产品概述 | i18n `home.tagline`：私人知识库智能体 / 个人知识智能助理（包罗万象、一网打尽、一站获取） |
 | 操作 | 「接入指南」文字链 +「管理员登录」`.btn.btn-page` |
 | 页脚 | 见 §4.4 |
 
@@ -104,6 +115,16 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 
 对应静态稿：`login.html`、`change-password.html`、`forgot-password.html`、`accept-invite.html`。
 
+**接受邀请表单字段（web-acct-05，2026-08-11）：**
+
+| 字段 | UI 文案（zh） | 规则 |
+| --- | --- | --- |
+| `username` | **用户名**（勿再用「登录名」） | 必填；字母开头；字母数字与 `._-`；3–64；库内唯一（大小写不敏感） |
+| `displayName` | **姓名**（英文） | 既有英文姓名规则；顶栏 Hello |
+| `password` / confirm | 新密码 / 确认密码 | ≥8；一致 |
+
+管理员列表表头第一列文案同为 **用户名**（i18n `admins.adminUsername`）。
+
 ```text
 ┌─────────────────────────────────────┐
 │                                     │
@@ -119,23 +140,24 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 ### 4.3 管理壳（图2）
 
 ```text
-┌──────────────────────────────────────────┐
-│ [logo] kb.agent-mate.ai    Hello, {Name} │  ← 顶栏撑满
-├──────────┬───────────────────────────────┤
-│ 使用者   │ content max ~760px            │
-│ 管理员   │  page-head | title + CTA      │
-│ 退出     │  ───────── hairline ──────    │
-│          │  table / form                 │
-├──────────┴───────────────────────────────┤
-│                 copyright ® Ethan Huang  │  ← 全宽页脚
-└──────────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│ [logo] kb.agent-mate.ai   Hello, {Name}  [中|EN] │  ← 顶栏撑满；语言在最右
+├──────────┬───────────────────────────────────────┤
+│ 使用者   │ content max ~760px                    │
+│ 管理员   │  page-head | title + CTA              │
+│ 退出     │  ───────── hairline ──────            │
+│          │  table / form                         │
+├──────────┴───────────────────────────────────────┤
+│                 copyright ® Ethan Huang          │  ← 全宽页脚（无语言切换）
+└──────────────────────────────────────────────────┘
 ```
 
 - 顶栏品牌：`.logo-header-mark` 36×36 + 站名；与公网锁头共用 `--logo-optical-shift`（黄泡光学对齐）。
 - 侧栏**无** logo、**无** ADMIN 角标；宽度约 `200px`。  
-- 顶栏右侧：`Hello, {display_name}`（种子账号可用 `Admin`）。  
+- 顶栏右侧：`.header-end` = `Hello, {display_name}` + **语言切换**（最右）。  
+- **语言切换** `.locale-switch`：灰色文字链（非黑白字盒）。Outfit `0.78rem` / weight 500 / `letter-spacing: 0.16em`；项距 `0.95rem`；未选 `--mute-soft`，当前项 `--ink` + `1px` 底线；文案 `中文` / `EN`。公网首页与 Auth 用 `.shell-locale` 绝对定位到视口右上。  
 - 邀请不占侧栏，从管理员页 CTA 进入。  
-- 接入指南：独立静态页 `guide.html`（可新标签打开）。  
+- 接入指南：独立页 `guide.html`；顶栏右侧为「返回」+ 语言切换。  
 - 移动：顶栏保留；侧栏改横排；`active` 用底边线而非左侧条。
 
 ### 4.5 接入指南 `guide.html`
@@ -146,7 +168,7 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 | 内容宽 | `max-width: 42rem` |
 | 章节 | 1 架构 → 2 获取 Key → **3 IDE 接入**（Cursor / CodeBuddy）→ **4 第三方工具**（ChatBox）；顶 TOC 锚点 |
 | 架构四段 | 调用者是谁 → 提供什么 → 两种调用方式 → 大模型怎么分工 |
-| 结构图 | `.guide-arch-diagram`：MCP / REST 汇合 → Bearer → kb → 私人库；左边 3px 墨线 |
+| 结构图 | `.guide-flow`：双轨 MCP/REST → 墨线汇合 Bearer（反相条）→ hub `kb.agent-mate.ai` → 私人库；左边 3px 墨线；零圆角 |
 | 双栏 | `.guide-modes`：调用方式（MCP \| REST）；模型分工 |
 | 步骤图 | `.guide-steps` / `.guide-step-head`（编号+文案）+ `.guide-figure`（**全宽**，与 `.guide-modes` / `.guide-code` 左右对齐）；`ol.guide-steps` 须 `padding-left: 0`（覆盖 `.guide-body ol`） |
 | MCP 接入 | §3：Customize → MCPs → `mcp.json` stdio（模板见 `deployment-plan` §7.1 B）；远程备选 `/mcp`。§4：ChatBox Remote (http/sse) **`/sse`**。见 `mcp-design.md` |
@@ -272,10 +294,12 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 | 管理壳示例 | `specs/mockup/users.html` · `admins.html` · Key / 邀请表单页 |
 | 静态稿目录 | `specs/mockup/gallery.html` |
 | 设计 token 落地 | `specs/mockup/styles.css`（`.home-*` / `.auth-*` / `.site-footer` / `.btn-page`） |
-| 实现（未来） | Admin Next.js；样式对齐本文件，不另起紫色/圆角体系 |
+| 品牌锁头 / favicon | `logo.png` · `favicon.ico`（mockup 与 `apps/kb-web` 同源黄泡） |
+| 实现 | `apps/kb-web`；样式对齐本文件，不另起紫色/圆角体系 |
 
 **验收：**
 
 1. 使用者页「签发新 Key」与管理员页「邀请管理员」桌面宽度下高度差 ≤ 1px，宽度均 ≥ `10.5rem`（推荐 `.btn-page`）。  
 2. 首页与登录页同顶距档位、同氛围底、同锁头规格；内容非死垂直居中。  
-3. 全部页面有右对齐 `copyright ® Ethan Huang` 页脚。
+3. 全部页面有右对齐 `copyright ® Ethan Huang` 页脚。  
+4. 浏览器标签显示品牌黄泡 favicon（非 Next 默认图标）。

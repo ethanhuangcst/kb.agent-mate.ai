@@ -43,6 +43,7 @@ class IndexedChunk:
 class VectorStore(Protocol):
     def upsert(self, chunk: IndexedChunk) -> None: ...
     def search(self, user_id: str, query_vec: list[float], top_k: int) -> list[Hit]: ...
+    def delete_by_knowledge_id(self, user_id: str, knowledge_id: str) -> int: ...
 
 
 @dataclass
@@ -74,6 +75,15 @@ class InMemoryVectorStore:
             )
         scored.sort(key=lambda h: h.score or 0.0, reverse=True)
         return scored[:top_k]
+
+    def delete_by_knowledge_id(self, user_id: str, knowledge_id: str) -> int:
+        before = len(self.chunks)
+        self.chunks = [
+            c
+            for c in self.chunks
+            if not (c.user_id == user_id and c.knowledge_id == knowledge_id)
+        ]
+        return before - len(self.chunks)
 
 
 def _cosine(a: list[float], b: list[float]) -> float:
@@ -152,6 +162,11 @@ class Retriever:
             )
             ids.append(cid)
         return ids
+
+    def delete_document(self, *, user_id: str, knowledge_id: str) -> int:
+        if not user_id or not knowledge_id:
+            raise ValueError("user_id and knowledge_id are required")
+        return self.store.delete_by_knowledge_id(user_id=user_id, knowledge_id=knowledge_id)
 
     def search(self, user_id: str, query: str, top_k: int = 8) -> SearchResult:
         if not user_id:

@@ -146,3 +146,27 @@ def internal_index(
             detail={"code": "RAG_INDEX_FAILED", "message": str(exc)},
         ) from exc
     return IndexResponse(knowledge_id=body.knowledge_id, chunk_ids=chunk_ids, indexed=True)
+
+
+class DeleteRequest(BaseModel):
+    user_id: str = Field(min_length=1)
+    knowledge_id: str = Field(min_length=1)
+
+
+class DeleteResponse(BaseModel):
+    knowledge_id: str
+    deleted: bool = True
+    removed_points: int = 0
+
+
+@app.post("/internal/delete", response_model=DeleteResponse, dependencies=[Depends(require_service_token)])
+def internal_delete(
+    body: DeleteRequest,
+    retriever: Retriever = Depends(get_retriever),
+) -> DeleteResponse:
+    removed = retriever.delete_document(user_id=body.user_id, knowledge_id=body.knowledge_id)
+    return DeleteResponse(
+        knowledge_id=body.knowledge_id,
+        deleted=True,
+        removed_points=removed,
+    )

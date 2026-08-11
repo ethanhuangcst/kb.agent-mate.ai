@@ -7,7 +7,7 @@
     "cancel": "Cancel"
   },
   "home": {
-    "tagline": "Private knowledge-base agent. Callers bring their own model; we manage knowledge and index after confirm.",
+    "tagline": "Your private knowledge base agent. A smart knowledge assistant, one-stop manage all your knowledge.",
     "guide": "Integration guide",
     "adminLogin": "Admin login"
   },
@@ -31,7 +31,50 @@
     "emailLabel": "Email",
     "submit": "Send link",
     "backLogin": "Back to sign-in",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "sent": "If that email is registered, a reset link is on its way.",
+    "mailUnavailable": "Email service is unavailable. Try again later.",
+    "rateLimited": "Too many requests. Try again later.",
+    "error": "Could not send the reset link."
+  },
+  "reset": {
+    "eyebrow": "Reset",
+    "title": "Set new password",
+    "lead": "Choose a new password for your admin account.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "submit": "Save password",
+    "backLogin": "Back to sign-in",
+    "backHome": "Back to home",
+    "checking": "Checking link…",
+    "invalidToken": "This reset link is invalid or has expired.",
+    "requestAgain": "Request a new link",
+    "mismatch": "Passwords do not match.",
+    "tooShort": "Password must be at least 8 characters.",
+    "error": "Could not reset password."
+  },
+  "acceptInvite": {
+    "eyebrow": "Invite",
+    "title": "Set password",
+    "lead": "Complete your admin account. Open registration stays closed.",
+    "emailLead": "Invite email",
+    "usernameLabel": "Username",
+    "usernameHint": "Starts with a letter; letters, digits, and ._- ; 3–64 chars; unique among admins.",
+    "usernameInvalid": "Username format is invalid.",
+    "usernameTaken": "That username is already taken.",
+    "nameLabel": "Name (English)",
+    "nameHint": "English letters, spaces, and .' - only.",
+    "nameInvalid": "Name must be English (letters and spaces).",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "submit": "Finish",
+    "checking": "Checking invite…",
+    "invalidToken": "This invite link is invalid or has expired.",
+    "backLogin": "Back to sign-in",
+    "backHome": "Back to home",
+    "mismatch": "Passwords do not match.",
+    "tooShort": "Password must be at least 8 characters.",
+    "error": "Could not accept the invite."
   },
   "changePassword": {
     "eyebrow": "Admin · first sign-in",
@@ -87,15 +130,36 @@
     "backList": "Back to list",
     "active": "active",
     "revoked": "revoked",
-    "adminsSoon": "Admin list opens in a later release."
+    "adminsLead": "You cannot delete yourself or the last active admin.",
+    "inviteAdmin": "Invite admin",
+    "inviteTitle": "Invite admin",
+    "inviteLead": "They receive a link to set a username, English name, and password. Open registration stays closed.",
+    "inviteEmailLabel": "Email",
+    "inviteSubmit": "Send invite",
+    "inviteSent": "Invite sent.",
+    "inviteFailed": "Could not send invite.",
+    "inviteMailUnavailable": "Email service is unavailable.",
+    "inviteEmailTaken": "An active admin already uses this email.",
+    "adminUsername": "Username",
+    "adminDisplayName": "Name",
+    "adminEmail": "Email",
+    "adminCreated": "Created",
+    "adminsEmpty": "No admins yet.",
+    "currentAccount": "Current account",
+    "deleteAdmin": "Delete",
+    "deleteConfirmTitle": "Delete this admin?",
+    "deleteConfirmBody": "They will no longer sign in. User API keys and knowledge are not affected.",
+    "deleteConfirmAction": "Delete"
   },
   "guide": {
     "title": "Integration guide",
     "back": "Back to home",
     "eyebrow": "Connect",
-    "lead": "Bring your own model. One API key; IDE and third-party transports differ."
+    "lead": "Private knowledge-base agent. Your personal knowledge assistant—broad coverage, one net, one place. Call it from IDEs and third-party tools via MCP, or from your own apps via REST API."
   },
   "locale": {
-    "label": "Language"
+    "label": "Language",
+    "zh": "中文",
+    "en": "EN"
   }
 }

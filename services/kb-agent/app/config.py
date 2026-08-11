@@ -17,6 +17,15 @@ class Settings(BaseSettings):
     qwen_api_key: str | None = None
     qwen_base_url: str | None = None
     qwen_chat_model: str | None = None
+    kb_import_max_files_per_batch: int = 20
+    kb_import_max_bytes_per_file: int = 5 * 1024 * 1024
+    kb_import_max_bytes_per_batch: int = 20 * 1024 * 1024
+    kb_external_search_rpm: int = 30
+    kb_fetch_rpm: int = 20
+    tavily_api_key: str | None = None
+    kb_source_use_fixture: bool = False
+    chat_facade_enabled: bool = False
+    chat_max_tool_iterations: int = 6
 
 
 def get_settings() -> Settings:

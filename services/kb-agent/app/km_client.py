@@ -49,6 +49,14 @@ def build_heuristic_overview(text: str, *, title: str | None = None) -> str:
 class KmClient(Protocol):
     def propose_metadata(self, *, text: str, title: str | None = None) -> dict[str, Any]: ...
 
+    def organize_suggestions(
+        self,
+        *,
+        action: str,
+        items: list[dict[str, Any]],
+        instruction: str | None = None,
+    ) -> list[dict[str, Any]]: ...
+
 
 class FakeKmClient:
     """CI / local fixture — no network."""
@@ -62,6 +70,42 @@ class FakeKmClient:
             "knowledge_type": "note",
             "tags": [],
         }
+
+    def organize_suggestions(
+        self,
+        *,
+        action: str,
+        items: list[dict[str, Any]],
+        instruction: str | None = None,
+    ) -> list[dict[str, Any]]:
+        _ = instruction
+        out: list[dict[str, Any]] = []
+        for it in items:
+            kid = it.get("knowledge_id")
+            tags = list(it.get("tags") or [])
+            project = it.get("project")
+            ktype = it.get("knowledge_type") or "note"
+            if action == "retag":
+                tags = sorted(set([*tags, "organized"]))
+            elif action == "reclassify":
+                ktype = "note"
+            elif action == "summarize":
+                pass
+            if instruction and "project:" in instruction.lower():
+                # e.g. "project:mvp3"
+                m = re.search(r"project\s*:\s*(\S+)", instruction, re.I)
+                if m:
+                    project = m.group(1)[:256]
+            out.append(
+                {
+                    "knowledge_id": kid,
+                    "project": project,
+                    "tags": tags,
+                    "knowledge_type": ktype,
+                    "rationale": f"fake-{action}",
+                }
+            )
+        return out
 
 
 class DashScopeKmClient:
@@ -98,6 +142,18 @@ class DashScopeKmClient:
         )
         raw = (resp.choices[0].message.content or "").strip()
         return _parse_km_json(raw, fallback_title=title, text=text)
+
+    def organize_suggestions(
+        self,
+        *,
+        action: str,
+        items: list[dict[str, Any]],
+        instruction: str | None = None,
+    ) -> list[dict[str, Any]]:
+        # Real KM organize is lightweight for MVP-3: reuse Fake heuristic until prompt tuned.
+        return FakeKmClient().organize_suggestions(
+            action=action, items=items, instruction=instruction
+        )
 
 
 def _parse_km_json(raw: str, *, fallback_title: str | None, text: str) -> dict[str, Any]:

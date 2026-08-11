@@ -15,7 +15,7 @@ related:
 # Logo 黄色灯泡光学左对齐
 
 ## Summary
-锁头 PNG 的包围盒含透明边与射线；视觉对齐应对准**黄色灯泡左缘**，不是图片左缘。全站用 `--logo-optical-shift`（56px 时 −19px）等比偏移。
+锁头 PNG 的包围盒含透明边与射线；视觉对齐应对准**黄色灯泡左缘**，不是图片左缘。全站用 `--logo-optical-shift`（56px 时 −19px）等比偏移。浏览器标签 favicon 使用同源黄泡（`app/favicon.ico` / `icon.png`），见 `specs/web-ui-design.md` 品牌资产。
 
 ## Evidence
 - 资产约 `600×600`；内容约 x=100 起，黄泡填充约 x=205 起（≈34% 画布宽）

@@ -33,6 +33,15 @@ npm test          # vitest
 npm run test:e2e  # Playwright（需 Postgres + ENABLE_TEST_RESET）
 ```
 
+## 品牌 / favicon
+
+浏览器标签与 Apple touch icon 使用品牌黄泡（与页内 `/logo.png` 同图），资产在：
+
+- `app/favicon.ico`、`app/icon.png`、`app/apple-icon.png`（App Router 约定）
+- `public/favicon.ico`、`public/favicon.png`、`public/apple-icon.png`（`metadata.icons`）
+
+规格见 `specs/web-ui-design.md`「品牌资产」。
+
 ## 文档
 
 - UI：`specs/web-ui-design.md`、`specs/mockup/`（含 `guide/` 截图）

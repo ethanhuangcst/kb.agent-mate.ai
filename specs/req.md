@@ -6,7 +6,7 @@
 ## 调用者
 
 - IDE，如 Cursor IDE / Cursor Agent 中的项目
-- 其他应用，如我自己开发的 HCP Engagement Assistant（https://hcp.agent-mate.ai）
+- 其他应用，如我自己开发的 MyPoke.Trade
 - 第三方工具如 ChatBox（chatboxai.app）
 
 上述调用方均须**自带大模型**（或由宿主应用接入 LLM），用于调用方一侧的意图理解、业务逻辑与知识消费。
@@ -74,14 +74,14 @@
 | **管理员** | Admin Web App（如 `/admin`） | 用户名或邮箱 + 密码（会话） | 邀请新管理员、登录、重设密码；签发 / 修改 / 吊销**使用者** API Key |
 | **使用者** | MCP / App / REST 等任意调用方 | **一把** API Key | 使用自己的**全局唯一**知识库；不按调用方拆 Key |
 
-- kb-agent 对每个使用者是**全局唯一知识库**；同一把 Key 可用于 ChatBox MCP、Cursor MCP、HCP App 等，无需按调用方区分。
+- kb-agent 对每个使用者是**全局唯一知识库**；同一把 Key 可用于 ChatBox MCP、Cursor MCP、MyPoke.Trade 等应用，无需按调用方区分。
 - **一人一把有效 API Key**；签发时管理员填写**使用者姓名**。
 - 使用者不能登录 Admin Web；管理员管理 Key 不依赖使用者自助注册。
 
 ### 管理员 Web（邀请制 R2 + Resend）
 
 - 登录、重设密码；邮件（验证/邀请/重置）经 **Resend** 发送。
-- **邀请制（R2）**：仅**已登录管理员**可邀请新管理员（输入邮箱 → Resend 发邀请链接 → 对方设置**英文姓名**与密码后成为管理员；顶栏显示 `Hello, {姓名}`）。**关闭**开放自助注册。
+- **邀请制（R2）**：仅**已登录管理员**可邀请新管理员（输入邮箱 → Resend 发邀请链接 → 对方设置**用户名**、**英文姓名**与密码后成为管理员；`username` 非空且唯一；顶栏显示 `Hello, {姓名}`）。**关闭**开放自助注册。
 - **初始化默认管理员**：Web / Admin 在库中尚无管理员时，自动创建默认账号 **用户名 `admin` / 密码 `admin` / 邮箱 `me@ethanhuang.com`**（`BOOTSTRAP_ADMIN_EMAIL` 可覆盖；`must_change_password=true`）。**仅该种子默认口令路径**须在登录后先改密，方可使用邀请、签发 Key 等管理能力。经**邀请设密**或**忘记密码重置**自选密码的管理员不走强制改密。之后新管理员只走邀请。
 - 管理台能力：
   - **管理员**：列表；邀请；删除（不可删自己；不可删光最后一名有效管理员）
@@ -99,7 +99,7 @@
 - 部署在香港 VPS 上；公网域名 **`kb.agent-mate.ai`**（HTTPS）
 - 后台是 RAG 服务
 - 知识存储放在 VPS 服务器上（本地目录或数据库）
-- 对 Cursor / ChatBox 等：以 **MCP** 为一等接入（Cursor：Streamable HTTP **`/mcp`**；ChatBox：遗留 SSE **`/sse`**；设计见 `specs/mcp-design.md`）；对 HCP 等：提供结构化 **REST**（与 MCP 工具共用领域层）
+- 对 Cursor / ChatBox 等：以 **MCP** 为一等接入（Cursor：Streamable HTTP **`/mcp`**；ChatBox：遗留 SSE **`/sse`**；设计见 `specs/mcp-design.md`）；对 MyPoke.Trade 等自有应用：提供结构化 **REST**（与 MCP 工具共用领域层）
 - 可选提供 OpenAI 兼容门面，但仅作为「调用同一套知识工具」的薄封装，**不**扩展为无边界业务 Agent
 - 提供 Admin Web App（同域不同路径即可，如 `https://kb.agent-mate.ai/admin`）
 

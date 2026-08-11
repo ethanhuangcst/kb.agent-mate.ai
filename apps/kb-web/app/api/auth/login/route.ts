@@ -21,15 +21,22 @@ export async function POST(req: NextRequest) {
       display_name: string | null;
       password_hash: string;
       must_change_password: boolean;
+      status: string;
+      session_version: number;
     }[]
   >`
-    SELECT id::text, username, email, display_name, password_hash, must_change_password
+    SELECT id::text, username, email, display_name, password_hash, must_change_password,
+           status, session_version
     FROM admin_users
     WHERE username = ${login} OR email = ${login}
     LIMIT 1
   `;
   const admin = rows[0];
-  if (!admin || !(await verifyPassword(password, admin.password_hash))) {
+  if (
+    !admin ||
+    admin.status !== "active" ||
+    !(await verifyPassword(password, admin.password_hash))
+  ) {
     return NextResponse.json({ code: "LOGIN_FAILED" }, { status: 401 });
   }
 
@@ -39,6 +46,7 @@ export async function POST(req: NextRequest) {
       username: admin.username,
       displayName: admin.display_name,
       mustChangePassword: admin.must_change_password,
+      sessionVersion: Number(admin.session_version),
     },
     {
       mustChangePassword: admin.must_change_password,

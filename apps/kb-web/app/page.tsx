@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { BrandLockup, SiteFooter } from "./site-chrome";
+import { BrandLockup, ShellLocale, SiteFooter } from "./site-chrome";
 
 export default async function HomePage() {
   const t = await getTranslations("home");
 
   return (
     <div className="home-shell">
+      <ShellLocale />
       <main className="home-main">
         <div className="home-card">
           <BrandLockup size="home" />
