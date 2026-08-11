@@ -21,7 +21,8 @@ function fromAddress(): string {
   return process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 }
 
-function useLogTransport(): boolean {
+/** Prefer log outbox when EMAIL_TRANSPORT=log or Resend key absent (not a React Hook). */
+function prefersLogTransport(): boolean {
   if (process.env.EMAIL_TRANSPORT === "log") return true;
   if (process.env.EMAIL_TRANSPORT === "resend") return false;
   return !process.env.RESEND_API_KEY;
@@ -35,7 +36,7 @@ export class MailUnavailableError extends Error {
 }
 
 async function send(kind: MailKind, to: string, subject: string, html: string, url: string): Promise<void> {
-  if (useLogTransport()) {
+  if (prefersLogTransport()) {
     logOutbox.push({ kind, to, subject, url });
     if (process.env.NODE_ENV !== "test") {
       console.info(`[email:log] ${kind} → ${to} ${url}`);

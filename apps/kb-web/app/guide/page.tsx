@@ -261,7 +261,11 @@ const copy = {
   },
 } as const;
 
-type Step = (typeof copy)["zh-CN"]["ideSteps"][number];
+type Step =
+  | (typeof copy)["zh-CN"]["ideSteps"][number]
+  | (typeof copy)["zh-CN"]["chatboxSteps"][number]
+  | (typeof copy)["en"]["ideSteps"][number]
+  | (typeof copy)["en"]["chatboxSteps"][number];
 
 function GuideStep({ step, index }: { step: Step; index: number }) {
   return (
