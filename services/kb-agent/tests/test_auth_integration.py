@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 import uuid
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -41,12 +40,6 @@ pytestmark = pytest.mark.skipif(not _db_available(), reason="Postgres not availa
 
 
 @pytest.fixture()
-def client() -> TestClient:
-    clear_engine_cache()
-    return TestClient(app)
-
-
-@pytest.fixture()
 def issued_key():
     """Create a user + active API key; yield (raw_key, user_id); cleanup after."""
     clear_engine_cache()
@@ -75,6 +68,13 @@ def issued_key():
     session.close()
 
 
+# client fixture: tests/conftest.py (module-scoped)
+@pytest.fixture()
+def client(api_client: TestClient) -> TestClient:
+    clear_engine_cache()
+    return api_client
+
+
 def test_bearer_whoami_resolves_user(client: TestClient, issued_key):
     raw, user_id, _key_id = issued_key
     resp = client.get("/api/v1/kb/whoami", headers={"Authorization": f"Bearer {raw}"})
@@ -83,30 +83,24 @@ def test_bearer_whoami_resolves_user(client: TestClient, issued_key):
     assert body["user_id"] == str(user_id)
 
 
-def test_body_user_id_ignored(client: TestClient, issued_key):
+def test_body_user_id_ignored(client: TestClient, issued_key, monkeypatch: pytest.MonkeyPatch):
     raw, user_id, _ = issued_key
-    empty_rag = MagicMock()
-    empty_rag.status_code = 200
-    empty_rag.json.return_value = {
-        "hits": [],
-        "sufficiency": {"enough": False, "reason": "no_hits"},
-    }
-    with patch("httpx.Client") as mock_client_cls:
-        mock_http = MagicMock()
-        mock_http.__enter__.return_value = mock_http
-        mock_http.__exit__.return_value = None
-        mock_http.post.return_value = empty_rag
-        mock_client_cls.return_value = mock_http
-        resp = client.post(
-            "/api/v1/kb/search",
-            headers={"Authorization": f"Bearer {raw}"},
-            json={"query": "hello", "user_id": "attacker-other-user"},
-        )
+    seen: list[uuid.UUID] = []
+
+    def fake_search(self, *, user_id, query, top_k=8):  # noqa: ANN001
+        seen.append(user_id)
+        from app.kb_service import SearchOutcome
+
+        return SearchOutcome(hits=[], enough=False, reason="no_hits")
+
+    monkeypatch.setattr("app.kb_service.KbService.search", fake_search)
+    resp = client.post(
+        "/api/v1/kb/search",
+        headers={"Authorization": f"Bearer {raw}"},
+        json={"query": "hello", "user_id": "attacker-other-user"},
+    )
     assert resp.status_code == 200
-    # RAG called with Bearer identity, not body user_id
-    call_kwargs = mock_http.post.call_args
-    assert call_kwargs.kwargs["json"]["user_id"] == str(user_id)
-    assert call_kwargs.kwargs["json"]["user_id"] != "attacker-other-user"
+    assert seen == [user_id]
 
 
 def test_revoked_key_is_401(client: TestClient, issued_key):
@@ -132,30 +126,27 @@ def test_same_key_multiple_clients(client: TestClient, issued_key):
     assert a.json()["user_id"] == b.json()["user_id"] == str(user_id)
 
 
-def test_empty_search_sufficiency_false(client: TestClient, issued_key):
+def test_empty_search_sufficiency_false(client: TestClient, issued_key, monkeypatch: pytest.MonkeyPatch):
     raw, user_id, _ = issued_key
-    empty_rag = MagicMock()
-    empty_rag.status_code = 200
-    empty_rag.json.return_value = {
-        "hits": [],
-        "sufficiency": {"enough": False, "reason": "no_hits"},
-    }
-    with patch("httpx.Client") as mock_client_cls:
-        mock_http = MagicMock()
-        mock_http.__enter__.return_value = mock_http
-        mock_http.__exit__.return_value = None
-        mock_http.post.return_value = empty_rag
-        mock_client_cls.return_value = mock_http
-        resp = client.post(
-            "/api/v1/kb/search",
-            headers={"Authorization": f"Bearer {raw}"},
-            json={"query": "anything"},
-        )
+    seen: list[uuid.UUID] = []
+
+    def fake_search(self, *, user_id, query, top_k=8):  # noqa: ANN001
+        seen.append(user_id)
+        from app.kb_service import SearchOutcome
+
+        return SearchOutcome(hits=[], enough=False, reason="no_hits")
+
+    monkeypatch.setattr("app.kb_service.KbService.search", fake_search)
+    resp = client.post(
+        "/api/v1/kb/search",
+        headers={"Authorization": f"Bearer {raw}"},
+        json={"query": "anything"},
+    )
     assert resp.status_code == 200
     body = resp.json()
     assert body["hits"] == []
     assert body["sufficiency"]["enough"] is False
-    assert mock_http.post.call_args.kwargs["json"]["user_id"] == str(user_id)
+    assert seen == [user_id]
 
 
 def test_settings_default_pepper():

@@ -1,8 +1,4 @@
-:root {
-  --font-ui: var(--font-outfit), "Noto Sans SC", "Outfit", system-ui, sans-serif;
-  --font-cn: var(--font-noto), "Noto Sans SC", "Outfit", system-ui, sans-serif;
-  --font-mono: var(--font-mono-g), "JetBrains Mono", ui-monospace, monospace;
-}
+/* App-only extras; font stacks live in admin-ui.css (same as specs/mockup/styles.css). */
 
 .error {
   color: #8b1a1a;

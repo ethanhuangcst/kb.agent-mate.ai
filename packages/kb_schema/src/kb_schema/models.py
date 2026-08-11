@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     DateTime,
     Enum,
@@ -16,6 +17,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Uuid
 
@@ -85,6 +87,7 @@ class ApiKey(Base):
     )
     key_hash: Mapped[str] = mapped_column(String(128), nullable=False, unique=True, index=True)
     key_prefix: Mapped[str] = mapped_column(String(32), nullable=False)
+    key_ciphertext: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[ApiKeyStatus] = mapped_column(
         Enum(ApiKeyStatus, name="api_key_status", native_enum=False, length=32),
         nullable=False,
@@ -117,6 +120,11 @@ class KnowledgeItem(Base):
         index=True,
     )
     project: Mapped[str | None] = mapped_column(String(256), nullable=True, index=True)
+    tags: Mapped[list] = mapped_column(
+        JSONB().with_variant(JSON(), "sqlite"),
+        nullable=False,
+        server_default="[]",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

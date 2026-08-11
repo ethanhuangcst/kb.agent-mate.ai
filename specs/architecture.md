@@ -29,7 +29,7 @@ kb-agent 是公网可调用的**私人知识库智能体**：以 MCP 工具（�
 | 调用方 | 接入 | 说明 |
 | --- | --- | --- |
 | Cursor | MCP（自定义 / 远程 MCP Server） | 宿主模型调工具；kb 不替代 Cursor 主模型 |
-| ChatBox | 自定义 MCP | 同上；用户所选 ChatBox 模型做消费侧推理 |
+| ChatBox | 自定义 MCP · Remote (http/sse) → **`/sse`** | 同上；勿配 `/mcp`（SSE GET 会 404） |
 | HCP Engagement Assistant | REST（及可选 MCP Client） | 应用侧已有 LLM；结构化 search / propose / confirm |
 
 可选：OpenAI 兼容 `/v1/chat/completions`，仅作为调用同一工具集的薄 harness（例如调试），系统策略必须执行与 MCP 相同的越界拒绝规则，不得变成方案 1 全功能业务 Agent。
@@ -83,9 +83,10 @@ Admin Web (/admin)
 | 签发输入 | **使用者姓名**（`display_name`） |
 | 全局唯一库 | 该用户所有项目知识在同一库内；可用 `project`/`tag` 过滤，不按调用方分库 |
 | 调用无关 | MCP 与 App 使用**同一把** Key |
-| 明文 | 仅签发（或重签）时显示一次；库内只存 `key_hash` + 可展示的 `key_prefix` |
+| 明文 | 签发/重签后写入库内 **`key_ciphertext`（AES-GCM）**；管理台可「查看」解密展示。鉴权仍用 `key_hash`；列表默认只显示 `key_prefix`（见 ADR-007） |
 | 重签 | 吊销旧 Key + 签发新 Key，**同一 `user_id`**，知识不断；姓名在签发时确定，管理台不提供改姓名 |
 | 吊销 | 确认后立即 401；管理列表移除该行；知识数据保留（使用者无法再经该 Key 访问） |
+| 查看 | 管理员对有效 Key 打开查看页：姓名 + 完整明文（可复制） |
 
 请求中的 `user_id` / 姓名**不可信**，不得覆盖 Key 解析出的身份。
 
@@ -99,7 +100,7 @@ Admin Web (/admin)
 | 开放注册 | **关闭** |
 | 登录 | 用户名或邮箱 + 密码 → HttpOnly Secure Cookie 会话；登录说明含「联系管理员」悬停微信二维码 |
 | 重设密码 | 邮箱 → Resend 重置链接（短时、一次性）→ 设新密码（成功后 `must_change_password=false`）；可使旧会话失效 |
-| 管理台 | **管理员**列表 / 邀请 / 删除（禁删自己、禁删最后一名）；**使用者**列表（仅有效 Key）；签发（英文姓名）/ 确认后吊销（列表移除）/ 重签（不提供改姓名） |
+| 管理台 | **管理员**列表 / 邀请 / 删除（禁删自己、禁删最后一名）；**使用者**列表（仅有效 Key）；签发（英文姓名）/ **查看（姓名+完整 Key）** / 确认后吊销（列表移除）/ 重签（不提供改姓名） |
 
 可选：`BOOTSTRAP_ADMIN_EMAIL` 绑定种子联系邮箱，**默认 `me@ethanhuang.com`**；**不**再作为创建首位管理员的唯一方式。未配置时仍落默认邮箱，可用 `admin` / `admin` 登录并强制改密。
 
@@ -147,7 +148,7 @@ Admin Web (/admin)
    - `OUT_OF_SCOPE_AUTO_INGEST` — 要求未确认批量入库
    - `INSUFFICIENT_KB_EVIDENCE` — 库内无据且调用方未授权外部补给
 3. **可附带建设性降级**（仍不越界）：
-   - 若可解析出「需要哪些公开知识」：可执行 `kb_search` 与/或外部候选检索，只返回**证据与来源**；
+   - 若可解析出「需要哪些公开知识」：可执行 `kb_internal_search` 与/或外部候选检索，只返回**证据与来源**；
    - 文案须声明：业务策略 / 洞察须由调用方 LLM 结合其业务数据完成。
 
 **坏例子（必须拒绝策略部分）：**
@@ -157,7 +158,7 @@ Admin Web (/admin)
 **合规应对：**
 
 - 拒绝「给出投放策略」及任何基于「本周 HCP 数据」的业务结论（kb-agent 也不应要求上传完整业务明细来「代算」）。
-- 若调用方改述为「检索公开可用来源中与某某竞品能力相关的资料候选」：允许 `kb_source_search` / `kb_fetch`，返回候选列表。
+- 若调用方改述为「检索公开可用来源中与某某竞品能力相关的资料候选」：允许 `kb_external_search` / `kb_fetch_url`，返回候选列表。
 - 投放策略由 HCP 应用侧 LLM 使用（业务数据 + 可选 kb 片段）自行生成。
 
 MCP 工具描述与（若存在）薄 Chat 系统提示必须写入上述边界，减少模型越权调用。
@@ -232,13 +233,14 @@ MCP 工具描述与（若存在）薄 Chat 系统提示必须写入上述边界�
 
 | 能力 | 作用 | 改库 |
 | --- | --- | --- |
-| `kb_search` | 库内语义 + 关键词检索，返回引用片段 | 否 |
+| `kb_internal_search` | 库内语义 + 关键词检索，返回引用片段 | 否 |
 | `kb_list` | 按 project / tag / 类型浏览 | 否 |
 | `kb_organize` | 体系归纳、标签/分类调整；破坏性变更可确认后写 | 视参数 |
-| `kb_source_search` | 经源路由的外部搜索，返回候选（不入库） | 否 |
-| `kb_fetch` | 按 URL 拉取正文（限额、超时、大小帽） | 否 |
-| `kb_propose_ingest` | 对粘贴 / fetch 正文生成提案（元数据 + 查重） | 仅 Pending |
-| `kb_confirm_ingest` | 确认单个 pending 后持久化并索引 | **是** |
+| `kb_external_search` | 经源路由的外部搜索，返回候选（不入库） | 否 |
+| `kb_fetch_url` | 按 URL 拉取正文（限额、超时、大小帽） | 否 |
+| `kb_propose_add` | 对粘贴 / fetch 正文生成提案（元数据 + ≤400 字内容概述 + 查重） | 仅 Pending |
+| `kb_confirm_add` | 确认单条 Pending → 索引 | **写库** |
+| `kb_knowledge_summary` | 读/刷新单条内容概述 | 仅 refresh 写元数据 |
 | `kb_import_documents` | 批量上传文档 → 解析 → 每文件一条 Pending，挂到 ImportBatch | 仅 Pending |
 | `kb_confirm_import_batch` | 对批次内指定 pending 或全部可确认项执行确认入库 | **是** |
 
@@ -260,12 +262,12 @@ MCP 工具描述与（若存在）薄 Chat 系统提示必须写入上述边界�
 意图（由调用方 LLM 给出 query / 约束 / 可选 URL）
         │
         ▼
-  kb_search（库内）── 已足够？──是──► 返回库内命中（可不再外部）
+  kb_internal_search（库内）── 已足够？──是──► 返回库内命中（可不再外部）
         │否（或调用方显式要求外部）
         ▼
   Source Router
         │
-        ├ user_url      → kb_fetch
+        ├ user_url      → kb_fetch_url
         ├ domain_docs   → 白名单域 / 文档站
         ├ web_general   → 通用 Web 检索适配器（如 Tavily）
         └ semantic_disc → 语义发现适配器（如 Exa，可选）
@@ -280,10 +282,10 @@ MCP 工具描述与（若存在）薄 Chat 系统提示必须写入上述边界�
   返回候选列表（不落库）
         │
         ▼ 调用方选用正文 / URL
-  kb_propose_ingest → PendingIngest
+  kb_propose_add → PendingIngest
         │
         ▼ 调用方确认
-  kb_confirm_ingest → Storage + Chunk + Embed + Qdrant
+  kb_confirm_add → Storage + Chunk + Embed + Qdrant
 ```
 
 ### 7.3 Source Registry（源注册表）
@@ -307,8 +309,8 @@ MCP 工具描述与（若存在）薄 Chat 系统提示必须写入上述边界�
 
 ### 7.4 选择策略（规范）
 
-1. **库内优先**：先 `kb_search`；仅当命中不足（条数、分数阈值）或调用方显式要求外部时，启用外部通道。
-2. **用户给定 URL 最高优先**：直接 `kb_fetch`，不强制先搜索。
+1. **库内优先**：先 `kb_internal_search`；仅当命中不足（条数、分数阈值）或调用方显式要求外部时，启用外部通道。
+2. **用户给定 URL 最高优先**：直接 `kb_fetch_url`，不强制先搜索。
 3. **禁止预测唯一源且无回退**：至少保留「偏好通道 + 一个回退通道」或小并行，再在证据层截断。
 4. **融合**：多通道结果合并后排序（检索分、RRF 或简单加权）；截断到上下文 / 响应预算。
 5. **适配器分工**：通用事实与 Agent 友好结构化结果偏 Web 检索层；概念/相似文档发现可用语义发现层；**合成答案型 API 不作为入库主通道**。
@@ -354,7 +356,7 @@ multipart 多文件（+ 可选默认 project/tags）
   返回 batch_id + 各文件提案摘要 / 失败列表（仍不落正式库）
         │
         ▼ 调用方
-  逐条 kb_confirm_ingest(pending_id)
+  逐条 kb_confirm_add(pending_id)
   或 kb_confirm_import_batch(batch_id, pending_ids? | confirm_all_viable=true)
 ```
 
@@ -449,7 +451,7 @@ User（使用者 — 知识库主人）
 
 ApiKey
   id, user_id          # 一人最多一把 active
-  key_hash, key_prefix
+  key_hash, key_prefix, key_ciphertext?   # ciphertext = AES-GCM；鉴权用 hash；管理查看解密（ADR-007）
   status(active|revoked), created_at, revoked_at?
 
 KnowledgeItem
@@ -488,12 +490,14 @@ SourceChannel / SourceConfig
 
 | 方法 | 路径 | 用途 |
 | --- | --- | --- |
-| `POST` | `/api/v1/kb/search` | 库内检索 |
-| `GET` | `/api/v1/kb/items` | 列表过滤 |
-| `GET` | `/api/v1/kb/items/{id}` | 详情 |
+| `POST` | `/api/v1/kb/search` | 库内检索（hit 可带 `title` / `summary`） |
+| `GET` | `/api/v1/kb/items` | 列表过滤（含 `summary` 概述） |
+| `GET` | `/api/v1/kb/items/{id}/summary` | 读单条内容概述（≤400 字） |
+| `POST` | `/api/v1/kb/items/{id}/summary/refresh` | KM 重生概述并写回 |
+| `GET` | `/api/v1/kb/items/{id}` | 详情（路线图） |
 | `POST` | `/api/v1/kb/sources/search` | 外部候选检索 |
 | `POST` | `/api/v1/kb/fetch` | URL 拉取 |
-| `POST` | `/api/v1/kb/proposals` | 创建单条提案 |
+| `POST` | `/api/v1/kb/proposals` | 创建单条提案（KM 写入概述） |
 | `POST` | `/api/v1/kb/proposals/{id}/confirm` | 确认单条入库 |
 | `POST` | `/api/v1/kb/imports` | 批量上传文档（multipart）→ 创建 ImportBatch + 多条提案 |
 | `GET` | `/api/v1/kb/imports/{batch_id}` | 批次状态与提案/失败列表 |
@@ -504,7 +508,8 @@ SourceChannel / SourceConfig
 
 鉴权：`Authorization: Bearer <api_key>`（`/healthz` 除外）。越界与校验失败返回稳定 `code`。
 
-MCP：使用 Streamable HTTP（路径 **`/mcp`**）或 ChatBox / Cursor 所支持的远程 MCP 传输；工具 schema 与上表语义一致；**配置同一把使用者 Key**。细则见 [`specs/mcp-design.md`](./mcp-design.md)。
+概述语义见 [`knowledge-summary.md`](./knowledge-summary.md)。MCP 工具含 `kb_knowledge_summary`。
+MCP：Cursor 用 Streamable HTTP（**`/mcp`**）；ChatBox 用遗留 SSE（**`/sse`** + **`/messages/`**）。工具 schema 与上表语义一致；**配置同一把使用者 Key**。细则见 [`specs/mcp-design.md`](./mcp-design.md)。
 
 ### 11.2 管理员 Web / Admin API（会话）
 
@@ -541,7 +546,7 @@ Admin API 仅接受管理员会话，不接受使用者 API Key 做邀请、签�
 | ORM / 客户端 | 优先 `SQLAlchemy` / `psycopg`（或 Drizzle 仅若 Admin BFF 需独立访问）；避免第二套 ORM | — |
 | AI | `openai` SDK → 通义千问 DashScope compatible-mode（内部 KM 对话 / 结构化 JSON）；Embedding 走 DashScope 文本向量模型 | openai 6.x |
 | 邮件 | Resend（管理员邀请 / 重置密码） | — |
-| 网关 / 编排 | 生产：野草云3 · NPM · Portainer（见 release-bot）；本地：Docker Compose + Makefile `dev` / `up` / `down` | — |
+| 网关 / 编排 | 生产：野草云3 · NPM · Portainer（见 release-bot）；本地：Docker Compose + Makefile（`up-daemon` / `up` / `down`；ADR-008） | — |
 | 测试 | Vitest · RTL · Playwright（Admin Web）；pytest（Agent / RAG） | 按锁文件钉死 |
 
 规则：尽量少依赖；优先平台与标准库；**应用持久化使用 PostgreSQL**——禁止把用户/业务数据写入本地 JSON（`data/`）或 **SQLite** 作为正式存储（测试 fixtures / 临时种子除外）。向量检索使用 **Qdrant**（非业务关系库）。只接入产品实际需要的第三方能力——不要默认把未列出的服务都接上。
@@ -556,7 +561,7 @@ Admin API 仅接受管理员会话，不接受使用者 API Key 做邀请、签�
 | **kb-agent** | FastAPI：MCP + 知识 REST + 越界策略；调用 RAG / 外部源 | DashScope chat（KM）、Resend 不必须；`RAG_BASE_URL` + 凭证；外部搜索适配器密钥；**无** 浏览器会话 |
 | **kb-rag** | FastAPI：分块 / 向量 / 混合检索 / 确认后索引 | Embedding、`DATABASE_URL`（元数据）、`QDRANT_URL`；**无** 用户会话、**无** DashScope chat（除非改写放本服务） |
 
-浏览器只访问 **kb-web**（及经反代的公开 MCP/API，生产域名为 `kb.agent-mate.ai`）。Agent / RAG / Qdrant / Postgres 端口不对公网。本地 `make up` 应拉起三者（+ Postgres + Qdrant + 可选本地反代）。
+浏览器只访问 **kb-web**（及经反代的公开 MCP/API，生产域名为 `kb.agent-mate.ai`）。Agent / RAG / Qdrant / Postgres 端口不对公网。本地推荐 **`make up-daemon`** 拉起 Postgres + Qdrant + kb-agent + kb-rag + kb-web（double-fork，避免挂在 Cursor Agent 进程树下被回收；见 `specs/knowledge/ops/local-apps-keep-dying.md`）。终端外也可 `make up`（仅 agent/rag）再另开 `npm run dev`。
 
 ### 最小依赖策略
 

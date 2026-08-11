@@ -51,9 +51,11 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 
 | 角色 | 字体 | 用法 |
 | --- | --- | --- |
-| UI / 英文标题 | Outfit 400–600 | `h1`、主按钮、logo 词、Hello |
+| UI / 英文标题 | Outfit 400–600（Google Fonts，与 mockup `@import` 同源） | `h1`、主按钮、logo 词、Hello |
 | 中文正文 | Noto Sans SC 400–600 | 正文、表格、表单值 |
 | 元数据 | JetBrains Mono | eyebrow、表头、状态、Key 前缀 |
+
+实现：`apps/kb-web` 与 `specs/mockup/styles.css` 共用同一套 `--font-ui` / `--font-cn` / `--font-mono` 与 Google Fonts URL；**不**用 `next/font` 以免子集/度量偏差。
 
 根字号：桌面 `17px`，≤720px `16px`。行高正文约 `1.65`。  
 顶栏站名约 `1.2rem`；首页 / auth 锁头站名约 `1.35rem`（≤720px 约 `1.1rem`）。
@@ -142,20 +144,24 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 | --- | --- |
 | 壳 | `.guide-shell` + 顶栏品牌 + `.guide-body` + 页脚 |
 | 内容宽 | `max-width: 42rem` |
-| 章节 | 1 架构 → 2 获取 Key；顶 TOC 锚点跳转 |
+| 章节 | 1 架构 → 2 获取 Key → **3 IDE 接入**（Cursor / CodeBuddy）→ **4 第三方工具**（ChatBox）；顶 TOC 锚点 |
 | 架构四段 | 调用者是谁 → 提供什么 → 两种调用方式 → 大模型怎么分工 |
 | 结构图 | `.guide-arch-diagram`：MCP / REST 汇合 → Bearer → kb → 私人库；左边 3px 墨线 |
-| 双栏 | `.guide-modes`：调用方式（MCP \| REST）；模型分工（你自带 \| 本站内嵌）；发丝分割、非卡片 |
-| MCP 接入 | Streamable HTTP；URL **`/mcp`**（本地 `http://127.0.0.1:8000/mcp`，生产 `https://kb.agent-mate.ai/mcp`）；Bearer = 使用者 Key。见 `specs/mcp-design.md` |
-| 文风 | 使用者视角、极简；`.guide-note` 收束要点 |
+| 双栏 | `.guide-modes`：调用方式（MCP \| REST）；模型分工 |
+| 步骤图 | `.guide-steps` / `.guide-step-head`（编号+文案）+ `.guide-figure`（**全宽**，与 `.guide-modes` / `.guide-code` 左右对齐）；`ol.guide-steps` 须 `padding-left: 0`（覆盖 `.guide-body ol`） |
+| MCP 接入 | §3：Customize → MCPs → `mcp.json` stdio（模板见 `deployment-plan` §7.1 B）；远程备选 `/mcp`。§4：ChatBox Remote (http/sse) **`/sse`**。见 `mcp-design.md` |
+| 资产 | `apps/kb-web/public/guide/*.png`（与 `specs/mockup/guide/` 同步） |
+| 文风 | 使用者视角、极简；`.guide-note` 收束要点与路径警告 |
 
 ```text
 ┌─ 顶栏 logo · 返回首页 ──────────────┐
 │  Connect / 接入指南 / lead           │
-│  TOC: 1 架构 · 2 Key                 │
+│  TOC: 1 架构 · 2 Key · 3 IDE · 4 工具│
 │  谁 → 提供什么 → 结构图+双门面       │
 │  你的模型 | 本站内嵌模型             │
 │  获取 Key                            │
+│  §3 Cursor 步骤 + mcp.json + CodeBuddy│
+│  §4 ChatBox 步骤（SSE /sse）         │
 │              copyright ® Ethan Huang │
 └──────────────────────────────────────┘
 ```
@@ -233,7 +239,8 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 - 标签：mono 大写追踪；输入为底边线（无盒）。
 - 签发姓名：输入框**上方**提示「仅允许输入英文」；placeholder `Daniel Foster`；前后端校验拉丁字母姓名；输入控件须抑制 macOS Contacts 自动填充干扰（勿用可见 honeypot 假字段）。
 - 表头：mono 大写；行操作右对齐文本按钮。
-- Key 明文：`.code-block` + 右上角复制图标；`white-space: nowrap` + 横向滚动，禁止断行；警告句用 `--mute`。
+- Key 明文：`.code-block` + 右上角复制图标；`white-space: nowrap` + 横向滚动，禁止断行；签发结果页可提示「请立即复制并安全存放」（**不**再写「仅此一次 / 离开后无法查看」）。
+- 查看 Key：列表操作「查看」→ 页眉无「仅此一次」；上方 `.key-meta` 显示姓名；下方同款 `.code-block` 展示可复制明文（mockup：`view-key.html`）。
 - 吊销：确认对话框文案「确认吊销该秘钥？」→ Key 立即失效 → 列表只保留有效 Key 行；知识数据仍保留，但使用者无法再访问。
 
 ---

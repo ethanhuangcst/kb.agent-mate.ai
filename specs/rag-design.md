@@ -224,7 +224,7 @@ on failure:
 | 步骤 | RAG | 内部 Qwen |
 | --- | --- | --- |
 | 分块 / 向量 / 检索 | 是 | 否 |
-| 提案 title/summary/tags | 否 | 是（propose 管道） |
+| 提案 title/summary/tags | 否 | 是（propose 管道；`summary` = ≤400 字内容概述，见 `knowledge-summary.md`） |
 | query rewrite | 可选触发 | 是 |
 | 证据 LLM 打分 | 可选后置 | 是（非基线必做） |
 | 业务回答 | 否 | 否 |
@@ -268,5 +268,5 @@ QDRANT_COLLECTION=kb_chunks
 
 ## 12. 接口契约（供 Agent / REST）
 
-`kb_search` / `POST /api/v1/kb/search` 返回上述 `Hit[]`，外加可选 `sufficiency` 信号。  
+`kb_internal_search` / `POST /api/v1/kb/search` 返回上述 `Hit[]`，外加可选 `sufficiency` 信号。  
 不在 RAG 层返回「最终业务结论」字符串（薄 Chat 门面若拼接，须在 Agent 设计中约束）。

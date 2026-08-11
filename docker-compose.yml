@@ -85,6 +85,7 @@ services:
       DATABASE_URL: postgresql://kb:kb_dev_password@postgres:5432/kb_agent
       SESSION_SECRET: ${SESSION_SECRET:-dev-session-secret-change-me-32chars}
       API_KEY_PEPPER: ${API_KEY_PEPPER:-dev-api-key-pepper-change-me}
+      API_KEY_ENCRYPTION_SECRET: ${API_KEY_ENCRYPTION_SECRET:-}
       AGENT_BASE_URL: http://kb-agent:8000
       NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
     ports:

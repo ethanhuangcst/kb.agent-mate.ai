@@ -61,13 +61,14 @@ MCP Server 与 REST 调用**同一** `KbService` 方法，避免双实现。
 
 | 工具名 | 简述 | 副作用 |
 | --- | --- | --- |
-| `kb_search` | 库内混合检索，返回 hits + sufficiency | 无 |
+| `kb_internal_search` | 库内混合检索，返回 hits + sufficiency | 无 |
 | `kb_list` | 按 project/tag/type/时间列表 | 无 |
 | `kb_organize` | 体系摘要或标签/分类调整建议；写操作需明确 flag | 视参数 |
-| `kb_source_search` | 源路由外部候选（不入库） | 无（出站） |
-| `kb_fetch` | URL 拉正文 | 无（出站） |
-| `kb_propose_ingest` | 粘贴/正文 → Pending | Pending |
-| `kb_confirm_ingest` | 确认单条 Pending → 索引 | **写库** |
+| `kb_external_search` | 源路由外部候选（不入库） | 无（出站） |
+| `kb_fetch_url` | URL 拉正文 | 无（出站） |
+| `kb_propose_add` | 粘贴/正文 → Pending（KM 生成 ≤400 字内容概述写入 `summary`） | Pending |
+| `kb_confirm_add` | 确认单条 Pending → 索引 | **写库** |
+| `kb_knowledge_summary` | 按 id 读取内容概述；可选 `refresh` 重生并写回 | 仅 refresh 写元数据 |
 | `kb_import_documents` | 多文件 → ImportBatch + Pendings | Pending |
 | `kb_confirm_import_batch` | 批确认 | **写库** |
 
@@ -77,16 +78,20 @@ MCP Server 与 REST 调用**同一** `KbService` 方法，避免双实现。
 
 | 工具名 | REST 等价（概念） | MVP |
 | --- | --- | --- |
-| `kb_search` | `POST /api/v1/kb/search` | 1 空检索；2 真命中+citation |
-| `kb_propose_ingest` | propose 正文/粘贴 | 2 |
-| `kb_confirm_ingest` | confirm → 索引 | 2 |
-| `kb_list_knowledge`（可选同批） | list | 2 |
+| `kb_internal_search` | `POST /api/v1/kb/search` | 1 空检索；2 真命中+citation；hit 可带 `summary` |
+| `kb_propose_add` | propose 正文/粘贴；`summary`≤400 字概述 | 2 |
+| `kb_confirm_add` | confirm → 索引 | 2 |
+| `kb_list_knowledge`（可选同批） | list（含 `summary`） | 2 |
+| `kb_knowledge_summary` | 读/刷新单条概述 | 2+（方案 1+2） |
+
+专文：[`knowledge-summary.md`](./knowledge-summary.md)。
 
 硬约束：
 
 - MCP 与 REST **同一** `KbService`；禁止第二套业务逻辑（故事 `mcp-04`）。  
-- 传输：Streamable HTTP，路径固定 **`/mcp`**（本地 `http://127.0.0.1:8000/mcp`；生产 `https://kb.agent-mate.ai/mcp`）。细则与故事见 [`mcp-design.md`](./mcp-design.md)、`mcp-01`…`mcp-05`。  
+- 传输：Cursor = Streamable HTTP **`/mcp`**；ChatBox = legacy SSE **`/sse`**（本地 `http://127.0.0.1:8000/sse`）。细则见 [`mcp-design.md`](./mcp-design.md)、`mcp-01`…`mcp-05`。  
 - Bearer = 管理台签发的使用者 Key（`mcp-02`）。  
+- 本地起栈推荐 **`make up-daemon`**（[`knowledge/ops/local-apps-keep-dying.md`](./knowledge/ops/local-apps-keep-dying.md)）。  
 - DoD：`USE_FAKE_EMBEDDER=false`；真 Qdrant；Cursor 手测 propose→confirm→search（`mcp-05`）。  
 - **不**在 MVP-2 暴露 import / source_search / fetch / organize（属 MVP-3 / MVP-4；`mcp-06` 扩展）。
 
@@ -98,18 +103,19 @@ MCP Server 与 REST 调用**同一** `KbService` 方法，避免双实现。
 - 「不生成业务策略 / 投放结论 / 竞品战略」  
 - 「仅操作用户 Key 所属知识库」
 
-`kb_search` 说明：返回供引用的片段；由调用方模型组织对用户的回答。
+`kb_internal_search` 说明：返回供引用的片段；由调用方模型组织对用户的回答。
 
 ### 4.2 建议参数形状（概念）
 
 ```text
-kb_search(query, project?=, tags?=, top_k?=)
+kb_internal_search(query, project?=, tags?=, top_k?=)
 kb_list(project?=, tag?=, knowledge_type?=, limit?=)
 kb_organize(action=summarize|retag|reclassify, …, apply?=false)
-kb_source_search(query, constraints?=, project?=)
-kb_fetch(url)
-kb_propose_ingest(text, title?=, project?=, tags?=)
-kb_confirm_ingest(pending_id)
+kb_external_search(query, constraints?=, project?=)
+kb_fetch_url(url)
+kb_propose_add(text, title?=, project?=, tags?=)
+kb_confirm_add(pending_id)
+kb_knowledge_summary(knowledge_id?=, pending_id?=, refresh?=false)
 kb_import_documents(files[], default_project?=, default_tags?=)  # MCP 侧或走 REST multipart
 kb_confirm_import_batch(batch_id, pending_ids?=, confirm_all_viable?=false)
 ```
@@ -148,7 +154,7 @@ loop (max_iters):
 
 1. **工具层：** 不存在 `generate_strategy` 类工具 → 结构上难越界。  
 2. **参数 / 意图启发式（KbService 入口）：** 对「自由文本指令」类可选入口（若有）做关键词/分类器；MCP 主路径以工具为准。  
-3. **organize / propose 的用户说明字段：** 若检测到「请直接给出投放策略」等，返回 `OUT_OF_SCOPE_BUSINESS_REASONING`，可建议改用 `kb_source_search`。  
+3. **organize / propose 的用户说明字段：** 若检测到「请直接给出投放策略」等，返回 `OUT_OF_SCOPE_BUSINESS_REASONING`，可建议改用 `kb_external_search`。  
 4. **confirm：** 不接受「auto_ingest_all_web=true」。
 
 ### 6.2 错误码（与架构一致）
@@ -170,7 +176,7 @@ loop (max_iters):
 
 - 若经薄 Chat：模型若乱调工具，仍**不得**有「输出策略」的服务端成功路径；最终回复模板拒绝策略部分。  
 - 若仅 MCP：无策略工具；调用方模型若自行编造策略，不属 kb-agent 输出。  
-- 允许：`kb_source_search("竞品 X 公开能力")` → 候选列表。
+- 允许：`kb_external_search("竞品 X 公开能力")` → 候选列表。
 
 ---
 
@@ -180,7 +186,7 @@ loop (max_iters):
 
 ```text
 User → 宿主 LLM
-LLM → kb_search(q)
+LLM → kb_internal_search(q)
 kb → Hits[]
 LLM → 用 hits 生成对用户回答（带引用 id）
 ```
@@ -188,13 +194,13 @@ LLM → 用 hits 生成对用户回答（带引用 id）
 ### 7.2 外部补给并入库
 
 ```text
-LLM → kb_search(q)           # 不足
-LLM → kb_source_search(q)
-LLM → kb_fetch(url)          # 用户/模型选定
-LLM → kb_propose_ingest(text)
+LLM → kb_internal_search(q)           # 不足
+LLM → kb_external_search(q)
+LLM → kb_fetch_url(url)          # 用户/模型选定
+LLM → kb_propose_add(text)
 LLM → 向用户展示提案，等待确认
 User → 「确认」
-LLM → kb_confirm_ingest(pending_id)
+LLM → kb_confirm_add(pending_id)
 ```
 
 ### 7.3 批量文档
@@ -221,10 +227,10 @@ LLM → kb_organize(..., apply=true)  # 或先提案再确认（若破坏性变�
 
 ```text
 你通过 MCP 使用 kb-agent。
-- 用 kb_search 取知识；回答基于返回片段并引用。
+- 用 kb_internal_search 取知识；回答基于返回片段并引用。
 - 新材料：propose 后必须等用户确认再 confirm。
 - 不要让 kb-agent 写业务策略；策略由你结合用户业务数据自行完成。
-- 库内不足时可用 kb_source_search / kb_fetch，仍须确认才入库。
+- 库内不足时可用 kb_external_search / kb_fetch_url，仍须确认才入库。
 ```
 
 服务端 MCP `instructions` 字段应包含同样边界摘要。
@@ -254,10 +260,10 @@ LLM → kb_organize(..., apply=true)  # 或先提案再确认（若破坏性变�
 
 | Agent 工具 | 下游 |
 | --- | --- |
-| `kb_search` | `Retriever`（rag-design） |
+| `kb_internal_search` | `Retriever`（rag-design） |
 | `kb_confirm_*` | `Indexer`（rag-design） |
 | `kb_propose_*` / import | Deduper + QwenKM 元数据 + Pending |
-| `kb_source_search` / `kb_fetch` | Source Router / Fetch（architecture §7） |
+| `kb_external_search` / `kb_fetch_url` | Source Router / Fetch（architecture §7） |
 
 ---
 

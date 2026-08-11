@@ -20,11 +20,13 @@
       <article class="guide-body">
         <p class="eyebrow">Connect</p>
         <h1>接入指南</h1>
-        <p class="lead">你带着自己的模型来用私人知识库。一把 API Key，两种接入方式。</p>
+        <p class="lead">你带着自己的模型来用私人知识库。一把 API Key；IDE 与第三方工具传输不同。</p>
 
         <nav class="guide-toc" aria-label="章节">
           <a href="#architecture">1. 架构</a>
           <a href="#key">2. 获取 Key</a>
+          <a href="#ide">3. IDE 接入</a>
+          <a href="#tools">4. 第三方工具</a>
         </nav>
 
         <section id="architecture" class="guide-section">
@@ -32,7 +34,7 @@
 
           <h3 id="who" class="guide-sub">调用者是谁</h3>
           <ul class="guide-list">
-            <li><strong>IDE</strong> — 如 Cursor 里的 Agent / 项目会话</li>
+            <li><strong>IDE</strong> — 如 Cursor、CodeBuddy 里的 Agent / 项目会话</li>
             <li><strong>聊天客户端</strong> — 如 ChatBox</li>
             <li><strong>自有应用</strong> — 如 HCP Engagement Assistant</li>
           </ul>
@@ -49,7 +51,7 @@
           <h3 id="modes" class="guide-sub">两种调用方式</h3>
           <figure class="guide-arch" aria-label="系统结构">
             <pre class="guide-arch-diagram" role="img" aria-label="调用方经 MCP 或 REST，用同一把 Bearer Key 进入 kb.agent-mate.ai，再访问按用户隔离的私人知识库">
-<span class="arch-muted">Cursor / ChatBox</span>          <span class="arch-muted">HCP / 自有 App</span>
+<span class="arch-muted">IDE / ChatBox</span>          <span class="arch-muted">HCP / 自有 App</span>
       │ <span class="arch-accent">MCP</span>                     │ <span class="arch-accent">REST</span>
       └───────────┬───────────────┘
                   │ <span class="arch-accent">Bearer API Key</span>
@@ -63,8 +65,8 @@
           <div class="guide-modes">
             <div class="guide-mode">
               <p class="guide-mode-label">MCP</p>
-              <p class="guide-mode-who">Cursor · ChatBox</p>
-              <p>远程 MCP（Streamable HTTP）：URL <span class="mono">/mcp</span>（本地 <span class="mono">http://127.0.0.1:8000/mcp</span>；生产 <span class="mono">https://kb.agent-mate.ai/mcp</span>）。宿主模型按工具调用检索 / 提案 / 确认；与 REST 同一把 Key。</p>
+              <p class="guide-mode-who">IDE · ChatBox</p>
+              <p>远程 MCP 工具面（检索 / 提案 / 确认 / 列表 / 内容概述 ≤400 字）。IDE 与第三方客户端传输不同，见第 3–4 节。</p>
             </div>
             <div class="guide-mode">
               <p class="guide-mode-label">REST</p>
@@ -72,7 +74,7 @@
               <p>HTTP 调 <span class="mono">/api/v1/kb/*</span>；与 MCP 同一套能力语义。</p>
             </div>
           </div>
-          <p class="guide-note">两种方式共用一把 Key、同一知识库；请求体里的用户标识不能覆盖 Key 身份。</p>
+          <p class="guide-note">MCP 与 REST 共用一把 Key、同一知识库；请求体里的用户标识不能覆盖 Key 身份。</p>
 
           <h3 id="llm-boundary" class="guide-sub">大模型怎么分工</h3>
           <div class="guide-modes guide-roles">
@@ -90,7 +92,7 @@
               <ul>
                 <li>库内检索、列表、体系整理辅助</li>
                 <li>外部候选检索与正文拉取</li>
-                <li>入库提案：摘要、分类建议、查重</li>
+                <li>入库提案：≤400 字内容概述、分类建议、查重</li>
                 <li>确认后的持久化与向量化</li>
               </ul>
             </div>
@@ -100,12 +102,143 @@
 
         <section id="key" class="guide-section">
           <h2>2. 获取 API Key</h2>
-          <ol>
-            <li>请管理员在管理台签发使用者 Key（明文仅显示一次）。</li>
-            <li>请求头：<span class="mono">Authorization: Bearer &lt;api_key&gt;</span>（MCP 与 REST 相同）。</li>
-            <li>Cursor / ChatBox：Transport = Streamable HTTP，URL = <span class="mono">…/mcp</span>，粘贴上述 Bearer。</li>
-            <li>吊销立即失效；重签换密钥，知识库保留。</li>
+          <p>管理员在管理台签发使用者 Key；列表可再次「查看」完整明文。MCP 与 REST 使用同一把 Key。</p>
+          <p>请求头：<span class="mono">Authorization: Bearer &lt;api_key&gt;</span></p>
+          <p class="guide-note">吊销立即失效；重签换密钥，知识库保留。</p>
+        </section>
+
+        <section id="ide" class="guide-section">
+          <h2>3. IDE 接入</h2>
+          <p class="guide-note">以 Cursor 与 CodeBuddy 为例。本地推荐 stdio（mcp.json）；也可使用远程 Streamable HTTP。</p>
+
+          <h3 class="guide-sub">Cursor</h3>
+          <ol class="guide-steps">
+            <li class="guide-step">
+              <div class="guide-step-head">
+                <p class="guide-step-index">01</p>
+                <div class="guide-step-copy">
+                  <h3 class="guide-step-title">打开 Cursor Settings</h3>
+                  <p>菜单 Cursor → Preferences → Cursor Settings（或 ⌘,）。</p>
+                </div>
+              </div>
+              <figure class="guide-figure">
+                <img src="guide/cursor-01-settings.png" alt="Cursor 菜单打开 Preferences → Cursor Settings" width="1200" height="750" />
+                <figcaption>Cursor 菜单打开 Preferences → Cursor Settings</figcaption>
+              </figure>
+            </li>
+            <li class="guide-step">
+              <div class="guide-step-head">
+                <p class="guide-step-index">02</p>
+                <div class="guide-step-copy">
+                  <h3 class="guide-step-title">进入 Customize</h3>
+                  <p>左侧栏选择 Customize（Plugins、MCPs、Skills 已迁至此）。</p>
+                </div>
+              </div>
+              <figure class="guide-figure">
+                <img src="guide/cursor-02-customize.png" alt="Cursor Settings 左侧栏高亮 Customize" width="1200" height="750" />
+                <figcaption>Cursor Settings 左侧栏高亮 Customize</figcaption>
+              </figure>
+            </li>
+            <li class="guide-step">
+              <div class="guide-step-head">
+                <p class="guide-step-index">03</p>
+                <div class="guide-step-copy">
+                  <h3 class="guide-step-title">MCPs → New MCP Server</h3>
+                  <p>筛选 MCPs，点击 New MCP Server / Add a Custom MCP Server。</p>
+                </div>
+              </div>
+              <figure class="guide-figure">
+                <img src="guide/cursor-03-new-mcp.png" alt="Customize 中 MCPs 分类与 New MCP Server" width="1200" height="750" />
+                <figcaption>Customize 中 MCPs 分类与 New MCP Server</figcaption>
+              </figure>
+            </li>
+            <li class="guide-step">
+              <div class="guide-step-head">
+                <p class="guide-step-index">04</p>
+                <div class="guide-step-copy">
+                  <h3 class="guide-step-title">按模板填写 mcp.json</h3>
+                  <p>在打开的 mcp.json 中配置 kb-agent（stdio）。KB_API_KEY 填使用者 Key 明文；API_KEY_PEPPER 须与签发环境一致。</p>
+                </div>
+              </div>
+              <figure class="guide-figure">
+                <img src="guide/cursor-04-mcp-json.png" alt="mcp.json 中 kb-agent stdio 与 env 示例" width="1200" height="750" />
+                <figcaption>mcp.json 中 kb-agent stdio 与 env 示例</figcaption>
+              </figure>
+            </li>
           </ol>
+
+          <p class="guide-code-label">mcp.json 模板（占位符换成你本机路径与密钥；勿提交到 Git）</p>
+          <pre class="guide-code"><code>{
+  "mcpServers": {
+    "kb-agent": {
+      "command": "&lt;REPO&gt;/.venv/bin/python",
+      "args": ["-m", "app.mcp_stdio"],
+      "cwd": "&lt;REPO&gt;/services/kb-agent",
+      "env": {
+        "KB_API_KEY": "&lt;paste_plaintext_user_api_key&gt;",
+        "API_KEY_PEPPER": "&lt;same_as_agent_and_admin_dotenv&gt;",
+        "DATABASE_URL": "postgresql+psycopg://kb:&lt;password&gt;@127.0.0.1:5434/kb_agent",
+        "RAG_BASE_URL": "http://127.0.0.1:8001",
+        "RAG_SERVICE_TOKEN": "&lt;same_as_dotenv&gt;",
+        "BLOB_ROOT": "&lt;REPO&gt;/data/blob",
+        "PYTHONPATH": "&lt;REPO&gt;/services/kb-agent"
+      }
+    }
+  }
+}</code></pre>
+          <p class="guide-note">远程备选：Transport = Streamable HTTP，URL 本地 <span class="mono">http://127.0.0.1:8000/mcp</span>，生产 <span class="mono">https://kb.agent-mate.ai/mcp</span>，鉴权 <span class="mono">Authorization: Bearer &lt;api_key&gt;</span>。不要填 <span class="mono">/sse</span>。</p>
+          <p class="guide-note">CodeBuddy：在 MCP / 插件设置中新增服务器，字段与上表相同——本地可用同类 mcp.json，或 Remote MCP 指向 <span class="mono">/mcp</span>。</p>
+          <p class="guide-note">连通后可试：<span class="mono">kb_list_knowledge</span> → <span class="mono">kb_internal_search</span> →（可选）propose / confirm。</p>
+        </section>
+
+        <section id="tools" class="guide-section">
+          <h2>4. 第三方工具接入</h2>
+          <p class="guide-note">以 ChatBox 为例。须使用 Remote (http/sse) 与 <span class="mono">/sse</span> 路径，不能填 <span class="mono">/mcp</span>。</p>
+
+          <ol class="guide-steps">
+            <li class="guide-step">
+              <div class="guide-step-head">
+                <p class="guide-step-index">01</p>
+                <div class="guide-step-copy">
+                  <h3 class="guide-step-title">Settings → MCP</h3>
+                  <p>打开 ChatBox 设置，左侧选择 MCP。</p>
+                </div>
+              </div>
+              <figure class="guide-figure">
+                <img src="guide/chatbox-01-mcp-settings.png" alt="ChatBox MCP Settings，侧栏 MCP 与 Add Server" width="1200" height="750" />
+                <figcaption>ChatBox MCP Settings，侧栏 MCP 与 Add Server</figcaption>
+              </figure>
+            </li>
+            <li class="guide-step">
+              <div class="guide-step-head">
+                <p class="guide-step-index">02</p>
+                <div class="guide-step-copy">
+                  <h3 class="guide-step-title">Add Custom Server</h3>
+                  <p>Custom MCP Servers → Add Server → 选择 Add Custom Server。</p>
+                </div>
+              </div>
+              <figure class="guide-figure">
+                <img src="guide/chatbox-02-add-custom.png" alt="ChatBox 选择 Add Custom Server" width="1200" height="750" />
+                <figcaption>ChatBox 选择 Add Custom Server</figcaption>
+              </figure>
+            </li>
+            <li class="guide-step">
+              <div class="guide-step-head">
+                <p class="guide-step-index">03</p>
+                <div class="guide-step-copy">
+                  <h3 class="guide-step-title">填写服务器（注意 SSE）</h3>
+                  <p>Type = Remote (http/sse)。URL 本地 <span class="mono">http://127.0.0.1:8000/sse</span>，生产 <span class="mono">https://kb.agent-mate.ai/sse</span>。HTTP Header：<span class="mono">Authorization=Bearer &lt;api_key&gt;</span>。</p>
+                </div>
+              </div>
+              <figure class="guide-figure">
+                <img src="guide/chatbox-03-server-form.png" alt="ChatBox Add MCP Server 表单，Type 为 Remote http/sse，URL 以 /sse 结尾" width="1200" height="750" />
+                <figcaption>ChatBox Add MCP Server 表单，Type 为 Remote http/sse，URL 以 /sse 结尾</figcaption>
+              </figure>
+            </li>
+          </ol>
+          <p>点 Test，通过后再 Save；在会话中启用该 MCP。</p>
+          <p class="guide-note">不要填 <span class="mono">/mcp</span>。ChatBox 会对 URL 发 SSE GET，<span class="mono">/mcp</span> 会报 404。</p>
+          <p class="guide-note">连通后可试：<span class="mono">kb_list_knowledge</span> → <span class="mono">kb_internal_search</span> →（可选）propose / confirm。</p>
         </section>
       </article>
 

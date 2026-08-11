@@ -53,10 +53,11 @@
 
 | 工具名 | 作用 |
 | --- | --- |
-| `kb_search` | 库内检索（MVP-1 已有 REST；本批升级真命中） |
-| `kb_propose_ingest` | 粘贴/正文 → Pending |
-| `kb_confirm_ingest` | 确认 → 索引 |
-| `kb_list_knowledge` | 可选；列表已确认条目 |
+| `kb_internal_search` | 库内检索（MVP-1 已有 REST；本批升级真命中） |
+| `kb_propose_add` | 粘贴/正文 → Pending（KM ≤400 字内容概述） |
+| `kb_confirm_add` | 确认 → 索引 |
+| `kb_list_knowledge` | 可选；列表已确认条目（含 summary） |
+| `kb_knowledge_summary` | 读/刷新单条内容概述 |
 
 **硬约束：** MCP 只调领域层；`USE_FAKE_EMBEDDER=false`；不得 mock agent↔rag。MCP 传输/鉴权/工具注册见 [`specs/mcp-design.md`](./mcp-design.md)。  
 **移出本批：** `agent-scope-01` / `02` → MVP-3；批量 import → MVP-3。
@@ -83,7 +84,7 @@
 | Cursor 手测（DoD 证据） | 手动添加 MCP 走通 propose→confirm→search；记录配置方式（HTTP URL + Bearer） |
 | 回归 | 提案态不可索引；吊销 Key → 401 |
 
-**DoD 出口：** 自动化真栈全绿 + Cursor 手测证据；本批故事 → `Done`。
+**DoD 出口：** 自动化真栈全绿 + Cursor/ChatBox 手测证据 + **用户确认可用（2026-08-11）**；本批故事 → `Done`。
 
 ---
 

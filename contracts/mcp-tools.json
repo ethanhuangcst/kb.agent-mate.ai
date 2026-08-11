@@ -6,12 +6,17 @@
   "transport": {
     "primary": "streamable-http",
     "path": "/mcp",
+    "legacy_sse": {
+      "path": "/sse",
+      "messages_path": "/messages/",
+      "clients": ["ChatBox Remote (http/sse)"]
+    },
     "auth": "Authorization: Bearer <api_key>"
   },
   "mvp": "MVP-2",
   "tools": [
     {
-      "name": "kb_search",
+      "name": "kb_internal_search",
       "rest": { "method": "POST", "path": "/api/v1/kb/search" },
       "side_effect": "none",
       "required": true,
@@ -30,7 +35,7 @@
       "forbidden_params": ["user_id"]
     },
     {
-      "name": "kb_propose_ingest",
+      "name": "kb_propose_add",
       "rest": { "method": "POST", "path": "/api/v1/kb/proposals" },
       "side_effect": "pending",
       "required": true,
@@ -48,7 +53,7 @@
       "forbidden_params": ["user_id", "skip_confirm", "auto_ingest"]
     },
     {
-      "name": "kb_confirm_ingest",
+      "name": "kb_confirm_add",
       "rest": { "method": "POST", "path": "/api/v1/kb/proposals/{id}/confirm" },
       "side_effect": "write_index",
       "required": true,
@@ -67,7 +72,7 @@
       "rest": { "method": "GET", "path": "/api/v1/kb/items" },
       "side_effect": "none",
       "required": false,
-      "note": "Optional in same MVP-2 batch",
+      "note": "Optional in same MVP-2 batch; items include summary (<=400 chars overview)",
       "input": {
         "type": "object",
         "properties": {
@@ -79,14 +84,42 @@
         "additionalProperties": false
       },
       "forbidden_params": ["user_id"]
+    },
+    {
+      "name": "kb_knowledge_summary",
+      "rest": {
+        "method": "GET|POST",
+        "path": "/api/v1/kb/items/{id}/summary",
+        "refresh": "POST /api/v1/kb/items/{id}/summary/refresh"
+      },
+      "side_effect": "metadata_write_on_refresh",
+      "required": true,
+      "note": "Content overview; max 400 Unicode chars. See specs/knowledge-summary.md",
+      "input": {
+        "type": "object",
+        "properties": {
+          "knowledge_id": { "type": "string" },
+          "pending_id": { "type": "string" },
+          "refresh": { "type": "boolean", "default": false }
+        },
+        "additionalProperties": false
+      },
+      "forbidden_params": ["user_id"]
     }
   ],
   "not_in_mvp2": [
     "kb_list",
     "kb_organize",
-    "kb_source_search",
-    "kb_fetch",
+    "kb_external_search",
+    "kb_fetch_url",
     "kb_import_documents",
     "kb_confirm_import_batch"
-  ]
+  ],
+  "renamed_from": {
+    "kb_internal_search": "kb_search",
+    "kb_propose_add": "kb_propose_ingest",
+    "kb_confirm_add": "kb_confirm_ingest",
+    "kb_external_search": "kb_source_search",
+    "kb_fetch_url": "kb_fetch"
+  }
 }

@@ -42,20 +42,48 @@ def require_bearer(
     settings: Settings = Depends(get_settings),
     db: Session = Depends(get_db),
 ) -> AuthContext:
-    if not authorization or not authorization.lower().startswith("bearer "):
-        raise HTTPException(status_code=401, detail={"code": "UNAUTHORIZED"})
-    raw = authorization.split(" ", 1)[1].strip()
-    if not raw:
-        raise HTTPException(status_code=401, detail={"code": "UNAUTHORIZED"})
-    digest = hash_api_key(raw, settings.api_key_pepper)
-    row = db.execute(
-        select(ApiKey, User).join(User, User.id == ApiKey.user_id).where(ApiKey.key_hash == digest)
-    ).first()
-    if row is None:
-        raise HTTPException(status_code=401, detail={"code": "UNAUTHORIZED"})
-    api_key, user = row
-    if api_key.status != ApiKeyStatus.active:
-        raise HTTPException(status_code=401, detail={"code": "KEY_REVOKED"})
-    if user.status != UserStatus.active:
-        raise HTTPException(status_code=401, detail={"code": "USER_DISABLED"})
-    return AuthContext(user_id=user.id, api_key_id=api_key.id, key_prefix=api_key.key_prefix)
+    try:
+        return authenticate_bearer(authorization, settings, db)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail={"code": exc.code}) from exc
+
+
+class AuthError(Exception):
+    def __init__(self, code: str, *, status_code: int = 401) -> None:
+        super().__init__(code)
+        self.code = code
+        self.status_code = status_code
+
+
+def authenticate_bearer(
+    authorization: str | None,
+    settings: Settings,
+    db: Session | None = None,
+) -> AuthContext:
+    """Validate Bearer key; optional db session (opens one if omitted)."""
+    owns = False
+    if db is None:
+        SessionLocal = get_session(settings.database_url)
+        db = SessionLocal()
+        owns = True
+    try:
+        if not authorization or not authorization.lower().startswith("bearer "):
+            raise AuthError("UNAUTHORIZED")
+        raw = authorization.split(" ", 1)[1].strip()
+        if not raw:
+            raise AuthError("UNAUTHORIZED")
+        digest = hash_api_key(raw, settings.api_key_pepper)
+        row = db.execute(
+            select(ApiKey, User).join(User, User.id == ApiKey.user_id).where(ApiKey.key_hash == digest)
+        ).first()
+        if row is None:
+            raise AuthError("UNAUTHORIZED")
+        api_key, user = row
+        if api_key.status != ApiKeyStatus.active:
+            raise AuthError("KEY_REVOKED")
+        if user.status != UserStatus.active:
+            raise AuthError("USER_DISABLED")
+        return AuthContext(user_id=user.id, api_key_id=api_key.id, key_prefix=api_key.key_prefix)
+    finally:
+        if owns and db is not None:
+            db.close()

@@ -823,6 +823,30 @@ td {
   font-weight: 400;
 }
 
+.key-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0 0 1.25rem;
+}
+
+.key-meta-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.key-meta-value {
+  font-family: var(--font-cn);
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
 .notice {
   padding: 1.25rem 0;
   border-bottom: 1px solid var(--line);
@@ -1142,6 +1166,123 @@ td {
   color: var(--ink);
 }
 
+.guide-steps {
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+}
+
+.guide-body ol.guide-steps {
+  padding-left: 0;
+  list-style: none;
+}
+
+.guide-body ol.guide-steps > .guide-step {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.guide-step {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 1.75rem 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.guide-step:first-child {
+  border-top: none;
+  padding-top: 0.5rem;
+}
+
+.guide-step-head {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  gap: 0.75rem 1.25rem;
+  align-items: start;
+}
+
+.guide-step-index {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--mute);
+}
+
+.guide-step-copy {
+  min-width: 0;
+}
+
+.guide-step-title {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-cn);
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.guide-step-copy > p {
+  margin: 0;
+  color: var(--mute);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.guide-figure {
+  margin: 1rem 0 0;
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: var(--paper, #fff);
+}
+
+.guide-figure img,
+.guide-figure-img {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100%;
+  display: block;
+}
+
+.guide-figure figcaption {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--mute);
+  line-height: 1.4;
+}
+
+.guide-code-label {
+  margin: 1.75rem 0 0.5rem;
+  font-size: 0.9rem;
+  color: var(--mute);
+}
+
+.guide-code {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.guide-code code {
+  font-family: inherit;
+  white-space: pre;
+}
+
 .guide-roles .guide-mode ul {
   margin: 0;
   padding-left: 1.1rem;
@@ -1163,7 +1304,7 @@ td {
   margin: 0.45rem 0;
 }
 
-.guide-body pre:not(.guide-arch-diagram) {
+.guide-body pre:not(.guide-arch-diagram):not(.guide-code) {
   margin: 0.75rem 0 0;
   padding: 1rem;
   background: #f4f4f4;
@@ -1186,6 +1327,11 @@ td {
 
   .guide-arch-diagram {
     font-size: 0.65rem;
+  }
+
+  .guide-step-head {
+    grid-template-columns: 2rem 1fr;
+    gap: 0.5rem 0.85rem;
   }
 }
 

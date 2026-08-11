@@ -30,3 +30,4 @@ related:
 ## Links
 - `specs/adr/ADR-002-admin-next-same-postgres.md`
 - `docker-compose.yml`、`.env.example`
+- 本地全栈：`make up-daemon`（[`local-apps-keep-dying.md`](./local-apps-keep-dying.md)）

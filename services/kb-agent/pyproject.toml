@@ -15,6 +15,8 @@ dependencies = [
   "sqlalchemy>=2.0.36",
   "psycopg[binary]>=3.2.0",
   "bcrypt>=4.2.0",
+  "openai>=1.60.0",
+  "mcp>=1.8.0",
   "kb-schema",
 ]
 

@@ -83,15 +83,25 @@ test("should_revoke_and_reissue_key", async ({ page }) => {
   const row = page.locator("tbody tr").filter({ hasText: name }).filter({ hasText: /active/i }).first();
   await expect(row).toBeVisible();
   await expect(page.locator("tbody tr").filter({ hasText: name })).toHaveCount(1);
+  await row.getByRole("button", { name: /查看|View/ }).click();
+  await expect(page.getByTestId("key-view")).toBeVisible();
+  await expect(page.getByTestId("view-display-name")).toHaveText(name);
+  const viewed = await page.getByTestId("api-key-plaintext").innerText();
+  expect(viewed.startsWith("kb_live_")).toBeTruthy();
+  await page.getByRole("button", { name: /返回列表|Back to list/ }).click();
+
   await row.getByRole("button", { name: /重签|Reissue/ }).click();
   await expect(page.getByTestId("key-issued")).toBeVisible();
   const reissued = await page.getByTestId("api-key-plaintext").innerText();
   expect(reissued.startsWith("kb_live_")).toBeTruthy();
+  expect(reissued).not.toBe(viewed);
   await expect(page.getByTestId("api-key-plaintext")).toHaveCSS("white-space", "nowrap");
   await page.getByRole("button", { name: /返回列表|Back to list/ }).click();
 
   const row2 = page.locator("tbody tr").filter({ hasText: name }).filter({ hasText: /active/i });
-  await row2.getByRole("button", { name: /吊销|Revoke/ }).click();
+  await expect(row2).toBeVisible();
+  const rePrefix = reissued.slice(0, 12);
+  await page.getByTestId(`revoke-${rePrefix}`).click();
   await expect(page.getByTestId("confirm-dialog")).toBeVisible();
   await page.getByTestId("confirm-dialog-ok").click();
   await expect(page.locator("tbody tr").filter({ hasText: name })).toHaveCount(0);

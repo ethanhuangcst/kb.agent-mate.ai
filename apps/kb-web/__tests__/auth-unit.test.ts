@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hashApiKey, generateApiKey } from "../lib/api-keys";
+import { hashApiKey, generateApiKey, encryptApiKey, decryptApiKey } from "../lib/api-keys";
 import { canAccessAdminApis } from "../lib/auth-gate";
 import type { SessionPayload } from "../lib/session-types";
 import { hashPassword, verifyPassword } from "../lib/passwords";
@@ -17,6 +17,20 @@ describe("api keys", () => {
     const { raw, prefix } = generateApiKey();
     expect(raw.startsWith("kb_live_")).toBe(true);
     expect(prefix).toBe(raw.slice(0, 12));
+  });
+
+  it("should_roundtrip_encrypt_decrypt_when_secret_fixed", () => {
+    const raw = "kb_live_roundtrip_secret_value_001";
+    const secret = "test-encryption-secret-32chars!!";
+    const ct = encryptApiKey(raw, secret);
+    expect(ct.startsWith("v1:")).toBe(true);
+    expect(ct).not.toContain(raw);
+    expect(decryptApiKey(ct, secret)).toBe(raw);
+  });
+
+  it("should_fail_decrypt_when_secret_differs", () => {
+    const ct = encryptApiKey("kb_live_x", "secret-a");
+    expect(() => decryptApiKey(ct, "secret-b")).toThrow();
   });
 });
 

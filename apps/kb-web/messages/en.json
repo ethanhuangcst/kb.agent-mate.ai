@@ -64,6 +64,7 @@
     "issuedAt": "Issued",
     "actions": "Actions",
     "reissue": "Reissue",
+    "view": "View",
     "revoke": "Revoke",
     "revokeConfirmTitle": "Revoke this secret key?",
     "revokeConfirmBody": "The secret key stops working immediately and leaves this list. Knowledge data is kept, but the user can no longer access it.",
@@ -72,13 +73,16 @@
     "issueEyebrow": "Issue",
     "issueTitle": "Issue new key",
     "issueLead": "Create a user and generate an API key. Name is for identification.",
-    "issueHint": "Plaintext is shown once on the next screen. Each user has an isolated knowledge base.",
+    "issueHint": "The full key appears on the next screen; you can open it again from the list later. Each user has an isolated knowledge base.",
     "issueSubmit": "Generate key",
     "cancel": "Cancel",
     "issuedEyebrow": "Issued",
     "issuedTitle": "Key issued",
-    "issuedWarn": "Plaintext is visible only once. You cannot view the full key after leaving this page.",
-    "issuedWarnStrong": "Copy and store it securely now. Closing this page hides the plaintext permanently.",
+    "issuedWarnStrong": "Copy and store it securely now.",
+    "viewEyebrow": "View",
+    "viewTitle": "View key",
+    "viewMissingCiphertext": "This key has no stored ciphertext. Reissue to enable viewing.",
+    "viewFailed": "Unable to show the key.",
     "copy": "Copy",
     "backList": "Back to list",
     "active": "active",
@@ -89,7 +93,7 @@
     "title": "Integration guide",
     "back": "Back to home",
     "eyebrow": "Connect",
-    "lead": "Bring your own model. One API key, two integration paths."
+    "lead": "Bring your own model. One API key; IDE and third-party transports differ."
   },
   "locale": {
     "label": "Language"

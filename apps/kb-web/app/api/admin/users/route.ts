@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
-import { apiKeyPepper, generateApiKey, hashApiKey } from "@/lib/api-keys";
+import { apiKeyPepper, encryptApiKey, generateApiKey, hashApiKey } from "@/lib/api-keys";
 import { isEnglishDisplayName } from "@/lib/display-name";
 import { canAccessAdminApis, getSession } from "@/lib/session";
 
@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
 
   const { raw, prefix } = generateApiKey();
   const keyHash = hashApiKey(raw, apiKeyPepper());
+  const keyCiphertext = encryptApiKey(raw);
 
   const inserted = await sql.begin(async (tx) => {
     const users = await tx<{ id: string }[]>`
@@ -56,8 +57,8 @@ export async function POST(req: NextRequest) {
     `;
     const userId = users[0].id;
     const keys = await tx<{ id: string }[]>`
-      INSERT INTO api_keys (id, user_id, key_hash, key_prefix, status)
-      VALUES (gen_random_uuid(), ${userId}::uuid, ${keyHash}, ${prefix}, 'active')
+      INSERT INTO api_keys (id, user_id, key_hash, key_prefix, key_ciphertext, status)
+      VALUES (gen_random_uuid(), ${userId}::uuid, ${keyHash}, ${prefix}, ${keyCiphertext}, 'active')
       RETURNING id::text
     `;
     return { userId, keyId: keys[0].id };

@@ -16,11 +16,11 @@ pip install -e ../../packages/kb_schema
 | --- | --- | --- |
 | `DATABASE_URL` | yes | SQLAlchemy URL (Postgres for product path; e.g. `postgresql+psycopg://…`) |
 
-Local Compose often maps Postgres to **`127.0.0.1:5434`** (see `specs/keys.md`, `specs/knowledge/ops/local-postgres-5434.md`).
+Local Compose often maps Postgres to **`127.0.0.1:5434`** (see `specs/keys.md`, `specs/knowledge/ops/local-postgres-5434.md`). Prefer **`make up-daemon`** from repo root (runs migrate + durable apps).
 
 ## Migrate
 
-From repo root (preferred):
+From repo root (preferred; also invoked by `make up-daemon`):
 
 ```bash
 make migrate

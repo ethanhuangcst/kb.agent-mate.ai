@@ -45,8 +45,9 @@
 ```text
 ┌──────────────────────────────────────────┐
 │ Cursor / ChatBox / MCP Inspector         │
-│  Transport: Streamable HTTP              │
-│  Header: Authorization: Bearer kb_live_… │
+│  Cursor: Streamable HTTP → /mcp          │
+│  ChatBox: http/sse → /sse (+ /messages/) │
+│  Header: Authorization: Bearer <api_key> │
 └────────────────────┬─────────────────────┘
                      │ HTTPS or http://127.0.0.1:8000
                      ▼
@@ -55,7 +56,9 @@
 │                                          │
 │  GET  /healthz                           │
 │  POST /api/v1/kb/*     ← REST 门面       │
-│  ALL  /mcp             ← MCP Streamable  │
+│  ALL  /mcp             ← Streamable HTTP │
+│  GET  /sse             ← legacy SSE      │
+│  POST /messages/       ← SSE posts       │
 │                                          │
 │  Auth (pepper+sha256 → user_id)          │
 │       ↓                                  │
@@ -63,8 +66,8 @@
 └──────────────────────────────────────────┘
 ```
 
-生产：Nginx Proxy Manager 将 `https://kb.agent-mate.ai/mcp`（及 `/api/v1/kb/*`）反代到 `kb-agent:8000`（见 `deployment-plan.md`）。  
-本地：`http://127.0.0.1:8000/mcp`。
+生产：Nginx Proxy Manager 将 `/mcp`、`/sse`、`/messages/`（及 `/api/v1/kb/*`）反代到 `kb-agent:8000`（见 `deployment-plan.md`）。  
+本地：Cursor `http://127.0.0.1:8000/mcp`；ChatBox `http://127.0.0.1:8000/sse`。起栈推荐 `make up-daemon`（见 `knowledge/ops/local-apps-keep-dying.md`）。
 
 **进程模型：** MCP 与 REST **同进程同应用**（同一 uvicorn），共享连接池与配置；禁止单独起第二个「只有 MCP」的业务副本以免双实现。
 
@@ -74,9 +77,9 @@
 
 | 项 | 决策 |
 | --- | --- |
-| 主传输 | **Streamable HTTP**（MCP 规范当前推荐；取代生产 SSE 主路径） |
-| 路径 | **`/mcp`**（固定；写入 `keys.md` / Cursor 配置 / NPM location） |
-| 遗留 SSE | 仅当某客户端强制要求时再评估；默认不实现第二套 |
+| 主传输 | **Streamable HTTP**（MCP 规范当前推荐；Cursor：`/mcp`） |
+| 路径 | **`/mcp`**（固定；裸 `/mcp` 与 `/mcp/` 均须可用——Starlette `Mount` 只匹配 `/mcp/…`，服务端将裸路径改写为 `/mcp/`） |
+| 遗留 SSE | ChatBox `http/sse`：`GET /sse` + `POST /messages/`（与 Streamable 并存） |
 | stdio | 可选开发入口（`python -m app.mcp_stdio`）；**不**作为 Cursor 手测 DoD 主证据 |
 | TLS | 生产终止于 NPM；本地明文 `127.0.0.1` 可接受 |
 
@@ -120,12 +123,15 @@
 
 | Tool | REST 等价 | 副作用 | 说明 |
 | --- | --- | --- | --- |
-| `kb_search` | `POST /api/v1/kb/search` | 无 | 已有 REST；MCP 同语义；MVP-2 须真命中+citation |
-| `kb_propose_ingest` | `POST /api/v1/kb/proposals` | Pending | 粘贴/正文；不写 Qdrant |
-| `kb_confirm_ingest` | `POST /api/v1/kb/proposals/{id}/confirm` | **写库+索引** | 显式确认 |
-| `kb_list_knowledge` | `GET /api/v1/kb/items` | 无 | **可选同批**；列表已确认条目 |
+| `kb_internal_search` | `POST /api/v1/kb/search` | 无 | 已有 REST；MCP 同语义；MVP-2 须真命中+citation |
+| `kb_propose_add` | `POST /api/v1/kb/proposals` | Pending | 粘贴/正文；KM 写入 ≤400 字内容概述；不写 Qdrant |
+| `kb_confirm_add` | `POST /api/v1/kb/proposals/{id}/confirm` | **写库+索引** | 显式确认 |
+| `kb_list_knowledge` | `GET /api/v1/kb/items` | 无 | **可选同批**；列表含 `summary` |
+| `kb_knowledge_summary` | `GET/POST .../items/{id}/summary` | 仅 refresh 写元数据 | 读概述；`refresh` 可重生 |
 
-**不**在 MVP-2 注册：`kb_import_*`、`kb_organize`、`kb_source_search`、`kb_fetch`。
+概述语义见 [`knowledge-summary.md`](./knowledge-summary.md)。
+
+**不**在 MVP-2 注册：`kb_import_*`、`kb_organize`、`kb_external_search`、`kb_fetch_url`。
 
 ### 5.2 全量路线图（unlock 时再注册）
 
@@ -139,34 +145,39 @@
 - Does not generate business strategy / campaign conclusions  
 - Operates only on the knowledge base bound to this API Key  
 
-`kb_search`：Returns citable fragments; the host model composes the user-facing answer.
+`kb_internal_search`：Returns citable fragments; the host model composes the user-facing answer.
 
 ### 5.4 输入 / 输出形状（概念；以实现契约为准）
 
 ```text
-kb_search
+kb_internal_search
   in:  { query: string, project?: string, tags?: string[], top_k?: number }
   out: { hits: Hit[], sufficiency: { enough: boolean, reason?: string } }
   Hit: { knowledge_id, chunk_id, text, score?, title?, project?, tags? }
   # 禁止参数: user_id
 
-kb_propose_ingest
+kb_propose_add
   in:  { text: string, title?: string, project?: string, tags?: string[] }
-  out: { pending_id, status: "proposed", summary?, suggested_type?, duplicate_hint? }
+  out: { pending_id, status: "proposed", summary? (<=400字概述), suggested_type?, duplicate_hint? }
 
-kb_confirm_ingest
+kb_confirm_add
   in:  { pending_id: string }
   out: { knowledge_id, status: "confirmed", indexed: true }
 
 kb_list_knowledge
   in:  { project?: string, tag?: string, knowledge_type?: string, limit?: number }
-  out: { items: [{ knowledge_id, title, project?, tags?, updated_at? }] }
+  out: { items: [{ knowledge_id, title, summary?, project?, tags?, updated_at? }] }
+
+kb_knowledge_summary
+  in:  { knowledge_id?: string, pending_id?: string, refresh?: boolean }
+  # knowledge_id 与 pending_id 二选一（同一 UUID）
+  out: { knowledge_id, title?, status?, summary, refreshed: boolean }
 ```
 
 错误：工具结果或 MCP 错误载荷统一可解析为：
 
 ```json
-{ "code": "OUT_OF_SCOPE_AUTO_INGEST", "message": "...", "degrade_hint": "kb_propose_ingest" }
+{ "code": "OUT_OF_SCOPE_AUTO_INGEST", "message": "...", "degrade_hint": "kb_propose_add" }
 ```
 
 码表与 `agent-design.md` §6.2 / `architecture.md` 一致。成功路径不得返回捏造的 `knowledge_id` / `chunk_id`。
@@ -205,23 +216,38 @@ REST route handler ─┘
 
 ### 6.3 幂等与重试
 
-- `kb_search` / `kb_list_knowledge`：只读，可重试  
-- `kb_propose_ingest`：允许内容 hash 幂等（同文同用户 → 同 pending 或明确 duplicate）  
-- `kb_confirm_ingest`：已确认再 confirm → 返回已确认态，不双写索引（Indexer 幂等）
+- `kb_internal_search` / `kb_list_knowledge` / `kb_knowledge_summary`（`refresh=false`）：只读，可重试  
+- `kb_knowledge_summary`（`refresh=true`）：幂等写元数据（同正文可重复刷新）  
+- `kb_propose_add`：允许内容 hash 幂等（同文同用户 → 同 pending 或明确 duplicate）  
+- `kb_confirm_add`：已确认再 confirm → 返回已确认态，不双写索引（Indexer 幂等）
 
 ---
 
 ## 7. 客户端接入
 
-### 7.1 Cursor 手测（MVP-2 DoD 证据）
+### 7.1 Cursor / CodeBuddy（MVP-2 DoD 证据）
 
-配置要点（UI 文案随 Cursor 版本变化；语义固定）：
+UI 图文步骤见 Admin「接入指南」`/guide` §3（截图：Settings → Customize → MCPs → `mcp.json`）。
+
+**路径 A — 本地 stdio（与截图一致）**
+
+1. Cursor Settings → **Customize** → **MCPs** → **New MCP Server**  
+2. 按 [`deployment-plan.md`](./deployment-plan.md) §7.1 B 填写 `mcp.json`（`python -m app.mcp_stdio` + `KB_API_KEY` / `API_KEY_PEPPER` 等）  
+3. CodeBuddy：在 MCP / 插件设置中用同类 `mcp.json` 字段
+
+**路径 B — 远程 Streamable HTTP（手测备选）**
+
+1. Transport = Streamable HTTP / Remote MCP  
+2. URL：本地 `http://127.0.0.1:8000/mcp`；生产 `https://kb.agent-mate.ai/mcp`  
+3. Auth：`Authorization: Bearer <api_key>`（管理台签发；可列表「查看」；**勿**写入仓库或公开截图）
 
 | 项 | 值 |
 | --- | --- |
 | Transport | Streamable HTTP（或 Cursor 标注的等价 Remote MCP） |
 | URL | 本地 `http://127.0.0.1:8000/mcp`；生产 `https://kb.agent-mate.ai/mcp` |
-| Auth | Bearer = 管理台「签发」一次性明文 Key（勿提交 git） |
+| Auth | Bearer = 使用者 Key 明文（勿提交 git） |
+
+已实现工具（MVP-2）：`kb_internal_search`、`kb_propose_add`、`kb_confirm_add`、`kb_list_knowledge`、`kb_knowledge_summary`。均走同一 `KbService`。
 
 手测剧本（与 `mvp-2-3-delivery.md` §3.2 一致）：
 
@@ -231,11 +257,21 @@ confirm(pending_id) → search 出现 citation
 换另一用户 Key → 搜不到
 ```
 
-Admin「接入指南」页（`/guide`）应链到本文件摘要 + 上表；密钥仍只在签发瞬间展示。
+Admin「接入指南」页（`/guide`）§3–§4 为图文步骤；完整模板见 [`deployment-plan.md`](./deployment-plan.md) **§7.1**。
 
 ### 7.2 ChatBox
 
-自定义 MCP：同一 URL + Bearer。工具集与 Cursor 相同。
+UI 图文步骤见 `/guide` §4。自定义 MCP：**Remote (http/sse)**（遗留 SSE，不是 Streamable HTTP）。
+
+| 字段 | 值 |
+| --- | --- |
+| Type | Remote (http/sse) |
+| URL | `http://127.0.0.1:8000/sse`（**不要**填 `/mcp`） |
+| HTTP Header | `Authorization=Bearer <api_key>` |
+
+工具集与 Cursor 相同。消息通道：`POST /messages/`（由 SSE 握手下发，无需手填）。
+
+> Cursor 继续用 Streamable HTTP：`http://127.0.0.1:8000/mcp`。ChatBox 的 http/sse 模式会对 `/mcp` 发 SSE GET → **404**；须改用 `/sse`。
 
 ### 7.3 HCP / 应用
 
@@ -257,7 +293,7 @@ Admin「接入指南」页（`/guide`）应链到本文件摘要 + 上表；密�
 
 ### 8.2 审计
 
-至少：`kb_confirm_ingest` 成功；日后 `import_confirm` / `organize(apply=true)`。
+至少：`kb_confirm_add` 成功；日后 `import_confirm` / `organize(apply=true)`。
 
 ### 8.3 滥用与成本
 
@@ -269,7 +305,7 @@ Admin「接入指南」页（`/guide`）应链到本文件摘要 + 上表；密�
 
 ### 8.4 SSRF / 出站
 
-MVP-2 无 `kb_fetch`。日后 fetch 工具须走 Source Router 的 URL 允许规则（architecture §7），与 REST 同。
+MVP-2 无 `kb_fetch_url`。日后 fetch 工具须走 Source Router 的 URL 允许规则（architecture §7），与 REST 同。
 
 ---
 
@@ -295,12 +331,12 @@ services/kb-agent/app/
 mcp = FastMCP("kb-agent", instructions=KB_INSTRUCTIONS)
 
 @mcp.tool(description="... no auto-ingest ...")
-async def kb_search(query: str, top_k: int = 8) -> dict:
+async def kb_internal_search(query: str, top_k: int = 8) -> dict:
     ctx = current_auth()  # from contextvar
     return await kb_service.search(user_id=ctx.user_id, query=query, top_k=top_k)
 ```
 
-挂载：将 MCP ASGI app 挂到 FastAPI `/mcp`，并保证鉴权中间件在 MCP 路由上生效（注意勿用会破坏流式响应的错误中间件写法；以 SDK 推荐集成方式为准）。
+挂载：Streamable HTTP ASGI 挂到 FastAPI `/mcp`；SSE 路由注册为 `GET /sse` 与 `POST /messages/`；鉴权中间件覆盖上述路径（勿用会破坏流式响应的错误中间件写法）。
 
 ---
 
@@ -328,7 +364,7 @@ CI：可用 MCP SDK 内存/HTTP 客户端打 `/mcp`；**Done 门禁**禁止 Fake
 | 与 REST 同 `KbService` / 契约 | §6 | mcp-04 |
 | Cursor propose→confirm→search | §7.1 | mcp-05 |
 | MVP-3 扩展工具面 | §5.2 | mcp-06 |
-| 未确认不进正式检索 | `kb_propose_ingest` / Indexer 规则（rag-design） |
+| 未确认不进正式检索 | `kb_propose_add` / Indexer 规则（rag-design） |
 
 ---
 
@@ -352,13 +388,14 @@ CI：可用 MCP SDK 内存/HTTP 客户端打 `/mcp`；**Done 门禁**禁止 Fake
 | --- | --- |
 | **本文** | MCP 传输、鉴权、工具注册、客户端、契约、实现边界 |
 | `agent-design.md` | 全量工具语义、越界、交互序列、截断 |
+| `knowledge-summary.md` | 内容概述 ≤400 字；`kb_knowledge_summary` |
 | `architecture.md` | 系统拓扑、REST 表、部署 |
 | `mvp-2-3-delivery.md` | 批交付与无 mock DoD |
-| `keys.md` | `AGENT_BASE_URL`、本地 `/mcp`、生产域名 |
-| `deployment-plan.md` | NPM `/mcp` location |
+| `keys.md` | `AGENT_BASE_URL`、本地 `/mcp` 与 `/sse`、生产域名 |
+| `deployment-plan.md` | NPM `/mcp`、`/sse`、`/messages/` location |
 
 ---
 
 ## 14. 小结
 
-kb-agent 的 MCP = **Streamable HTTP 上的薄工具门面**：Bearer 一人一库、3～4 个最小工具、与 REST 共享 `KbService`。智能留在调用方模型；本服务保证可引用、可确认、可多客户端共用一把 Key。
+kb-agent 的 MCP = **双传输薄工具门面**：Cursor 走 Streamable HTTP（`/mcp`）；ChatBox 走遗留 SSE（`/sse`）；Bearer 一人一库、当前 **5** 个工具、与 REST 共享 `KbService`。智能留在调用方模型；本服务保证可引用、可确认、可多客户端共用一把 Key。

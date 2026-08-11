@@ -1,12 +1,12 @@
-"""Retriever with mandatory user_id filter and FakeEmbedder for CI."""
+"""Retriever with mandatory user_id filter."""
 
 from __future__ import annotations
 
-import hashlib
 import math
-import re
 from dataclasses import dataclass, field
 from typing import Protocol
+
+from app.embedders import Embedder, FakeEmbedder
 
 
 @dataclass
@@ -30,33 +30,6 @@ class SearchResult:
     sufficiency: Sufficiency
 
 
-class Embedder(Protocol):
-    def embed(self, texts: list[str]) -> list[list[float]]: ...
-
-
-class FakeEmbedder:
-    """Deterministic bag-of-tokens embedder for CI (no external API)."""
-
-    def __init__(self, dim: int = 64) -> None:
-        self.dim = dim
-
-    def embed(self, texts: list[str]) -> list[list[float]]:
-        return [self._one(t) for t in texts]
-
-    def _one(self, text: str) -> list[float]:
-        vec = [0.0] * self.dim
-        tokens = re.findall(r"\w+", text.lower())
-        if not tokens:
-            return vec
-        for tok in tokens:
-            digest = hashlib.sha256(tok.encode("utf-8")).digest()
-            idx = digest[0] % self.dim
-            sign = 1.0 if digest[1] % 2 == 0 else -1.0
-            vec[idx] += sign
-        norm = math.sqrt(sum(v * v for v in vec)) or 1.0
-        return [v / norm for v in vec]
-
-
 @dataclass
 class IndexedChunk:
     chunk_id: str
@@ -65,6 +38,11 @@ class IndexedChunk:
     text: str
     vector: list[float]
     status: str = "confirmed"
+
+
+class VectorStore(Protocol):
+    def upsert(self, chunk: IndexedChunk) -> None: ...
+    def search(self, user_id: str, query_vec: list[float], top_k: int) -> list[Hit]: ...
 
 
 @dataclass
@@ -113,7 +91,7 @@ class Retriever:
 
     def __init__(
         self,
-        store: InMemoryVectorStore | None = None,
+        store: VectorStore | None = None,
         embedder: Embedder | None = None,
         *,
         min_hits_for_enough: int = 2,
@@ -148,6 +126,33 @@ class Retriever:
             )
         )
 
+    def index_document(
+        self,
+        *,
+        user_id: str,
+        knowledge_id: str,
+        text: str,
+        status: str = "confirmed",
+    ) -> list[str]:
+        """Chunk + embed + upsert; returns chunk ids."""
+        from uuid import uuid4
+
+        from app.chunker import chunk_text
+
+        chunks = chunk_text(text)
+        ids: list[str] = []
+        for piece in chunks:
+            cid = str(uuid4())
+            self.index_chunk(
+                user_id=user_id,
+                knowledge_id=knowledge_id,
+                chunk_id=cid,
+                text=piece,
+                status=status,
+            )
+            ids.append(cid)
+        return ids
+
     def search(self, user_id: str, query: str, top_k: int = 8) -> SearchResult:
         if not user_id:
             raise ValueError("user_id is required for search (tenant isolation)")
@@ -155,7 +160,6 @@ class Retriever:
             top_k = 1
         query_vec = self.embedder.embed([query])[0]
         hits = self.store.search(user_id=user_id, query_vec=query_vec, top_k=top_k)
-        # Defense in depth: never leak another tenant even if store misbehaves.
         hits = [h for h in hits if h.user_id is None or h.user_id == user_id]
         sufficiency = self._sufficiency(hits)
         return SearchResult(hits=hits, sufficiency=sufficiency)

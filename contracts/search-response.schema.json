@@ -14,7 +14,12 @@
           "knowledge_id": { "type": "string" },
           "chunk_id": { "type": "string" },
           "text": { "type": "string" },
-          "score": { "type": ["number", "null"] }
+          "score": { "type": ["number", "null"] },
+          "title": { "type": ["string", "null"] },
+          "summary": {
+            "type": ["string", "null"],
+            "description": "Content overview from KnowledgeItem.summary, max 400 Unicode chars"
+          }
         },
         "additionalProperties": true
       }

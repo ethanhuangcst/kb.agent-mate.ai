@@ -24,7 +24,7 @@
 1. **知识正确性**：无 confirm 不索引；confirm 后可检索且可引用；提案态不可当已入库知识。  
 2. **租户安全**：跨 `user_id` 不可见；请求体伪造身份无效；吊销 Key 立即 401。  
 3. **职责边界**：越界请求稳定拒绝；不捏造库内引用；内部 Qwen 仅 KM。  
-4. **管理面可用**：种子 `admin`/`admin`→强制改密；邀请设密不二次强制改密；管理员删除约束；Key 签发明文一次。  
+4. **管理面可用**：种子 `admin`/`admin`→强制改密；邀请设密不二次强制改密；管理员删除约束；Key 签发 / **查看** / 吊销 / 重签。  
 5. **契约一致**：MCP 工具与 REST 同领域层语义（见 `mcp-design.md`；工件 `contracts/mcp-tools.json`）。  
 6. **可部署**：健康检查与冒烟路径与 `deployment-plan.md` 对齐；MCP 公网路径 **`/mcp`**。
 
@@ -39,7 +39,7 @@
 | 单元 | Vitest + Testing Library | pytest | pytest |
 | 集成 | Vitest/Playwright API 或 BFF 对真实 Postgres（测试库） | pytest + 真实 Postgres + 真实 Qdrant（Compose 测试栈） | 同左；Indexer/Retriever 端到端 |
 | 契约 | — | MCP schema ↔ REST 路径对照表自动化或快照 | Hit 结构 schema |
-| E2E | Playwright 真浏览器（`file://` 仅静态稿冒烟；动态用 `make up` / `with_server`） | 经 REST/MCP HTTP 的旅程脚本（可与 Playwright 或 pytest+httpx 组合） | 由 Agent 旅程间接覆盖；另保留检索回归夹具 |
+| E2E | Playwright 真浏览器（`file://` 仅静态稿冒烟；动态用 `make up-daemon` / 系统终端 `make up`） | 经 REST/MCP HTTP 的旅程脚本（可与 Playwright 或 pytest+httpx 组合） | 由 Agent 旅程间接覆盖；另保留检索回归夹具 |
 
 **不做：** 在 VPS 上跑破坏性测试；对生产库写入；CI 默认调用付费 DashScope / 真实 Tavily（另设 `online` 可选 job）。
 
@@ -49,7 +49,9 @@
 
 | 环境 | 用途 |
 | --- | --- |
-| 本地 `make up` | 开发 + 手工 / E2E；Postgres + Qdrant + 三服务 |
+| 本地 `make up-daemon` | **推荐**：deps + 三服务 durable（脚本 double-fork；可在 Cursor Agent 内执行） |
+| 本地 `make up` | 仅 deps + agent/rag（nohup）；宜在系统终端跑；web 另起 |
+| CI | fixture 车道：`USE_FAKE_EMBEDDER` 可 true；真 Qdrant 仍建议起 |
 | CI fixture | Compose 或 service container：Postgres、Qdrant；应用 env 指向测试库名（如 `kb_agent_test`） |
 | Online（可选） | 真实 DashScope embed/chat、Resend test mode、外部搜索；人工或 nightly |
 
@@ -110,8 +112,8 @@
 | propose → confirm → search | agent-ingest-*, rag-index-01, rag-retrieve-01 | 确认前 search 无正式命中；确认后有引用字段 |
 | 批量导入 → 逐条/一键 confirm | agent-import-* | 无静默全量索引；失败文件不阻塞同批可确认项 |
 | 跨租户 | agent-auth-03, rag-isolate-01 | A 的 hit 永不含 B |
-| 吊销 / 重签 Key | web-keys-03/04, agent-auth-01 | 旧 Key 401；新 Key 同库可读 |
-| MCP ↔ REST | mcp-04, agent-rest-01 | 同输入同语义 `code` / hit shape；传输 `/mcp` Streamable HTTP + Bearer（`mcp-design.md`；`mcp-01`…`05`） |
+| 吊销 / 重签 / 查看 Key | web-keys-03/04/05, agent-auth-01 | 旧 Key 401；新 Key 同库可读；查看解密密文 |
+| MCP ↔ REST | mcp-04, agent-rest-01 | 同输入同语义；Cursor `/mcp` Streamable HTTP；ChatBox `/sse` SSE（`mcp-design.md`；`mcp-01`…`05`） |
 | 越界 | agent-scope-* | 策略类请求拒绝；可附带候选但不给策略正文 |
 | Admin 删管理员 | web-acct-08 | DB 约束与 API 一致 |
 
@@ -119,22 +121,23 @@
 
 ### 5.3 E2E（真浏览器 + 关键知识旅程）
 
-工具：Playwright（Chromium）。动态应用：先起真实本地栈（`make up` 或 `with_server`），再跑脚本。选择器优先 `role` / 可见名 / `data-testid`；断言不绑单一语言硬编码（设 `zh-CN` 或测 test id）。
+工具：Playwright（Chromium）。动态应用：先起真实本地栈（**`make up-daemon`**，或系统终端里 `make up` + web；见 `knowledge/ops/local-apps-keep-dying.md`），再跑脚本。选择器优先 `role` / 可见名 / `data-testid`；断言不绑单一语言硬编码（设 `zh-CN` 或测 test id）。
 
 **Admin 旅程（对应 web-acct / web-keys）**
 
 1. 空库登录 `admin`/`admin` → 强制改密页 → 改密成功 → 进入管理台  
-2. 签发 Key → 明文一次可见 → 列表仅前缀  
+2. 签发 Key → 明文可复制且密文入库 → 列表「查看」可再取同一明文  
 3. 邀请管理员（Resend 打桩）→ 接受邀请设密 → 登录**无**二次强制改密  
 4. 管理员列表 → 删除其他管理员成功；删自己 / 删最后一名失败  
 5. 吊销 Key 后，用旧 Key 调知识 API 失败  
 
 **知识旅程（Agent + RAG，可用 REST 驱动 + 可选 UI）**
 
-1. Bearer Key：`kb_search` 空库 → 不足  
-2. `kb_propose_ingest` → search 仍无正式命中 → `kb_confirm_ingest` → search 命中带引用  
-3. `kb_import_documents`（md/txt）→ `kb_confirm_import_batch` → 可检索  
-4. 越界：「给出投放策略」→ 稳定拒绝码  
+1. Bearer Key：`kb_internal_search` 空库 → 不足  
+2. `kb_propose_add` → search 仍无正式命中 → `kb_confirm_add` → search 命中带引用（hit 可含 `summary`）  
+3. `kb_knowledge_summary` 可读；`refresh=true` 可重生 ≤400 字概述  
+4. `kb_import_documents`（md/txt）→ `kb_confirm_import_batch` → 可检索  
+5. 越界：「给出投放策略」→ 稳定拒绝码  
 
 **静态稿（可选）：** `specs/mockup/*.html` 用 `file://` 做视觉/导航冒烟（侧栏三项、`.btn-page` 尺寸、首页/登录偏上对齐、全站页脚），**不**替代动态 E2E。
 
@@ -147,7 +150,7 @@
 | 模块 | 优先自动化的功能编号 | 最低层 |
 | --- | --- | --- |
 | Web 账号 | web-acct-01…08 | 单元门禁 + E2E 旅程 1/3/4 |
-| Web Key | web-keys-01…04 | 集成 + E2E 旅程 2/5 |
+| Web Key | web-keys-01…05 | 集成 + E2E 旅程（签发 / 查看 / 重签 / 吊销） |
 | Web i18n | web-i18n-01 | 单元 + 一页 E2E locale |
 | Agent 鉴权/隔离 | agent-auth-* | 单元 + 集成 |
 | Agent 检索/整理 | agent-search/list/org | 集成 |
@@ -188,8 +191,8 @@
 
 ### 功能
 
-- [ ] Admin：种子改密、邀请、删管理员约束、Key 签发/吊销/重签可用  
-- [ ] 知识：propose→confirm→search；批量确认；越界拒绝  
+- [ ] Admin：种子改密、邀请、删管理员约束、Key 签发/查看/吊销/重签可用
+- [ ] 知识：propose→confirm→search；list/summary 可读；批量确认；越界拒绝
 - [ ] 失败/空态：无效登录、无效邀请链接、无命中、索引失败不假装成功  
 
 ### 自动化

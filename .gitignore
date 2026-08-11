@@ -19,6 +19,10 @@ node_modules/
 .pids/
 data/blob/
 data/raw/
+services/kb-agent/data/
+services/kb-rag/data/
+**/data/blob/
+**/data/raw/
 apps/kb-web/.next/
 apps/kb-web/test-results/
 apps/kb-web/playwright-report/

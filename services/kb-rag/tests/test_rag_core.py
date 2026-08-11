@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
+import os
+
+# Unit TestClient path must not require a live Qdrant process.
+os.environ["USE_INMEMORY_VECTOR_STORE"] = "1"
+
 import pytest
 from fastapi.testclient import TestClient
 
 from app.blob_store import BlobStore
 from app.indexer_guard import IndexGuardError, assert_indexable
-from app.main import app
+from app.main import _build_retriever, app
 from app.retriever import Retriever
+
+_build_retriever.cache_clear()
 
 
 def test_blob_store_roundtrip(tmp_path):
@@ -55,3 +62,39 @@ def test_healthz_and_search_auth():
     body = ok.json()
     assert body["hits"] == []
     assert body["sufficiency"]["enough"] is False
+
+
+def test_should_index_confirmed_and_refuse_proposed_via_http():
+    client = TestClient(app)
+    headers = {"X-Service-Token": "dev-rag-token"}
+    bad = client.post(
+        "/internal/index",
+        headers=headers,
+        json={
+            "user_id": "u1",
+            "knowledge_id": "k-proposed",
+            "text": "should not index",
+            "status": "proposed",
+        },
+    )
+    assert bad.status_code == 400
+    ok = client.post(
+        "/internal/index",
+        headers=headers,
+        json={
+            "user_id": "u1",
+            "knowledge_id": "k-ok",
+            "text": "confirmed widget pricing notes for retrieval",
+            "status": "confirmed",
+        },
+    )
+    assert ok.status_code == 200
+    assert ok.json()["indexed"] is True
+    search = client.post(
+        "/internal/search",
+        headers=headers,
+        json={"user_id": "u1", "query": "widget pricing", "top_k": 5},
+    )
+    assert search.status_code == 200
+    hits = search.json()["hits"]
+    assert any(h["knowledge_id"] == "k-ok" for h in hits)
