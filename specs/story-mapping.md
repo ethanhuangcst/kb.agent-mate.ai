@@ -61,7 +61,8 @@ ATDD：用户故事 + Gherkin AC；实现前可据此写失败验收测试。
 #### MVP-1 — 地基（17）· Done
 
 目标：可登录、可发 Key、可鉴权空检索。  
-验收日期：2026-08-11。证据：`make test`（schema 2 + rag 7 + agent 9 + vitest 9）+ Playwright Admin E2E 5/5；ADR-002 / ADR-003；知识笔记见 `specs/knowledge/`。
+验收日期：2026-08-11。证据：`make test`（schema 2 + rag 7 + agent 9 + vitest 9）+ Playwright Admin E2E 5/5；ADR-002 / ADR-003；知识笔记见 `specs/knowledge/`。  
+**用户确认可用：** 2026-08-11（DoD User Acceptance）。
 
 | 模块 | 功能编号 | 功能名称 | 状态 |
 | --- | --- | --- | --- |
