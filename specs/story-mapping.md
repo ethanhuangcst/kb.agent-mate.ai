@@ -1142,7 +1142,7 @@ Scenario: 固定路径与传输
   When 客户端以 Streamable HTTP 访问 /mcp
   Then MCP 会话可建立（或按 SDK 语义返回可诊断错误，而非静默 404 到错误服务）
   And MCP 与知识 REST 运行在同一 FastAPI 进程
-  And 生产反代路径为 https://<PUBLIC_HOST>/mcp（本地为 http://<HOST>:<AGENT_PORT>/mcp）
+  And 产品反代路径为 https://kb.agent-mate.ai/mcp（客户端勿使用本机地址）
 
 Scenario: healthz 不等于 MCP 可用
   Given GET /healthz 返回成功

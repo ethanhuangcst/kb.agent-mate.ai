@@ -4,10 +4,9 @@ Streamable HTTP 的挂载在部分框架下只会匹配 `/mcp/...`，对 **恰�
 
 ## 正确行为
 
-服务端在鉴权中间件里把路径 `/mcp` 改写为 `/mcp/` 再交给路由。客户端配置可继续写：
+服务端在鉴权中间件里把路径 `/mcp` 改写为 `/mcp/` 再交给路由。产品客户端配置：
 
-- 本地：`http://<HOST>:<AGENT_PORT>/mcp`
-- 生产：`https://<PUBLIC_HOST>/mcp`
+- **`https://kb.agent-mate.ai/mcp`**
 
 ## 自检
 

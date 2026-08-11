@@ -27,7 +27,7 @@ ChatBox **Remote (http/sse)** is legacy SSE, not Streamable HTTP. Misconfiguring
 | Field | Value |
 | --- | --- |
 | Type | Remote (http/sse) |
-| URL | `http://<HOST>:<AGENT_PORT>/sse` (prod: `https://<PUBLIC_HOST>/sse`) |
+| URL | **`https://kb.agent-mate.ai/sse`** |
 | HTTP Header | `Authorization=Bearer <api_key>` |
 
 After Test succeeds: save, enable in the chat session, then call `kb_list_knowledge` / `kb_internal_search` / `kb_external_search`.
@@ -36,9 +36,8 @@ After Test succeeds: save, enable in the chat session, then call `kb_list_knowle
 
 | Client | Transport | URL |
 | --- | --- | --- |
-| Cursor (recommended) | Streamable HTTP | `…/mcp` |
-| Cursor (optional stdio) | local process | mcp.json command/env |
-| ChatBox | SSE | `…/sse` (+ server posts to `/messages/`) |
+| Cursor | Streamable HTTP | `https://kb.agent-mate.ai/mcp` |
+| ChatBox | SSE | `https://kb.agent-mate.ai/sse` (+ server posts to `/messages/`) |
 
 Same Bearer key and tool set. Spec: [`mcp-design.md`](../../mcp-design.md) §7.2.
 
@@ -55,7 +54,7 @@ POST /messages/?session_id=… → 404 Could not find session
 
 The first `endpoint` event can still leak out (curl sees it), then the stream crashes and the session is gone — ChatBox waits forever for the tool result.
 
-**Fix:** pure ASGI Bearer middleware in `mcp_server.mount_mcp` (do not subclass `BaseHTTPMiddleware`). Decision: [ADR-017](../../adr/ADR-017-mcp-bearer-pure-asgi.md). Restart kb-agent after the change (`make down-apps && make up-daemon`). Verify:
+**Fix:** pure ASGI Bearer middleware in `mcp_server.mount_mcp` (do not subclass `BaseHTTPMiddleware`). Decision: [ADR-017](../../adr/ADR-017-mcp-bearer-pure-asgi.md). Restart kb-agent after the change (`make down-apps && make up-daemon`). Local stack smoke (contributor only; product clients use `https://kb.agent-mate.ai/sse`):
 
 ```bash
 # keep SSE open; expect event: endpoint with session_id

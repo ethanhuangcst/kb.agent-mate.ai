@@ -171,7 +171,7 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 | 结构图 | `.guide-flow`：双轨 MCP/REST → 墨线汇合 Bearer（反相条）→ hub `kb.agent-mate.ai` → 私人库；左边 3px 墨线；零圆角 |
 | 双栏 | `.guide-modes`：调用方式（MCP \| REST）；模型分工 |
 | 步骤图 | `.guide-steps` / `.guide-step-head`（编号+文案）+ `.guide-figure`（**全宽**，与 `.guide-modes` / `.guide-code` 左右对齐）；`ol.guide-steps` 须 `padding-left: 0`（覆盖 `.guide-body ol`） |
-| MCP 接入 | §3：Customize → MCPs → `mcp.json` stdio（模板见 `deployment-plan` §7.1 B）；远程备选 `/mcp`。§4：ChatBox Remote (http/sse) **`/sse`**。见 `mcp-design.md` |
+| MCP 接入 | §3：Customize → MCPs → 远程 `https://kb.agent-mate.ai/mcp` + Bearer。§4：ChatBox Remote (http/sse) **`https://kb.agent-mate.ai/sse`**。见 `mcp-design.md` §7、`deployment-plan.md` §7.1 |
 | 资产 | `apps/kb-web/public/guide/*.png`（与 `specs/mockup/guide/` 同步） |
 | 文风 | 使用者视角、极简；`.guide-note` 收束要点与路径警告 |
 

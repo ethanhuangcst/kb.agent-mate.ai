@@ -67,7 +67,8 @@
 ```
 
 生产：Nginx Proxy Manager 将 `/mcp`、`/sse`、`/messages/`（及 `/api/v1/kb/*`）反代到 `kb-agent:8000`（见 `deployment-plan.md`）。  
-本地：Cursor `http://<HOST>:<AGENT_PORT>/mcp`；ChatBox `http://<HOST>:<AGENT_PORT>/sse`。起栈推荐 `make up-daemon`（见 `knowledge/ops/local-apps-keep-dying.md`）。
+**产品客户端 URL（唯一接入面）：** **`https://kb.agent-mate.ai/mcp`**（Cursor）、**`https://kb.agent-mate.ai/sse`**（ChatBox）。  
+本机起栈与贡献者调试见 `knowledge/ops/local-apps-keep-dying.md`、`knowledge/ops/mcp-stdio-auth.md`（**不**写入 `/guide` 产品接入说明）。
 
 **进程模型：** MCP 与 REST **同进程同应用**（同一 uvicorn），共享连接池与配置；禁止单独起第二个「只有 MCP」的业务副本以免双实现。
 
@@ -81,7 +82,7 @@
 | 路径 | **`/mcp`**（固定；裸 `/mcp` 与 `/mcp/` 均须可用——Starlette `Mount` 只匹配 `/mcp/…`，服务端将裸路径改写为 `/mcp/`） |
 | 遗留 SSE | ChatBox `http/sse`：`GET /sse` + `POST /messages/`（与 Streamable 并存） |
 | stdio | 可选开发入口（`python -m app.mcp_stdio`）；**不**作为 Cursor 手测 DoD 主证据 |
-| TLS | 生产终止于 NPM；本地明文 `127.0.0.1` 可接受 |
+| TLS | 生产终止于 NPM；产品客户端只连 `https://kb.agent-mate.ai` |
 
 实现选用官方 **Python MCP SDK**（`mcp` 包）的 FastMCP / Streamable HTTP，**挂载**到现有 FastAPI app（`mount` 或 SDK 提供的 ASGI 集成）。实现时以当时 SDK 文档为准；本文约束语义与路径，不锁死某一小版本方法名。
 
@@ -237,27 +238,20 @@ REST route handler ─┘
 
 ### 7.1 Cursor / CodeBuddy（MVP-2 DoD 证据）
 
-UI 图文步骤见 Admin「接入指南」`/guide` §3。**产品默认：远程 Streamable HTTP**（客户端不配 `TAVILY_API_KEY`，见 [ADR-018](./adr/ADR-018-clients-no-tavily-key.md)）。
-
-**路径 A — 远程 Streamable HTTP（推荐）**
+UI 图文步骤见 Admin「接入指南」`/guide` §3。**产品接入：远端 Streamable HTTP → `https://kb.agent-mate.ai/mcp`**（客户端不配 `TAVILY_API_KEY`，见 [ADR-018](./adr/ADR-018-clients-no-tavily-key.md)）。勿配置本机地址。
 
 1. Transport = Streamable HTTP / Remote MCP  
-2. URL：本地 `http://<HOST>:<AGENT_PORT>/mcp`；生产 `https://<PUBLIC_HOST>/mcp`  
+2. URL：**`https://kb.agent-mate.ai/mcp`**  
 3. Auth：`Authorization: Bearer <api_key>`（管理台签发；可列表「查看」；**勿**写入仓库或公开截图）  
 4. **不要**在客户端配置 `TAVILY_API_KEY`
 
 | 项 | 值 |
 | --- | --- |
 | Transport | Streamable HTTP（或 Cursor 标注的等价 Remote MCP） |
-| URL | 本地 `http://<HOST>:<AGENT_PORT>/mcp`；生产 `https://<PUBLIC_HOST>/mcp` |
+| URL | **`https://kb.agent-mate.ai/mcp`** |
 | Auth | Bearer = 使用者 Key 明文（勿提交 git） |
 
-**路径 B — 本地 stdio（可选，贡献者 / 本机全栈）**
-
-1. Cursor Settings → **Customize** → **MCPs** → **New MCP Server**  
-2. 按 [`deployment-plan.md`](./deployment-plan.md) §7.1 B 填写 `mcp.json`（`python -m app.mcp_stdio` + `KB_API_KEY` / `API_KEY_PEPPER` 等；**无** Tavily）  
-3. 需要 `kb_external_search` 时改用路径 A（指向已配置 Tavily 的 kb-agent）  
-4. CodeBuddy：优先 Remote MCP；stdio 用同类 `mcp.json` 字段
+贡献者本机 stdio 调试（非产品接入）见 [`knowledge/ops/mcp-stdio-auth.md`](./knowledge/ops/mcp-stdio-auth.md)。
 
 已实现工具：MVP-2 五件套 + MVP-3 `kb_import_documents` / `kb_confirm_import_batch` / `kb_organize` / `kb_fetch_url` / `kb_external_search`。均走同一 `KbService`。  
 Chat 门面：`POST /v1/chat/completions`（`CHAT_FACADE_ENABLED`）；非 MCP 工具。
@@ -274,25 +268,25 @@ Admin「接入指南」页（`/guide`）§3–§4 为图文步骤；完整模板
 
 ### 7.2 ChatBox
 
-UI 图文步骤见 `/guide` §4。自定义 MCP：**Remote (http/sse)**（遗留 SSE，不是 Streamable HTTP）。客户端**不**配置 Tavily。
+UI 图文步骤见 `/guide` §4。自定义 MCP：**Remote (http/sse)**（遗留 SSE，不是 Streamable HTTP）。客户端**不**配置 Tavily。**勿**使用本机地址。
 
 | 字段 | 值 |
 | --- | --- |
 | Type | Remote (http/sse) |
-| URL | `http://<HOST>:<AGENT_PORT>/sse`（生产 `https://<PUBLIC_HOST>/sse`；**不要**填 `/mcp`） |
+| URL | **`https://kb.agent-mate.ai/sse`**（**不要**填 `/mcp`） |
 | HTTP Header | `Authorization=Bearer <api_key>` |
 
 工具集与 Cursor 相同。消息通道：`POST /messages/`（由 SSE 握手下发，无需手填）。
 
-> Cursor 继续用 Streamable HTTP：`http://<HOST>:<AGENT_PORT>/mcp`。ChatBox 的 http/sse 模式会对 `/mcp` 发 SSE GET → **404**；须改用 `/sse`。
+> Cursor 用 Streamable HTTP：`https://kb.agent-mate.ai/mcp`。ChatBox 的 http/sse 模式会对 `/mcp` 发 SSE GET → **404**；须改用 `/sse`。
 
 ### 7.3 MyPoke.Trade / 自有应用
 
-优先 **REST**；若嵌入 MCP Client，同一 Key、同一工具语义。
+优先 **REST**（经 `https://kb.agent-mate.ai` 反代的 `/api/v1/kb/*`）；若嵌入 MCP Client，同一 Key、同一工具语义。
 
 ### 7.4 调试
 
-- MCP Inspector：Streamable HTTP + Bearer  
+- MCP Inspector：Streamable HTTP + Bearer → `https://kb.agent-mate.ai/mcp`  
 - `GET /healthz` 不鉴权，仅探活，不证明 MCP 可用  
 
 ---
@@ -404,7 +398,7 @@ CI：可用 MCP SDK 内存/HTTP 客户端打 `/mcp`；**Done 门禁**禁止 Fake
 | `knowledge-summary.md` | 内容概述 ≤400 字；`kb_knowledge_summary` |
 | `architecture.md` | 系统拓扑、REST 表、部署 |
 | `mvp-2-3-delivery.md` | 批交付与无 mock DoD |
-| `keys.md` | `AGENT_BASE_URL`、本地 `/mcp` 与 `/sse`、生产域名 |
+| `keys.md` | `AGENT_BASE_URL`、产品域名 `kb.agent-mate.ai`（`/mcp` · `/sse`） |
 | `deployment-plan.md` | NPM `/mcp`、`/sse`、`/messages/` location |
 
 ---

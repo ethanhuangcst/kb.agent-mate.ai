@@ -2,6 +2,8 @@
 .env
 .env.local
 .env*.local
+.env.prod
+.env.prod.example
 **/.env
 specs/.env
 specs/keys.local.md

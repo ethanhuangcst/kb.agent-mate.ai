@@ -4,33 +4,13 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { BrandLockup, SiteFooter } from "../site-chrome";
 import { LocaleSwitcher } from "../locale-switcher";
 
-/** Product path: remote Streamable HTTP — no Tavily on the client (ADR-018). */
+/** Product path: remote Streamable HTTP on kb.agent-mate.ai only (ADR-018). */
 const MCP_REMOTE_SNIPPET = `{
   "mcpServers": {
     "kb-agent": {
-      "url": "https://<PUBLIC_HOST>/mcp",
+      "url": "https://kb.agent-mate.ai/mcp",
       "headers": {
         "Authorization": "Bearer <paste_plaintext_user_api_key>"
-      }
-    }
-  }
-}`;
-
-/** Optional contributor path: local stdio. No TAVILY_API_KEY — use remote for external search. */
-const MCP_STDIO_SNIPPET = `{
-  "mcpServers": {
-    "kb-agent": {
-      "command": "<REPO>/.venv/bin/python",
-      "args": ["-m", "app.mcp_stdio"],
-      "cwd": "<REPO>/services/kb-agent",
-      "env": {
-        "KB_API_KEY": "<paste_plaintext_user_api_key>",
-        "API_KEY_PEPPER": "<same_as_agent_and_admin_dotenv>",
-        "DATABASE_URL": "postgresql+psycopg://kb:<password>@<PG_HOST>:<PG_PORT>/kb_agent",
-        "RAG_BASE_URL": "http://<RAG_HOST>:<RAG_PORT>",
-        "RAG_SERVICE_TOKEN": "<same_as_dotenv>",
-        "BLOB_ROOT": "<REPO>/data/blob",
-        "PYTHONPATH": "<REPO>/services/kb-agent"
       }
     }
   }
@@ -91,8 +71,8 @@ const copy = {
     keyRevoke: "吊销立即失效；重签换密钥，知识库保留。",
     ideTitle: "3. IDE 接入",
     ideLead:
-      "推荐远程 Streamable HTTP（与生产一致，无需任何 Tavily）。以 Cursor 为例；CodeBuddy 字段相同。",
-    ideCursor: "Cursor · 远程（推荐）",
+      "一律通过远端 https://kb.agent-mate.ai 接入（Streamable HTTP，客户端不配 Tavily）。以 Cursor 为例；CodeBuddy 字段相同。",
+    ideCursor: "Cursor · 远程",
     ideSteps: [
       {
         title: "打开 Cursor Settings",
@@ -114,21 +94,16 @@ const copy = {
       },
       {
         title: "填写远程 URL 与 Bearer",
-        body: "用下方远程模板：url 指向 /mcp（本地或生产），headers 里 Authorization: Bearer <使用者 Key>。不要填 /sse，不要加 TAVILY_API_KEY。",
+        body: "用下方模板：url 固定为 https://kb.agent-mate.ai/mcp；headers 里 Authorization: Bearer <使用者 Key>。不要填 /sse，不要加 TAVILY_API_KEY，不要使用本机地址。",
         img: "/guide/cursor-04-mcp-json.png",
         alt: "mcp.json 编辑界面（远程配置用 url + headers）",
       },
     ],
-    ideRemoteCaption:
-      "远程 mcp.json 模板（将 <PUBLIC_HOST> 换成实际主机；本地可用 http://<HOST>:<AGENT_PORT>/mcp）",
-    ideLocalTitle: "可选：本地 stdio（贡献者 / 本机全栈）",
-    ideLocalLead:
-      "仅在本机已拉起 Postgres / RAG、需要不经 HTTP 调试时使用。客户端仍不配 Tavily；外部搜索请改用上方远程，或由运维在 kb-agent .env 配置后走远程。",
-    ideLocalCaption: "stdio 模板（勿提交密钥；无 TAVILY_API_KEY）",
-    ideCodeBuddy:
-      "CodeBuddy：优先 Remote MCP → /mcp + Bearer；本地 stdio 字段与上表可选模板相同。",
+    ideRemoteCaption: "mcp.json 模板（远端 kb.agent-mate.ai）",
+    ideCodeBuddy: "CodeBuddy：Remote MCP → https://kb.agent-mate.ai/mcp + Bearer（与上表相同）。",
     toolsTitle: "4. 第三方工具接入",
-    toolsLead: "以 ChatBox 为例。须使用 Remote (http/sse) 与 /sse 路径，不能填 /mcp。同样不配置 Tavily。",
+    toolsLead:
+      "以 ChatBox 为例。须使用 Remote (http/sse) 与远端 /sse，不能填 /mcp，不能使用本机地址。同样不配置 Tavily。",
     chatboxSteps: [
       {
         title: "Settings → MCP",
@@ -144,7 +119,7 @@ const copy = {
       },
       {
         title: "填写服务器（注意 SSE）",
-        body: "Type = Remote (http/sse)。URL 本地 http://<HOST>:<AGENT_PORT>/sse，生产 https://<PUBLIC_HOST>/sse。HTTP Header：Authorization=Bearer <api_key>。",
+        body: "Type = Remote (http/sse)。URL：https://kb.agent-mate.ai/sse。HTTP Header：Authorization=Bearer <api_key>。",
         img: "/guide/chatbox-03-server-form.png",
         alt: "ChatBox Add MCP Server 表单，Type 为 Remote http/sse，URL 以 /sse 结尾",
       },
@@ -217,8 +192,8 @@ const copy = {
     keyRevoke: "Revoke fails immediately; reissue rotates the secret, library kept.",
     ideTitle: "3. IDE setup",
     ideLead:
-      "Prefer remote Streamable HTTP (production path; no Tavily on the client). Cursor example; CodeBuddy uses the same fields.",
-    ideCursor: "Cursor · remote (recommended)",
+      "Connect only via remote https://kb.agent-mate.ai (Streamable HTTP; no Tavily on the client). Cursor example; CodeBuddy uses the same fields.",
+    ideCursor: "Cursor · remote",
     ideSteps: [
       {
         title: "Open Cursor Settings",
@@ -240,21 +215,16 @@ const copy = {
       },
       {
         title: "Set remote URL and Bearer",
-        body: "Use the remote template below: url ends with /mcp (local or prod); headers Authorization: Bearer <user key>. Do not use /sse. Do not add TAVILY_API_KEY.",
+        body: "Use the template below: url must be https://kb.agent-mate.ai/mcp; headers Authorization: Bearer <user key>. Do not use /sse, TAVILY_API_KEY, or a local/loopback host.",
         img: "/guide/cursor-04-mcp-json.png",
         alt: "mcp.json editor (remote uses url + headers)",
       },
     ],
-    ideRemoteCaption:
-      "Remote mcp.json template (replace <PUBLIC_HOST>; local may use http://<HOST>:<AGENT_PORT>/mcp)",
-    ideLocalTitle: "Optional: local stdio (contributors / full local stack)",
-    ideLocalLead:
-      "Only when Postgres/RAG are local and you need non-HTTP debugging. Still no Tavily in the client; use remote above for external search, or point remote at an agent whose .env already has the key.",
-    ideLocalCaption: "stdio template (never commit secrets; no TAVILY_API_KEY)",
-    ideCodeBuddy:
-      "CodeBuddy: prefer Remote MCP → /mcp + Bearer; optional local stdio matches the secondary template.",
+    ideRemoteCaption: "mcp.json template (remote kb.agent-mate.ai)",
+    ideCodeBuddy: "CodeBuddy: Remote MCP → https://kb.agent-mate.ai/mcp + Bearer (same as above).",
     toolsTitle: "4. Third-party tools",
-    toolsLead: "Example: ChatBox. Use Remote (http/sse) and /sse — not /mcp. No Tavily on the client.",
+    toolsLead:
+      "Example: ChatBox. Use Remote (http/sse) and remote /sse — not /mcp, not a local address. No Tavily on the client.",
     chatboxSteps: [
       {
         title: "Settings → MCP",
@@ -270,7 +240,7 @@ const copy = {
       },
       {
         title: "Fill the server form (SSE)",
-        body: "Type = Remote (http/sse). URL local http://<HOST>:<AGENT_PORT>/sse, prod https://<PUBLIC_HOST>/sse. HTTP Header: Authorization=Bearer <api_key>.",
+        body: "Type = Remote (http/sse). URL: https://kb.agent-mate.ai/sse. HTTP Header: Authorization=Bearer <api_key>.",
         img: "/guide/chatbox-03-server-form.png",
         alt: "ChatBox Add MCP Server form with Remote http/sse and /sse URL",
       },
@@ -474,12 +444,6 @@ export default async function GuidePage() {
           <p className="guide-code-label">{c.ideRemoteCaption}</p>
           <pre className="guide-code">
             <code>{MCP_REMOTE_SNIPPET}</code>
-          </pre>
-          <h3 className="guide-sub">{c.ideLocalTitle}</h3>
-          <p className="guide-note">{c.ideLocalLead}</p>
-          <p className="guide-code-label">{c.ideLocalCaption}</p>
-          <pre className="guide-code">
-            <code>{MCP_STDIO_SNIPPET}</code>
           </pre>
           <p className="guide-note">{c.ideCodeBuddy}</p>
           <p className="guide-note">{c.connectCheck}</p>

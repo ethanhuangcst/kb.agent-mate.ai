@@ -25,7 +25,8 @@ Prefer **`make up-daemon`** when starting from Cursor Agent (avoids child proces
 | Postgres | 127.0.0.1:5434 |
 | Qdrant | 127.0.0.1:6333 |
 
-MCP config (Cursor / ChatBox, `KB_API_KEY` vs `API_KEY_PEPPER`): [`specs/deployment-plan.md`](specs/deployment-plan.md) §7.1.
+MCP config (Cursor / ChatBox): [`specs/deployment-plan.md`](specs/deployment-plan.md) §7.1.  
+Production deploy (野草云3): [`specs/deployment-plan.md`](specs/deployment-plan.md) + `docker-compose.prod.yml` + `.env.prod.example`.
 
 ## Layout
 

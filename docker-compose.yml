@@ -1,5 +1,6 @@
-# Local stack per specs/architecture.md — Postgres + Qdrant + three services.
-# Usage: make up | make down | make dev
+# Local development stack only (build: + local Postgres :5434).
+# Production (野草云3 / Portainer / GHCR): use docker-compose.prod.yml — see specs/deployment-plan.md.
+# Usage: make up | make up-daemon | make down | make migrate
 
 services:
   postgres:

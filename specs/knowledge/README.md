@@ -65,5 +65,6 @@
 | [ops/admin-resend-mail.md](ops/admin-resend-mail.md) | Admin 邮件 Resend / log transport | 2026-08-11 |
 | [ops/safari-localhost-email-links.md](ops/safari-localhost-email-links.md) | Safari + `127.0.0.1` 邮件链接（ADR-012） | 2026-08-11 |
 | [ops/config-snippet-placeholders.md](ops/config-snippet-placeholders.md) | 配置示例占位符约定 | 2026-08-11 |
+| [ops/prod-yecaoyun3.md](ops/prod-yecaoyun3.md) | 野草云3 生产交接：端口、Aliyun `kb_agent`、release-bot | 2026-08-11 |
 | [security/api-key-ciphertext.md](security/api-key-ciphertext.md) | Key 密文 + 查看（ADR-007） | 2026-08-11 |
 | [for-kb/](for-kb/) | **产品库入库正文包** | 2026-08-11 |

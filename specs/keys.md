@@ -58,7 +58,7 @@ AGENT_BASE_URL=
 RAG_BASE_URL=
 RAG_SERVICE_TOKEN=
 # MCP：Cursor = Streamable HTTP `/mcp`；ChatBox = legacy SSE `/sse`（+ `/messages/`）
-# 客户端如何写配置（含 stdio mcp.json）：specs/deployment-plan.md §7.1
+# 产品客户端：https://kb.agent-mate.ai/mcp · https://kb.agent-mate.ai/sse（deployment-plan.md §7.1）
 # 详见 specs/mcp-design.md §7；Bearer = 使用者 Key（勿把 Key 写进 URL）
 # MCP_PUBLIC_PATH=/mcp
 # MCP_SSE_PATH=/sse
@@ -84,14 +84,15 @@ SESSION_SECRET=
 | `NEXT_PUBLIC_APP_URL` | `http://localhost:3000`（与上同域） | `https://kb.agent-mate.ai`（与 `PUBLIC_BASE_URL` 一致） |
 | `AGENT_BASE_URL` | `http://127.0.0.1:8000` | Compose 内网如 `http://kb-agent:8000` |
 | `RAG_BASE_URL` | `http://127.0.0.1:8001` | `http://kb-rag:8001` |
-| `QDRANT_URL` | `http://127.0.0.1:6333` | `http://qdrant:6333` |
-| `DATABASE_URL` | 本机 Compose（常映射 **`:5434`**）或远程实例 | 生产 Postgres；**禁止**写进 `NEXT_PUBLIC_*` |
+| `QDRANT_URL` | `http://127.0.0.1:6333` | `http://kb-qdrant:6333` |
+| `DATABASE_URL` | 本机 Compose（常映射 **`:5434`**）或远程实例 | Aliyun **`101.132.156.250:5432` / DB `kb_agent`**；**禁止**写进 `NEXT_PUBLIC_*` |
 | `USE_FAKE_EMBEDDER` | MVP-1/廉价车道可 `true`；**MVP-2 Done 须 `false`** | 生产 `false` |
 
 模板文件：
 
 - 本地：`.env.example` → 复制为 `.env`（gitignore）
-- 生产名册：[`.env.prod.example`](../.env.prod.example)（无密钥）→ 填入 Portainer / 节点 env
+- 生产名册：[`.env.prod.example`](../.env.prod.example)（主机/模型已填真实值；**密钥留空**）→ 填入 Portainer / 节点 env
+- 部署计划：[`deployment-plan.md`](./deployment-plan.md)（野草云3 · `38.55.192.140` · `kb.agent-mate.ai`）
 - 交付批次：[`mvp-2-3-delivery.md`](./mvp-2-3-delivery.md)、[`story-mapping.md`](./story-mapping.md)
 
 本地起栈：复制 `.env` 后 **`make install`** → **`make up-daemon`**（durable；见 [`knowledge/ops/local-apps-keep-dying.md`](./knowledge/ops/local-apps-keep-dying.md)）。根目录 [`README.md`](../README.md) 有端口表。MCP 写入法见 [`deployment-plan.md`](./deployment-plan.md) §7.1。
@@ -119,8 +120,8 @@ SESSION_SECRET=
 | QDRANT_* | 向量库；通常仅内网 URL（环境变量 `QDRANT_URL`） |
 | `USE_FAKE_EMBEDDER` | `true` 仅廉价测试；MVP-2+ 闭环交付门禁必须 `false` + 真 embed |
 | `AGENT_BASE_URL` / `RAG_BASE_URL` | 服务间调用；环境变量配置，生产用服务名而非 `127.0.0.1` |
-| MCP `/mcp` | Streamable HTTP（Cursor）；URL = `{基址}/mcp`；配置写法见 `deployment-plan.md` §7.1 |
-| MCP `/sse` | Legacy SSE（ChatBox http/sse）；URL = `{基址}/sse`；配套 `/messages/`；§7.1 |
+| MCP `/mcp` | Streamable HTTP（Cursor）；产品 URL = `https://kb.agent-mate.ai/mcp`；见 `deployment-plan.md` §7.1 |
+| MCP `/sse` | Legacy SSE（ChatBox http/sse）；产品 URL = `https://kb.agent-mate.ai/sse`；配套 `/messages/`；§7.1 |
 | `API_KEY_PEPPER` | 服务端 Key 哈希盐；stdio 的 `mcp.json` 必须与签发环境相同（勿填成 API Key） |
 | PUBLIC_BASE_URL | 邮件/邀请链接公网基址。本地用 `http://localhost:3000`；生产 `https://kb.agent-mate.ai`。勿用 `127.0.0.1`（Safari 会升 HTTPS 并丢端口） |
 | NEXT_PUBLIC_APP_URL | 与 `PUBLIC_BASE_URL` 同域；生产须一并写入 compose |
