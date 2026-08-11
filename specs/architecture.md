@@ -93,7 +93,7 @@ Admin Web (/admin)
 | --- | --- |
 | 初始化默认管理员 | 库中无 `AdminUser` 时自动种子账号：登录名 **`admin`**、密码 **`admin`**，并标记 `must_change_password=true`。**关闭**开放注册 |
 | 种子账号强制改密 | **仅** `must_change_password=true`（种子默认口令）登录成功后须先改密；未改密不得访问 Key / 邀请等管理能力。**不适用于**邀请设密或忘记密码重置成功的账号（二者设密后即为 `false`，登录不再强制改密） |
-| 邀请（R2） | 已登录且已完成改密的管理员输入邮箱 → Resend 发邀请链接 → 对方设密码（`must_change_password=false`）→ 成为管理员并可直接使用管理台 |
+| 邀请（R2） | 已登录且已完成改密的管理员输入邮箱 → Resend 发邀请链接 → 对方设**英文姓名**与密码（`must_change_password=false`）→ 成为管理员；顶栏 `Hello, {display_name}` |
 | 开放注册 | **关闭** |
 | 登录 | 用户名或邮箱 + 密码 → HttpOnly Secure Cookie 会话 |
 | 重设密码 | 邮箱 → Resend 重置链接（短时、一次性）→ 设新密码（成功后 `must_change_password=false`）；可使旧会话失效 |
@@ -434,7 +434,8 @@ multipart 多文件（+ 可选默认 project/tags）
 
 ```text
 AdminUser
-  id, username?, email?, password_hash
+  id, username?, email?, display_name?   # 邀请设密时填英文姓名；种子可用 Admin
+  password_hash
   must_change_password   # 种子默认 admin 为 true；邀请/重置设密与主动改密成功后 false
   email_verified_at?, created_at
 
@@ -507,7 +508,7 @@ MCP：使用 Streamable HTTP 或 ChatBox / Cursor 所支持的远程 MCP 传输�
 
 | 能力 | 说明 |
 | --- | --- |
-| 登录 / 登出 | 邮箱密码；Cookie 会话 |
+| 登录 / 登出 | 用户名或邮箱 + 密码；Cookie 会话 |
 | 接受邀请 / 设密 | 邀请链接落地 |
 | 忘记密码 / 重置 | Resend 链接 |
 | 种子强制改密 | `must_change_password` 为真时仅开放改密相关接口 |
@@ -530,7 +531,7 @@ Admin API 仅接受管理员会话，不接受使用者 API Key 做邀请、签�
 | --- | --- | --- |
 | Admin Web | Next.js（App Router） | 16.2.x |
 | UI / 语言 | React · TypeScript；i18n locales `zh-CN`（默认）/ `en`（可扩展 `ja`）；管理面用户可见文案走 i18n | 19.2.x · 5.9.x |
-| 样式 | Tailwind CSS；视觉对齐 [`web-ui-design.md`](./web-ui-design.md) 与 `specs/mockup/`（性冷淡；主按钮固定 `--control-h`） | 4.x |
+| 样式 | Tailwind CSS；视觉对齐 [`web-ui-design.md`](./web-ui-design.md) 与 `specs/mockup/`（性冷淡；公网/auth 偏上居中同壳；全站页脚；主按钮固定 `--control-h`） | 4.x |
 | 状态 / 表单 | React Query · Zustand · RHF + Zod + `@hookform/resolvers`（管理面表单） | 按锁文件钉死 |
 | Agent / API / MCP | Python 3.12 · FastAPI · MCP Python SDK | — |
 | RAG 服务 | Python 3.12 · FastAPI；Qdrant（向量） | — |

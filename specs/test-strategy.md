@@ -135,7 +135,7 @@
 3. `kb_import_documents`（md/txt）→ `kb_confirm_import_batch` → 可检索  
 4. 越界：「给出投放策略」→ 稳定拒绝码  
 
-**静态稿（可选）：** `specs/mockup/*.html` 用 `file://` 做视觉/导航冒烟（侧栏三项、`.btn-page` 尺寸），**不**替代动态 E2E。
+**静态稿（可选）：** `specs/mockup/*.html` 用 `file://` 做视觉/导航冒烟（侧栏三项、`.btn-page` 尺寸、首页/登录偏上对齐、全站页脚），**不**替代动态 E2E。
 
 **延迟：** 遵循架构「软提示 ~10s / 目标 ≤20s」；E2E 禁止用冲突的 10s 硬杀替代可观测等待；断言用就绪选择器，避免无意义 `sleep`。
 

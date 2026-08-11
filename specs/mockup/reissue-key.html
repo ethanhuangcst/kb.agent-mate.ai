@@ -8,51 +8,46 @@
   </head>
   <body>
     <div class="app-shell">
-      <aside class="sidebar">
+
+      <header class="app-header">
         <a class="logo" href="index.html" aria-label="kb.agent-mate.ai">
-          <img class="logo-mark" src="logo.png" alt="" width="40" height="40" />
+          <img class="logo-header-mark" src="logo.png" alt="" width="36" height="36" />
           <span class="logo-word">kb.agent-mate.ai</span>
         </a>
-        <nav class="nav" aria-label="管理导航">
-          <a class="active" href="users.html">使用者</a>
-          <a href="admins.html">管理员</a>
-          <a href="login.html">退出</a>
-        </nav>
-        <p class="foot">ADMIN</p>
-      </aside>
-      <div class="main">
-        <header class="topbar">
-          <span class="crumb">Users / Reissue</span>
-          <span class="admin-chip">替换密钥</span>
-        </header>
-        <div class="content">
-          <div class="page-head">
-            <div>
-              <p class="eyebrow">Reissue</p>
-              <h1>重签 Key</h1>
-              <p>吊销当前有效 Key，并为同一使用者签发新 Key。知识库数据保留。</p>
+        <p class="hello">Hello, <span class="hello-name">Admin</span></p>
+      </header>
+      <div class="app-body">
+        <aside class="sidebar">
+          <nav class="nav" aria-label="管理导航">
+            <a class="active" href="users.html">使用者</a>
+            <a href="admins.html">管理员</a>
+            <a href="login.html">退出</a>
+          </nav>
+        </aside>
+        <div class="main">
+          <div class="content">
+            <div class="page-head">
+              <div>
+                <p class="eyebrow">Reissue</p>
+                <h1>重签 Key</h1>
+                <p>将吊销旧 Key 并生成新 Key。知识库与姓名不变。</p>
+              </div>
             </div>
-          </div>
-
-          <div class="notice">
-            <p>
-              使用者 <strong>Ethan Huang</strong><br />
-              当前前缀 <span class="mono">kb_3f8a</span> · 状态 active
-            </p>
-          </div>
-
-          <form class="form" action="key-issued.html" method="get" style="max-width: 420px">
-            <p class="hint">
-              确认后，旧 Key 立即失效。对方须在 MCP / App 中更换为新 Key。新 Key
-              明文仅显示一次。
-            </p>
-            <div class="form-actions btn-row">
-              <button type="submit" class="btn">确认重签</button>
-              <a class="btn btn-ghost" href="users.html">取消</a>
+            <div class="notice">
+              <p>使用者 <strong>Ethan Huang</strong> · 当前前缀 <span class="mono">kb_3f8a</span></p>
             </div>
-          </form>
+            <form class="form" action="key-issued.html" method="get" style="max-width: 420px">
+              <div class="form-actions btn-row">
+                <button type="submit" class="btn">确认重签</button>
+                <a class="btn btn-ghost" href="users.html">取消</a>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
+      <footer class="site-footer">
+        <p>copyright ® Ethan Huang</p>
+      </footer>
     </div>
   </body>
 </html>

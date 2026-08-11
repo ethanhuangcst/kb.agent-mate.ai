@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>接入指南 · kb.agent-mate.ai</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="guide-shell">
+
+      <header class="guide-header">
+        <a class="logo" href="index.html" aria-label="kb.agent-mate.ai">
+          <img class="logo-header-mark" src="logo.png" alt="" width="36" height="36" />
+          <span class="logo-word">kb.agent-mate.ai</span>
+        </a>
+        <a class="btn-text" href="index.html">返回首页</a>
+      </header>
+      <article class="guide-body">
+        <p class="eyebrow">Connect</p>
+        <h1>接入指南</h1>
+        <p class="lead">用同一把 API Key 连接 Cursor、ChatBox 或自有应用。调用方自带大模型；本服务提供知识工具。</p>
+
+        <h2>1. 获取 API Key</h2>
+        <ol>
+          <li>请管理员在管理台签发一把使用者 Key（明文仅显示一次）。</li>
+          <li>妥善保存；吊销后立即失效，重签会更换密钥但知识库保留。</li>
+        </ol>
+
+        <h2>2. 鉴权</h2>
+        <p>所有知识面请求使用：</p>
+        <pre>Authorization: Bearer &lt;api_key&gt;</pre>
+
+        <h2>3. MCP（Cursor / ChatBox）</h2>
+        <ul>
+          <li>配置远程 MCP，指向本站公开的 MCP 端点（上线后见部署说明）。</li>
+          <li>工具含检索、列表、提案、确认、批量导入等；不提供业务策略工具。</li>
+          <li>写入必须确认后才会索引。</li>
+        </ul>
+
+        <h2>4. REST（如 HCP）</h2>
+        <ul>
+          <li>与 MCP 工具语义对齐，路径形如 <span class="mono">/api/v1/kb/*</span>。</li>
+          <li>同样使用 Bearer Key；请求体中的用户标识不能覆盖 Key 身份。</li>
+        </ul>
+
+        <h2>5. 边界</h2>
+        <ul>
+          <li>可帮你找到并管好知识；不替你做投放策略或业务决策。</li>
+          <li>外部材料须提案并确认后入库；禁止无确认自动进库。</li>
+        </ul>
+      </article>
+      <footer class="site-footer">
+        <p>copyright ® Ethan Huang</p>
+      </footer>
+    </div>
+  </body>
+</html>

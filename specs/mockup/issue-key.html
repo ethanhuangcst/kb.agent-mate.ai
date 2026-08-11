@@ -8,45 +8,48 @@
   </head>
   <body>
     <div class="app-shell">
-      <aside class="sidebar">
+
+      <header class="app-header">
         <a class="logo" href="index.html" aria-label="kb.agent-mate.ai">
-          <img class="logo-mark" src="logo.png" alt="" width="40" height="40" />
+          <img class="logo-header-mark" src="logo.png" alt="" width="36" height="36" />
           <span class="logo-word">kb.agent-mate.ai</span>
         </a>
-        <nav class="nav" aria-label="管理导航">
-          <a class="active" href="users.html">使用者</a>
-          <a href="admins.html">管理员</a>
-          <a href="login.html">退出</a>
-        </nav>
-        <p class="foot">ADMIN</p>
-      </aside>
-      <div class="main">
-        <header class="topbar">
-          <span class="crumb">Users / Issue</span>
-          <span class="admin-chip">新建使用者</span>
-        </header>
-        <div class="content">
-          <div class="page-head">
-            <div>
-              <p class="eyebrow">Issue</p>
-              <h1>签发新 Key</h1>
-              <p>创建使用者并生成一把 API Key。姓名用于识别，签发后不可修改。</p>
+        <p class="hello">Hello, <span class="hello-name">Admin</span></p>
+      </header>
+      <div class="app-body">
+        <aside class="sidebar">
+          <nav class="nav" aria-label="管理导航">
+            <a class="active" href="users.html">使用者</a>
+            <a href="admins.html">管理员</a>
+            <a href="login.html">退出</a>
+          </nav>
+        </aside>
+        <div class="main">
+          <div class="content">
+            <div class="page-head">
+              <div>
+                <p class="eyebrow">Issue</p>
+                <h1>签发新 Key</h1>
+                <p>创建使用者并生成一把 API Key。姓名用于识别。</p>
+              </div>
             </div>
+            <form class="form" action="key-issued.html" method="get" style="max-width: 420px">
+              <label>
+                使用者姓名
+                <input type="text" name="display_name" placeholder="Ethan Huang" required />
+              </label>
+              <p class="hint">明文 Key 仅在下一页显示一次。该使用者拥有独立全局知识库。</p>
+              <div class="form-actions btn-row">
+                <button type="submit" class="btn">生成 Key</button>
+                <a class="btn btn-ghost" href="users.html">取消</a>
+              </div>
+            </form>
           </div>
-
-          <form class="form" action="key-issued.html" method="get" style="max-width: 420px">
-            <label>
-              使用者姓名
-              <input type="text" name="display_name" placeholder="例如 Ethan Huang" required />
-            </label>
-            <p class="hint">明文 Key 仅在下一页显示一次。该使用者拥有独立全局知识库。</p>
-            <div class="form-actions btn-row">
-              <button type="submit" class="btn">生成 Key</button>
-              <a class="btn btn-ghost" href="users.html">取消</a>
-            </div>
-          </form>
         </div>
       </div>
+      <footer class="site-footer">
+        <p>copyright ® Ethan Huang</p>
+      </footer>
     </div>
   </body>
 </html>

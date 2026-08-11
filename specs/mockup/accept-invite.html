@@ -8,9 +8,11 @@
   </head>
   <body>
     <div class="auth-shell">
-      <div class="auth-card">
-        <a class="logo" href="index.html" aria-label="kb.agent-mate.ai">
-          <img class="logo-full" src="logo.png" alt="kb.agent-mate.ai" width="80" height="80" />
+      <main class="auth-main">
+        <div class="auth-card">
+        <a class="logo logo-auth" href="index.html" aria-label="kb.agent-mate.ai">
+          <img class="logo-full" src="logo.png" alt="" width="56" height="56" />
+          <span class="logo-word">kb.agent-mate.ai</span>
         </a>
         <p class="eyebrow">Invite</p>
         <h1>设置密码</h1>
@@ -18,19 +20,36 @@
         <hr class="rule" />
         <form class="form" action="users.html" method="get">
           <label>
+            姓名（英文）
+            <input
+              type="text"
+              name="display_name"
+              autocomplete="name"
+              placeholder="Alex Chen"
+              pattern="[A-Za-z][A-Za-z .'-]{0,63}"
+              title="仅限英文字母、空格与常见标点"
+              required
+            />
+          </label>
+          <p class="hint">仅允许英文字母、空格与 <span class="mono">.'-</span>；登录后顶栏显示 Hello, {姓名}。</p>
+          <label>
             新密码
-            <input type="password" name="password" autocomplete="new-password" placeholder="至少 12 位" />
+            <input type="password" name="password" autocomplete="new-password" placeholder="至少 12 位" required />
           </label>
           <label>
             确认密码
-            <input type="password" name="password2" autocomplete="new-password" placeholder="再次输入" />
+            <input type="password" name="password2" autocomplete="new-password" placeholder="再次输入" required />
           </label>
           <div class="form-actions btn-row">
             <button type="submit" class="btn">完成</button>
           </div>
         </form>
-        <a class="back-link" href="index.html">全部界面</a>
+        <a class="back-link" href="index.html">返回首页</a>
       </div>
+      </main>
+      <footer class="site-footer">
+        <p>copyright ® Ethan Huang</p>
+      </footer>
     </div>
   </body>
 </html>

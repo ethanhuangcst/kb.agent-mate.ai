@@ -15,7 +15,7 @@ ATDD：用户故事 + Gherkin AC；实现前可据此写失败验收测试。
 | 2 | Web | web-acct-02 | 管理员登录 / 登出 | 用户名或邮箱+密码会话；Cookie | MVP-1 | ToDo |
 | 3 | Web | web-acct-03 | 忘记密码 / 重置 | Resend 短时一次性链接设新密 | MVP-3 | ToDo |
 | 4 | Web | web-acct-04 | 邀请管理员（R2） | 已登录且已改密管理员邀请邮箱 → 对方设密成为管理员 | MVP-3 | ToDo |
-| 5 | Web | web-acct-05 | 接受邀请设密 | 邀请链接落地；设密后可登录 | MVP-3 | ToDo |
+| 5 | Web | web-acct-05 | 接受邀请设密 | 邀请链接落地；设英文姓名 + 密码后可登录 | MVP-3 | ToDo |
 | 6 | Web | web-acct-06 | 种子账号强制改密 | 仅默认 `admin`/`admin`（`must_change_password`）；邀请/重置设密不走此门禁 | MVP-1 | ToDo |
 | 7 | Web | web-acct-07 | 管理员列表 | 查看管理员（用户名/邮箱、状态、创建时间） | MVP-3 | ToDo |
 | 8 | Web | web-acct-08 | 删除管理员 | 删除其他管理员；禁止删自己、禁止删光最后一名 | MVP-3 | ToDo |
@@ -182,19 +182,26 @@ Scenario: 强制改密未完成不能邀请
 
 **用户故事**  
 As an 被邀请人，  
-I want 通过邀请链接设置密码，  
-So that 我成为管理员并可登录。
+I want 通过邀请链接设置英文姓名与密码，  
+So that 我成为管理员并可登录，且顶栏显示我的姓名。
 
 **AC**
 
 ```gherkin
-Scenario: 有效邀请链接设密成功
+Scenario: 有效邀请链接设姓名与密码成功
   Given 被邀请人打开未过期的邀请链接
-  When 被邀请人设置符合要求的密码并提交
+  When 被邀请人填写符合规则的英文姓名与密码并提交
   Then 该邮箱成为管理员
   And must_change_password 为 false
   And 可用该邮箱密码直接登录管理台并使用管理能力
+  And 顶栏问候显示 Hello, {英文姓名}
   And 不进入种子账号的强制改密流程
+
+Scenario: 拒绝非英文姓名
+  Given 被邀请人打开未过期的邀请链接
+  When 被邀请人提交含非英文字符的姓名
+  Then 系统拒绝提交
+  And 提示姓名仅限英文
 
 Scenario: 无效邀请链接被拒绝
   Given 邀请链接无效、过期或已使用
@@ -396,6 +403,7 @@ Scenario: 默认 locale 解析文案
   Given 管理台默认 locale 为 zh-CN
   When 管理员打开登录或使用者列表页
   Then 可见文案来自 i18n 词条而非散落硬编码业务句
+  And 页脚 copyright 文案亦走 i18n key
   And 缺少词条时有明确回退行为而不白屏崩溃
 ```
 
