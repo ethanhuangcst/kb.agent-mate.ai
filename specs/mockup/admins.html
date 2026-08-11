@@ -4,76 +4,91 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>管理员 · kb.agent-mate.ai</title>
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="icon" href="logo.png" type="image/png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="app-shell">
-      <aside class="sidebar">
+
+      <header class="app-header">
         <a class="logo" href="index.html" aria-label="kb.agent-mate.ai">
-          <img class="logo-mark" src="logo.png" alt="" width="40" height="40" />
+          <img class="logo-header-mark" src="logo.png" alt="" width="36" height="36" />
           <span class="logo-word">kb.agent-mate.ai</span>
         </a>
-        <nav class="nav" aria-label="管理导航">
-          <a href="users.html">使用者</a>
-          <a class="active" href="admins.html">管理员</a>
-          <a href="login.html">退出</a>
-        </nav>
-        <p class="foot">ADMIN</p>
-      </aside>
-      <div class="main">
-        <header class="topbar">
-          <span class="crumb">Admins</span>
-          <span class="admin-chip">会话有效</span>
-        </header>
-        <div class="content">
-          <div class="page-head">
-            <div>
-              <p class="eyebrow">Admins</p>
-              <h1>管理员</h1>
-              <p>不可删除自己；不可删除最后一名有效管理员。</p>
-            </div>
-            <a class="btn btn-page" href="invite-admin.html">邀请管理员</a>
+        <div class="header-end">
+          <p class="hello">Hello, <span class="hello-name">Admin</span></p>
+          <div class="locale-switch" role="group" aria-label="语言">
+            <button type="button" class="is-active">中文</button>
+            <button type="button">EN</button>
           </div>
+        </div>
+      </header>
+      <div class="app-body">
+        <aside class="sidebar">
+          <nav class="nav" aria-label="管理导航">
+            <a href="users.html">使用者</a>
+            <a class="active" href="admins.html">管理员</a>
+            <a href="login.html">退出</a>
+          </nav>
+        </aside>
+        <div class="main">
+          <div class="content">
+            <div class="page-head">
+              <div>
+                <p class="eyebrow">Admins</p>
+                <h1>管理员</h1>
+                <p>不可删除自己；不可删除最后一名有效管理员。</p>
+              </div>
+              <a class="btn btn-page" href="invite-admin.html">邀请管理员</a>
+            </div>
 
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>登录名</th>
-                  <th>邮箱</th>
-                  <th>状态</th>
-                  <th>创建</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="mono">admin</td>
-                  <td>—</td>
-                  <td><span class="status is-on">active</span></td>
-                  <td class="mono">2026-08-01</td>
-                  <td>
-                    <div class="row-actions">
-                      <span class="btn-text" style="border: none; cursor: default; color: var(--mute-soft)">当前账号</span>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="mono">—</td>
-                  <td>ops@agent-mate.ai</td>
-                  <td><span class="status is-on">active</span></td>
-                  <td class="mono">2026-08-10</td>
-                  <td>
-                    <div class="row-actions">
-                      <button type="button" class="btn-text btn-danger-text">删除</button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>用户名</th>
+                    <th>姓名</th>
+                    <th>邮箱</th>
+                    <th>状态</th>
+                    <th>创建</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="mono">admin</td>
+                    <td>Admin</td>
+                    <td>—</td>
+                    <td><span class="status is-on">active</span></td>
+                    <td class="mono">2026-08-01</td>
+                    <td>
+                      <div class="row-actions">
+                        <span class="btn-text" style="border: none; cursor: default; color: var(--mute-soft)">当前账号</span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="mono">—</td>
+                    <td>Alex Chen</td>
+                    <td>ops@agent-mate.ai</td>
+                    <td><span class="status is-on">active</span></td>
+                    <td class="mono">2026-08-10</td>
+                    <td>
+                      <div class="row-actions">
+                        <button type="button" class="btn-text btn-danger-text">删除</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
+      <footer class="site-footer">
+        <p>copyright ® Ethan Huang</p>
+      </footer>
     </div>
   </body>
 </html>

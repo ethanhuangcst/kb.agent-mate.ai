@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kb.agent-mate.ai/contracts/search-response.schema.json",
+  "title": "KbSearchResponse",
+  "type": "object",
+  "required": ["hits", "sufficiency"],
+  "properties": {
+    "hits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["knowledge_id", "chunk_id", "text"],
+        "properties": {
+          "knowledge_id": { "type": "string" },
+          "chunk_id": { "type": "string" },
+          "text": { "type": "string" },
+          "score": { "type": ["number", "null"] },
+          "title": { "type": ["string", "null"] },
+          "summary": {
+            "type": ["string", "null"],
+            "description": "Content overview from KnowledgeItem.summary, max 400 Unicode chars"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "sufficiency": {
+      "type": "object",
+      "required": ["enough"],
+      "properties": {
+        "enough": { "type": "boolean" },
+        "reason": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

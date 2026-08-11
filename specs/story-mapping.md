@@ -1,9 +1,18 @@
 # Story Mapping — kb-agent
 
-来源：`specs/req.md`（辅以 `specs/architecture.md` 能力边界）。  
+来源：`specs/req.md`（辅以 `specs/architecture.md`、`specs/mcp-design.md` 能力边界）。  
 ATDD：用户故事 + Gherkin AC；实现前可据此写失败验收测试。
 
-模块约定：**Web** = Admin 管理面；**Agent** = MCP / REST / 越界与补给编排；**RAG** = 确认后索引与库内检索。
+模块约定：
+
+| 模块 | 含义 |
+| --- | --- |
+| **Web** | Admin 管理面（账号、Key、i18n） |
+| **Agent** | 知识领域能力：鉴权语义、REST、检索/提案/确认/越界/补给编排（`KbService`） |
+| **MCP** | MCP 门面：Streamable HTTP `/mcp`、遗留 SSE `/sse`、工具注册、与 REST 契约、Cursor/ChatBox 接入 |
+| **RAG** | 确认后索引与库内检索 |
+
+编号约定：功能编号前缀 = 模块小写（`web-*` / `agent-*` / `mcp-*` / `rag-*`）。原 `agent-mcp-01` 已拆入 **MCP** 模块（`mcp-01`…），勿再引用旧编号。
 
 ---
 
@@ -11,47 +20,153 @@ ATDD：用户故事 + Gherkin AC；实现前可据此写失败验收测试。
 
 | 序号 | 模块 | 功能编号 | 功能名称 | 说明 | MVP批次 | 状态 |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Web | web-acct-01 | 初始化默认管理员 | 无管理员时种子账号 `admin`/`admin`；关闭开放注册 | MVP-1 | ToDo |
-| 2 | Web | web-acct-02 | 管理员登录 / 登出 | 用户名或邮箱+密码会话；Cookie | MVP-1 | ToDo |
-| 3 | Web | web-acct-03 | 忘记密码 / 重置 | Resend 短时一次性链接设新密 | MVP-3 | ToDo |
-| 4 | Web | web-acct-04 | 邀请管理员（R2） | 已登录且已改密管理员邀请邮箱 → 对方设密成为管理员 | MVP-3 | ToDo |
-| 5 | Web | web-acct-05 | 接受邀请设密 | 邀请链接落地；设密后可登录 | MVP-3 | ToDo |
-| 6 | Web | web-acct-06 | 种子账号强制改密 | 仅默认 `admin`/`admin`（`must_change_password`）；邀请/重置设密不走此门禁 | MVP-1 | ToDo |
-| 7 | Web | web-acct-07 | 管理员列表 | 查看管理员（用户名/邮箱、状态、创建时间） | MVP-3 | ToDo |
-| 8 | Web | web-acct-08 | 删除管理员 | 删除其他管理员；禁止删自己、禁止删光最后一名 | MVP-3 | ToDo |
-| 9 | Web | web-keys-01 | 使用者列表 | 管理台查看已签发使用者（姓名、Key 前缀、状态） | MVP-1 | ToDo |
-| 10 | Web | web-keys-02 | 签发 API Key | 填姓名；明文仅显示一次；一人一把有效 Key | MVP-1 | ToDo |
-| 11 | Web | web-keys-03 | 吊销 API Key | 立即失效；知识数据保留 | MVP-1 | ToDo |
-| 12 | Web | web-keys-04 | 重签 API Key | 吊销旧 Key、发新 Key；同一使用者与库；不改姓名 | MVP-1 | ToDo |
-| 13 | Web | web-i18n-01 | 管理面文案 i18n | 用户可见文案走 i18n（默认 `zh-CN`，可扩展 `en`） | MVP-1 | ToDo |
-| 14 | Agent | agent-auth-01 | Bearer 鉴权 | MCP/REST 统一 `Authorization: Bearer`；解析 `user_id` | MVP-1 | ToDo |
-| 15 | Agent | agent-auth-02 | 身份不可覆盖 | 请求体中的用户标识不能覆盖 Key 身份 | MVP-1 | ToDo |
-| 16 | Agent | agent-auth-03 | 租户隔离 | 各使用者数据强制隔离；默认无跨用户共享 | MVP-1 | ToDo |
-| 17 | Agent | agent-auth-04 | 一人一库一 Key | 同一 Key 可用于 Cursor / ChatBox / HCP；不按调用方拆 Key | MVP-1 | ToDo |
-| 18 | Agent | agent-search-01 | 库内检索 | 按输入检索已有知识；返回可引用片段 / 结构化命中 | MVP-1 | ToDo |
-| 19 | Agent | agent-list-01 | 知识列表 | 按项目 / 标签等过滤列出知识条目 | MVP-3 | ToDo |
-| 20 | Agent | agent-org-01 | 体系整理 | 归纳分类、标签、项目归属（重大变更可走确认） | MVP-3 | ToDo |
-| 21 | Agent | agent-ingest-01 | 粘贴 / 单文件提案 | 材料 → 提案（摘要、分类、查重）；确认前不入库 | MVP-2 | ToDo |
-| 22 | Agent | agent-ingest-02 | URL 拉取提案 | 指定 URL 拉取正文后进入提案 | MVP-4 | ToDo |
-| 23 | Agent | agent-ingest-03 | 确认单条入库 | 显式 confirm 后持久化并触发索引 | MVP-2 | ToDo |
-| 24 | Agent | agent-import-01 | 批量文档上传 | 多文件 → ImportBatch + 每文件提案；禁止静默进库 | MVP-3 | ToDo |
-| 25 | Agent | agent-import-02 | 批次逐条 / 一键确认 | 逐条 confirm 或一键确认全部有效提案 | MVP-3 | ToDo |
-| 26 | Agent | agent-import-03 | 批量格式与限额 | `.md` / `.txt` / 可抽文本 PDF；大小与个数上限；失败不阻塞同批 | MVP-3 | ToDo |
-| 27 | Agent | agent-source-01 | 外部搜索候选 | 源路由搜索；返回候选列表；不自动落库 | MVP-4 | ToDo |
-| 28 | Agent | agent-source-02 | 库内优先补给 | 优先库内；不足或显式要求时才外部 | MVP-4 | ToDo |
-| 29 | Agent | agent-scope-01 | 拒绝业务策略越界 | 拒绝代劳投放策略 / 业务结论；可降级为公开资料候选 | MVP-2 | ToDo |
-| 30 | Agent | agent-scope-02 | 拒绝开放式决策 | 只给证据与来源；不给「该怎么做」的最终决策 | MVP-2 | ToDo |
-| 31 | Agent | agent-scope-03 | 拒绝无确认自动入库 | 拒绝「网上相关都自动进库」 | MVP-2 | ToDo |
-| 32 | Agent | agent-scope-04 | 拒绝伪造库内引用 | 库内无据时明确不足；禁止捏造引用 | MVP-2 | ToDo |
-| 33 | Agent | agent-mcp-01 | MCP 一等接入 | Cursor / ChatBox 自定义 MCP；工具与领域层一致 | MVP-3 | ToDo |
-| 34 | Agent | agent-rest-01 | 知识 REST | 与 MCP 工具语义对齐的结构化 API（HCP 等） | MVP-1 | ToDo |
-| 35 | Agent | agent-chat-01 | 可选 OpenAI 兼容门面 | 薄封装同一工具集；同等越界规则；非业务中台 | MVP-4 | ToDo |
-| 36 | Agent | agent-km-01 | 内部 Qwen 仅 KM | 归类 / 摘要提案 / 去重辅助；不做调用方业务洞察 | MVP-2 | ToDo |
-| 37 | RAG | rag-index-01 | 确认后分块索引 | confirm 后分块、向量化、写入向量库 | MVP-2 | ToDo |
-| 38 | RAG | rag-index-02 | 禁止未确认索引 | 提案态不写向量、不建正式条目 | MVP-1 | ToDo |
-| 39 | RAG | rag-retrieve-01 | 混合检索与引用 | 库内混合检索；命中带可引用 chunk / item | MVP-2 | ToDo |
-| 40 | RAG | rag-isolate-01 | 检索租户过滤 | 向量与元数据查询强制 `user_id` | MVP-1 | ToDo |
-| 41 | RAG | rag-store-01 | 原文与元数据存储 | 原文 Blob + PostgreSQL 元数据；排除 Gist | MVP-1 | ToDo |
+| 1 | Web | web-acct-01 | 初始化默认管理员 | 无管理员时种子 `admin`/`admin`，默认邮箱 `me@ethanhuang.com`；关闭开放注册 | MVP-1 | Done |
+| 2 | Web | web-acct-02 | 管理员登录 / 登出 | 用户名或邮箱+密码；联系管理员微信二维码；密码显示/隐藏 | MVP-1 | Done |
+| 3 | Web | web-acct-03 | 忘记密码 / 重置 | Resend 短时一次性链接设新密 | MVP-3 | Done |
+| 4 | Web | web-acct-04 | 邀请管理员（R2） | 已登录且已改密管理员邀请邮箱 → 对方设密成为管理员 | MVP-3 | Done |
+| 5 | Web | web-acct-05 | 接受邀请设密 | 邀请链接落地；设**用户名** + 英文姓名 + 密码后可登录 | MVP-3 | Done |
+
+| 6 | Web | web-acct-06 | 种子账号强制改密 | 仅默认 `admin`/`admin`（`must_change_password`）；邀请/重置设密不走此门禁 | MVP-1 | Done |
+| 7 | Web | web-acct-07 | 管理员列表 | 查看管理员（用户名、姓名、邮箱、状态、创建时间） | MVP-3 | Done |
+
+| 8 | Web | web-acct-08 | 删除管理员 | 删除其他管理员；禁止删自己、禁止删光最后一名 | MVP-3 | Done |
+| 9 | Web | web-keys-01 | 使用者列表 | 管理台查看已签发使用者（姓名、Key 前缀、状态） | MVP-1 | Done |
+| 10 | Web | web-keys-02 | 签发 API Key | 英文姓名；明文单行可复制并密文入库；一人一把有效 Key | MVP-1 | Done |
+| 11 | Web | web-keys-03 | 吊销 API Key | 确认后立即失效；列表移除该行；知识数据保留 | MVP-1 | Done |
+| 12 | Web | web-keys-04 | 重签 API Key | 吊销旧 Key、发新 Key；同一使用者与库；不改姓名 | MVP-1 | Done |
+| 12a | Web | web-keys-05 | 查看 API Key | 列表「查看」：姓名 + 完整明文可复制（密文存库） | MVP-1 | Done |
+| 13 | Web | web-i18n-01 | 管理面文案 i18n | 用户可见文案走 i18n（默认 `zh-CN`，可扩展 `en`） | MVP-1 | Done |
+| 14 | Agent | agent-auth-01 | Bearer 鉴权 | REST/MCP 统一 `Authorization: Bearer`；解析 `user_id`（实现可共用校验） | MVP-1 | Done |
+| 15 | Agent | agent-auth-02 | 身份不可覆盖 | 请求体 / 工具参数中的用户标识不能覆盖 Key 身份 | MVP-1 | Done |
+| 16 | Agent | agent-auth-03 | 租户隔离 | 各使用者数据强制隔离；默认无跨用户共享 | MVP-1 | Done |
+| 17 | Agent | agent-auth-04 | 一人一库一 Key | 同一 Key 可用于 Cursor / ChatBox / MyPoke.Trade；不按调用方拆 Key | MVP-1 | Done |
+| 18 | Agent | agent-search-01 | 库内检索 | 按输入检索已有知识；返回可引用片段 / 结构化命中 | MVP-1 | Done |
+| 19 | Agent | agent-list-01 | 知识列表 | 按项目 / 标签等过滤列出知识条目 | MVP-2 | Done |
+| 20 | Agent | agent-org-01 | 体系整理 | 归纳分类、标签、项目归属（重大变更可走确认） | MVP-3 | Done |
+| 21 | Agent | agent-ingest-01 | 粘贴 / 单文件提案 | 材料 → 提案（摘要、分类、查重）；确认前不入库 | MVP-2 | Done |
+| 22 | Agent | agent-ingest-02 | URL 拉取提案 | 指定 URL 拉取正文后进入提案 | MVP-3 | Done |
+| 23 | Agent | agent-ingest-03 | 确认单条入库 | 显式 confirm 后持久化并触发索引 | MVP-2 | Done |
+| 24 | Agent | agent-import-01 | 批量文档上传 | 多文件 → ImportBatch + 每文件提案；禁止静默进库 | MVP-3 | Done |
+| 25 | Agent | agent-import-02 | 批次逐条 / 一键确认 | 逐条 confirm 或一键确认全部有效提案 | MVP-3 | Done |
+| 26 | Agent | agent-import-03 | 批量格式与限额 | `.md` / `.txt` / 可抽文本 PDF；大小与个数上限；失败不阻塞同批 | MVP-3 | Done |
+| 27 | Agent | agent-source-01 | 外部搜索候选 | 源路由搜索；返回候选列表；不自动落库 | MVP-3 | Done |
+| 28 | Agent | agent-source-02 | 库内优先补给 | 优先库内；不足或显式要求时才外部 | MVP-3 | Done |
+| 29 | Agent | agent-scope-01 | 拒绝业务策略越界 | 拒绝代劳投放策略 / 业务结论；可降级为公开资料候选 | MVP-3 | Done |
+| 30 | Agent | agent-scope-02 | 拒绝开放式决策 | 只给证据与来源；不给「该怎么做」的最终决策 | MVP-3 | Done |
+| 31 | Agent | agent-scope-03 | 拒绝无确认自动入库 | 拒绝「网上相关都自动进库」 | MVP-2 | Done |
+| 32 | Agent | agent-scope-04 | 拒绝伪造库内引用 | 库内无据时明确不足；禁止捏造引用 | MVP-2 | Done |
+| 33 | Agent | agent-rest-01 | 知识 REST | 与 MCP 工具语义对齐的结构化 API（MyPoke.Trade 等） | MVP-1 | Done |
+| 34 | Agent | agent-chat-01 | 可选 OpenAI 兼容门面 | 薄封装同一工具集；同等越界规则；非业务中台 | MVP-3 | Done |
+| 35 | Agent | agent-km-01 | 内部 Qwen 仅 KM | 归类 / 摘要提案 / 去重辅助；不做调用方业务洞察 | MVP-2 | Done |
+| 35a | Agent | agent-summary-01 | 内容概述 ≤400 字 | propose 生成长概述；`kb_knowledge_summary` 读/刷新；list/search 可带 summary | MVP-2+ | Done |
+| 36 | MCP | mcp-01 | Streamable HTTP 与 `/mcp` | 同进程挂载；路径固定 `/mcp`；主传输 Streamable HTTP | MVP-2 | Done |
+| 37 | MCP | mcp-02 | MCP Bearer 鉴权 | 与 REST 同 Key / pepper；禁 query 传 Key；context 注入 `user_id` | MVP-2 | Done |
+| 38 | MCP | mcp-03 | 最小工具集注册 | `kb_internal_search` / `kb_propose_add` / `kb_confirm_add`（可选 `kb_list_knowledge`）+ `kb_knowledge_summary` | MVP-2 | Done |
+| 39 | MCP | mcp-04 | 与 REST 领域一致 | 同 `KbService`；`contracts/mcp-tools.json`；无第二套业务逻辑 | MVP-2 | Done |
+| 40 | MCP | mcp-05 | Cursor / ChatBox 手测 | URL+Bearer 配置；propose→confirm→search 可手验 | MVP-2 | Done |
+| 41 | MCP | mcp-06 | 工具面扩展 | 随领域交付注册 import / org 等；不重写门面 | MVP-3 | Done |
+| 42 | RAG | rag-index-01 | 确认后分块索引 | confirm 后分块、向量化、写入向量库 | MVP-2 | Done |
+| 43 | RAG | rag-index-02 | 禁止未确认索引 | 提案态不写向量、不建正式条目 | MVP-1 | Done |
+| 44 | RAG | rag-retrieve-01 | 混合检索与引用 | 库内混合检索；命中带可引用 chunk / item | MVP-2 | Done |
+| 45 | RAG | rag-isolate-01 | 检索租户过滤 | 向量与元数据查询强制 `user_id` | MVP-1 | Done |
+| 46 | RAG | rag-store-01 | 原文与元数据存储 | 原文 Blob + PostgreSQL 元数据；排除 Gist | MVP-1 | Done |
+| 47 | Agent | agent-item-01 | 知识条目详情 | `GET /items/{id}` 读已确认（或提案）元数据+概述 | MVP-3 | Done |
+| 48 | Agent | agent-item-02 | 知识条目更新 / 软删 | `PATCH`/`DELETE`；软删后不可检索并清向量 | MVP-3 | Done |
+| 49 | Agent | agent-quota-01 | 出站与导入配额 | 按 Key 限制外部搜索/fetch/批次数与体积；超限稳定错误码 | MVP-3 | Done |
+
+### MVP 规划（三批闭环）
+
+每批须**独立闭环交付**：真实栈可测；DoD **禁用** Fake Embedder / 假 KM / mock RAG HTTP / 假邮件 Outbox。细则见 `specs/mvp-2-3-delivery.md`。
+
+#### MVP-1 — 地基（17）· Done
+
+目标：可登录、可发 Key、可鉴权空检索（**REST**；MCP 门面在 MVP-2）。  
+验收日期：2026-08-11。证据：`make test`（schema 2 + rag 7 + agent 9 + vitest 9）+ Playwright Admin E2E 5/5；ADR-002 / ADR-003；知识笔记见 `specs/knowledge/`。  
+**用户确认可用：** 2026-08-11（DoD User Acceptance）。
+
+| 模块 | 功能编号 | 功能名称 | 状态 |
+| --- | --- | --- | --- |
+| Web | web-acct-01 | 初始化默认管理员 | Done |
+| Web | web-acct-02 | 管理员登录 / 登出 | Done |
+| Web | web-acct-06 | 种子账号强制改密 | Done |
+| Web | web-keys-01 | 使用者列表 | Done |
+| Web | web-keys-02 | 签发 API Key | Done |
+| Web | web-keys-03 | 吊销 API Key | Done |
+| Web | web-keys-04 | 重签 API Key | Done |
+| Web | web-keys-05 | 查看 API Key | Done |
+| Web | web-i18n-01 | 管理面文案 i18n | Done |
+| Agent | agent-auth-01 | Bearer 鉴权 | Done |
+| Agent | agent-auth-02 | 身份不可覆盖 | Done |
+| Agent | agent-auth-03 | 租户隔离 | Done |
+| Agent | agent-auth-04 | 一人一库一 Key | Done |
+| Agent | agent-search-01 | 库内检索 | Done |
+| Agent | agent-rest-01 | 知识 REST | Done |
+| RAG | rag-index-02 | 禁止未确认索引 | Done |
+| RAG | rag-isolate-01 | 检索租户过滤 | Done |
+| RAG | rag-store-01 | 原文与元数据存储 | Done |
+
+#### MVP-2 — 知识闭环 + MCP 门面（13）· Done
+
+目标：抽出/共用 `KbService`；真索引检索闭环；**MCP 模块**可挂 Cursor 手测。  
+路径：粘贴 → 提案（真 KM）→ 确认 → 真向量索引 → 可引用检索；不可自动入库、不可伪造引用。  
+约束：`USE_FAKE_EMBEDDER=false`；agent↔rag 真 HTTP；MCP 与 REST 同 `KbService`。  
+本批 MCP 工具：`kb_internal_search` / `kb_propose_add` / `kb_confirm_add` / `kb_list_knowledge` / `kb_knowledge_summary`（概述 ≤400 字，方案 1+2；[`knowledge-summary.md`](./knowledge-summary.md)、`agent-summary-01`）。  
+专文：[`mcp-design.md`](./mcp-design.md)；契约：[`contracts/mcp-tools.json`](../contracts/mcp-tools.json)。  
+验收日期：2026-08-11。证据：`scripts/mvp2_true_stack_journey.py`（真 DashScope KM + `text-embedding-v3` + Qdrant `kb_chunks_v3`）全绿；MCP `initialize` + Bearer（含裸 `/mcp` 路径）；fixture 车道 `make test`。  
+**用户确认可用：** 已确认（2026-08-11）。
+
+| 模块 | 功能编号 | 功能名称 | 状态 |
+| --- | --- | --- | --- |
+| MCP | mcp-01 | Streamable HTTP 与 `/mcp` | Done |
+| MCP | mcp-02 | MCP Bearer 鉴权 | Done |
+| MCP | mcp-03 | 最小工具集注册 | Done |
+| MCP | mcp-04 | 与 REST 领域一致 | Done |
+| MCP | mcp-05 | Cursor / ChatBox 手测 | Done |
+| Agent | agent-ingest-01 | 粘贴 / 单文件提案 | Done |
+| Agent | agent-km-01 | 内部 Qwen 仅 KM | Done |
+| Agent | agent-summary-01 | 内容概述 ≤400 字 | Done |
+| Agent | agent-ingest-03 | 确认单条入库 | Done |
+| RAG | rag-index-01 | 确认后分块索引 | Done |
+| RAG | rag-retrieve-01 | 混合检索与引用 | Done |
+| Agent | agent-list-01 | 知识列表 | Done |
+| Agent | agent-scope-03 | 拒绝无确认自动入库 | Done |
+| Agent | agent-scope-04 | 拒绝伪造库内引用 | Done |
+
+建议实现顺序：`KbService` + 领域闭环（ingest/km/index/retrieve）→ **mcp-01…04** → **mcp-05** 手测。
+
+#### MVP-3 — 操作面扩展 + URL/外部源/Chat + 条目/配额（19）· Done
+
+目标：批量导入确认；体系整理；多管理员（真 Resend）；对话向越界（scope-01/02）；**mcp-06** 扩展 MCP 工具面（import/org）；URL 拉取、外部源补给、可选 Chat 门面；条目详情/更新软删；出站配额。
+
+| 模块 | 功能编号 | 功能名称 | 状态 |
+| --- | --- | --- | --- |
+| MCP | mcp-06 | 工具面扩展 | Done |
+| Agent | agent-import-01 | 批量文档上传 | Done |
+| Agent | agent-import-02 | 批次逐条 / 一键确认 | Done |
+| Agent | agent-import-03 | 批量格式与限额 | Done |
+| Agent | agent-org-01 | 体系整理 | Done |
+| Agent | agent-scope-01 | 拒绝业务策略越界 | Done |
+| Agent | agent-scope-02 | 拒绝开放式决策 | Done |
+| Web | web-acct-03 | 忘记密码 / 重置 | Done |
+| Web | web-acct-04 | 邀请管理员（R2） | Done |
+| Web | web-acct-05 | 接受邀请设密 | Done |
+| Web | web-acct-07 | 管理员列表 | Done |
+| Web | web-acct-08 | 删除管理员 | Done |
+| Agent | agent-ingest-02 | URL 拉取提案 | Done |
+| Agent | agent-source-01 | 外部搜索候选 | Done |
+| Agent | agent-source-02 | 库内优先补给 | Done |
+| Agent | agent-chat-01 | 可选 OpenAI 兼容门面 | Done |
+| Agent | agent-item-01 | 知识条目详情 | Done |
+| Agent | agent-item-02 | 知识条目更新 / 软删 | Done |
+| Agent | agent-quota-01 | 出站与导入配额 | Done |
+
+**管理面切片（2026-08-11）：** web-acct-03/04/05/07/08 已实现。
+
+**Agent/MCP 切片（2026-08-11）：** scope-01/02、import-01/02/03、org-01、mcp-06 已落地。
+
+**MVP-3 收尾（2026-08-11）：** `agent-ingest-02`、`agent-source-01/02`、`agent-chat-01`、`agent-item-01/02`、`agent-quota-01` 已落地（`kb_fetch_url` / `kb_external_search` / 条目 CRUD / 配额 / Chat 门面）。
+
+**用户确认可用（2026-08-11）：** 是 — MVP-3 整批完工，交付分支 `3-mvp03`。
 
 ---
 
@@ -72,7 +187,8 @@ So that 无需开放注册即可首次登录管理台。
 Scenario: 空库初始化种子账号 admin/admin
   Given 应用数据库中尚无任何管理员
   When Web / Admin 完成初始化
-  Then 存在登录名为 admin、初始密码为 admin 的管理员账号
+  Then 存在用户名为 admin、初始密码为 admin 的管理员账号
+  And 该账号联系邮箱为 me@ethanhuang.com（可由 BOOTSTRAP_ADMIN_EMAIL 覆盖）
   And 该账号标记为必须修改密码
   And 开放自助注册入口不可用
 
@@ -106,9 +222,19 @@ Scenario: 默认账号可用 admin/admin 登录
   Then 登录凭证校验通过
   And 会话进入必须修改密码状态
 
+Scenario: 可用种子邮箱登录
+  Given 种子管理员邮箱为 me@ethanhuang.com
+  When 管理员以该邮箱与正确密码提交登录
+  Then 登录凭证校验通过
+
+Scenario: 登录页联系管理员展示微信二维码
+  Given 访客在登录页
+  When 访客悬停或聚焦「联系管理员」
+  Then 浮层展示管理员微信二维码（EthanWeChat.png）
+
 Scenario: 错误密码登录失败
   Given 存在已设密的管理员账号
-  When 管理员输入正确登录名与错误密码并提交
+  When 管理员输入正确用户名与错误密码并提交
   Then 系统显示登录失败提示
   And 不建立管理员会话
   And 管理员仍停留在可登录状态
@@ -182,19 +308,40 @@ Scenario: 强制改密未完成不能邀请
 
 **用户故事**  
 As an 被邀请人，  
-I want 通过邀请链接设置密码，  
-So that 我成为管理员并可登录。
+I want 通过邀请链接设置**用户名**、英文姓名与密码，  
+So that 我成为管理员并可登录，且顶栏显示我的姓名。
 
-**AC**
+**AC**（2026-08-11 变更：接受邀请须填用户名；原仅「姓名+密码」已不足）
 
 ```gherkin
-Scenario: 有效邀请链接设密成功
+Scenario: 有效邀请链接设用户名姓名与密码成功
   Given 被邀请人打开未过期的邀请链接
-  When 被邀请人设置符合要求的密码并提交
+  When 被邀请人填写符合规则的用户名、英文姓名与密码并提交
   Then 该邮箱成为管理员
+  And admin_users.username 为所填用户名（非空）
   And must_change_password 为 false
-  And 可用该邮箱密码直接登录管理台并使用管理能力
+  And 可用该用户名或该邮箱与密码登录管理台并使用管理能力
+  And 顶栏问候显示 Hello, {英文姓名}
   And 不进入种子账号的强制改密流程
+
+Scenario: 拒绝缺失或非法用户名
+  Given 被邀请人打开未过期的邀请链接
+  When 被邀请人未填用户名或用户名不符合规则（须以字母开头，仅字母数字与 ._- ，长度 3–64）
+  Then 系统拒绝提交
+  And 不创建管理员
+
+Scenario: 拒绝已占用用户名
+  Given 已存在用户名为 kbadmin 的管理员
+  And 被邀请人打开未过期的邀请链接
+  When 被邀请人提交用户名 kbadmin（大小写不敏感冲突）
+  Then 系统拒绝提交
+  And 提示用户名已被占用
+
+Scenario: 拒绝非英文姓名
+  Given 被邀请人打开未过期的邀请链接
+  When 被邀请人提交含非英文字符的姓名
+  Then 系统拒绝提交
+  And 提示姓名仅限英文
 
 Scenario: 无效邀请链接被拒绝
   Given 邀请链接无效、过期或已使用
@@ -257,7 +404,7 @@ Scenario: 已登录管理员看到管理员列表
   Given 管理员已登录且不处于强制改密状态
   And 系统中存在至少两名管理员
   When 管理员打开管理员列表
-  Then 列表展示各管理员的用户名或邮箱、状态与创建时间
+  Then 列表展示各管理员的用户名、姓名、邮箱、状态与创建时间
   And 不展示密码哈希或会话密钥
 
 Scenario: 未改密不能查看管理员列表
@@ -317,7 +464,7 @@ Scenario: 已登录管理员看到使用者列表
   And 系统中存在至少一名已签发使用者
   When 管理员打开使用者列表
   Then 列表展示使用者姓名、Key 前缀与状态
-  And 不展示完整 Key 明文
+  And 每行提供「查看」入口（完整明文不在列表内联展示）
 ```
 
 #### 功能 web-keys-02 — 签发 API Key
@@ -330,12 +477,18 @@ So that 该使用者能用同一把 Key 访问全局知识库。
 **AC**
 
 ```gherkin
-Scenario: 签发成功且明文仅一次可见
+Scenario: 签发成功展示明文并可再次查看
   Given 管理员已登录
-  When 管理员填写使用者姓名并签发 Key
+  When 管理员填写符合规则的英文使用者姓名（如 Daniel Foster）并签发 Key
   Then 系统创建该使用者与一把有效 Key
-  And 完整 Key 明文仅在本次数展示
-  And 之后列表仅可见前缀等信息
+  And 完整 Key 明文在结果页单行展示且可复制
+  And 库内保存 key_hash 与可解密的 key_ciphertext
+  And 之后可从列表「查看」再次取得同一明文
+
+Scenario: 非英文姓名拒签
+  Given 管理员已登录并打开签发表单
+  When 管理员提交含非拉丁字母的姓名
+  Then 系统拒绝签发并提示仅允许英文
 
 Scenario: 同一使用者不能同时有两把有效 Key
   Given 某使用者已有一把有效 Key
@@ -354,12 +507,13 @@ So that 泄露或离职时立即切断访问。
 **AC**
 
 ```gherkin
-Scenario: 吊销后知识面立即拒绝
+Scenario: 吊销后知识面立即拒绝且列表移除
   Given 使用者持有有效 Key
   And 管理员已登录
-  When 管理员吊销该 Key
+  When 管理员确认吊销该秘钥
   Then 使用原 Key 的知识面请求被拒绝
-  And 该使用者知识数据仍保留
+  And 该使用者知识数据仍保留但无法再经该 Key 访问
+  And 使用者列表不再显示该行
 ```
 
 #### 功能 web-keys-04 — 重签 API Key
@@ -377,9 +531,34 @@ Scenario: 重签保留同一知识库
   And 管理员已登录
   When 管理员对该使用者执行重签
   Then 旧 Key 立即失效
-  And 新 Key 明文展示一次
+  And 新 Key 明文展示且密文入库
   And 使用者姓名不变
   And 用新 Key 仍可检索到原有知识
+```
+
+#### 功能 web-keys-05 — 查看 API Key
+
+**用户故事**  
+As an 管理员，  
+I want 从使用者列表打开某把有效 Key 的查看页，  
+So that 我能再次看到姓名与完整明文并复制。
+
+**AC**
+
+```gherkin
+Scenario: 查看有效 Key
+  Given 管理员已登录
+  And 存在带 key_ciphertext 的有效 Key
+  When 管理员点击该行「查看」
+  Then 页面展示使用者姓名与完整 Key 明文
+  And 提供一键复制
+  And 不展示「仅此一次」类文案
+
+Scenario: 无密文的历史 Key
+  Given 管理员已登录
+  And 某有效 Key 无 key_ciphertext（迁移前签发）
+  When 管理员打开查看
+  Then 系统提示无法展示明文并建议重签
 ```
 
 #### 功能 web-i18n-01 — 管理面文案 i18n
@@ -396,12 +575,15 @@ Scenario: 默认 locale 解析文案
   Given 管理台默认 locale 为 zh-CN
   When 管理员打开登录或使用者列表页
   Then 可见文案来自 i18n 词条而非散落硬编码业务句
+  And 页脚 copyright 文案亦走 i18n key
   And 缺少词条时有明确回退行为而不白屏崩溃
 ```
 
 ---
 
 ### 模块：Agent
+
+知识领域能力与 REST / 越界 / 补给。**MCP 协议门面**见下一节「模块：MCP」。
 
 #### 功能 agent-auth-01 — Bearer 鉴权
 
@@ -462,7 +644,7 @@ Scenario: 跨使用者检索不可见
 
 **用户故事**  
 As a 使用者，  
-I want 同一把 Key 用于 Cursor、ChatBox 与 HCP，  
+I want 同一把 Key 用于 Cursor、ChatBox 与 MyPoke.Trade，  
 So that 我不必按调用方管理多把密钥。
 
 **AC**
@@ -560,20 +742,23 @@ As a 调用方，
 I want 指定 URL 拉取正文再提案，  
 So that 我能把公开网页材料纳入确认流。
 
+**规范表面：** MCP `kb_fetch_url`；REST `POST /api/v1/kb/fetch`。拉取成功后的提案复用 `kb_propose_add` / `POST /proposals`（或 fetch 响应附带 pending）。**禁止**另造 `kb_fetch` 等第二名称。出站须 SSRF 防护（architecture §7.6）；配额见 `agent-quota-01`。
+
 **AC**
 
 ```gherkin
 Scenario: 合法 URL 拉取后生成提案
   Given 使用者持有有效 Key
   And 目标 URL 可在出站策略内访问并抽取正文
-  When 调用方请求按该 URL 补给并入库提案
-  Then 系统拉取正文并生成提案
+  When 调用方经 kb_fetch_url 或 POST /api/v1/kb/fetch 请求该 URL
+  Then 系统拉取正文并生成提案（或返回可供 propose 的正文）
   And 不在确认前写入正式条目与向量
+  And MCP 已注册工具名恰为 kb_fetch_url（contracts/mcp-tools.json）
 
 Scenario: 不安全或失败的 URL 被拒绝
   Given 目标 URL 违反出站策略或无法抽取正文
   When 调用方请求拉取该 URL
-  Then 系统返回明确失败
+  Then 系统返回明确失败码（如 FETCH_BLOCKED / IMPORT_FILE_REJECTED 同类）
   And 不假装已入库
 ```
 
@@ -679,14 +864,17 @@ As a 调用方，
 I want 按源路由获得外部搜索候选列表，  
 So that 我能挑选证据再决定是否提案入库。
 
+**规范表面：** MCP `kb_external_search`；REST `POST /api/v1/kb/sources/search`。**禁止**另造 `kb_source_search` 作为对外名。候选不自动入库；配额见 `agent-quota-01`。源注册可实现为配置/表，属本故事实现细节。
+
 **AC**
 
 ```gherkin
 Scenario: 外部搜索返回候选且不落库
   Given 使用者获准进行外部搜索
-  When 调用方发起外部知识候选检索
+  When 调用方经 kb_external_search 或 POST /api/v1/kb/sources/search 发起检索
   Then 返回含标题、URL、摘要、来源类型等信号的候选列表
   And 候选不会自动写入正式知识库或向量索引
+  And MCP 工具名恰为 kb_external_search
 ```
 
 #### 功能 agent-source-02 — 库内优先补给
@@ -696,6 +884,8 @@ As a 调用方，
 I want 系统优先用库内知识、不足时再外部补给，  
 So that 减少不必要外呼并复用已有沉淀。
 
+**规范表面：** **无新工具名**。编排使用既有 `kb_internal_search` +（条件）`kb_external_search`；REST 同路径。可在 Agent 说明 / Chat 门面 / 专用编排辅助中落地，但不得新增与上表冲突的 MCP 工具名。
+
 **AC**
 
 ```gherkin
@@ -703,13 +893,13 @@ Scenario: 库内足够时可不强制外部
   Given 库内检索已足以回答知识查询
   And 调用方未显式要求外部补给
   When 调用方请求获取相关知识
-  Then 系统可仅返回库内命中
-  And 不强制发起外部搜索
+  Then 系统可仅返回库内命中（kb_internal_search）
+  And 不强制发起 kb_external_search
 
 Scenario: 不足或显式要求时启用外部
   Given 库内命中不足或调用方显式要求外部
   When 调用方请求补给
-  Then 系统可走源路由外部候选检索
+  Then 系统可走源路由外部候选检索（kb_external_search）
 ```
 
 #### 功能 agent-scope-01 — 拒绝业务策略越界
@@ -782,27 +972,10 @@ Scenario: 无依据时禁止假装库内说过
   And 可建议外部补给或入库提案
 ```
 
-#### 功能 agent-mcp-01 — MCP 一等接入
-
-**用户故事**  
-As a Cursor / ChatBox 用户，  
-I want 通过自定义 MCP 调用知识工具，  
-So that 宿主模型能管知识而不被 kb-agent 取代。
-
-**AC**
-
-```gherkin
-Scenario: MCP 工具与领域能力一致
-  Given 使用者配置了有效 Key 的远程 MCP
-  When 宿主通过 MCP 调用检索或提案类工具
-  Then 行为与对应知识领域能力一致
-  And 越界请求同样被拒绝
-```
-
 #### 功能 agent-rest-01 — 知识 REST
 
 **用户故事**  
-As a HCP 等应用，  
+As a MyPoke.Trade 等应用，  
 I want 用结构化 REST 调用同一套知识能力，  
 So that 应用侧 LLM 可集成 search / propose / confirm。
 
@@ -812,7 +985,7 @@ So that 应用侧 LLM 可集成 search / propose / confirm。
 Scenario: REST 与 MCP 语义对齐
   Given 使用者持有有效 Key
   When 应用经 REST 执行检索与确认入库
-  Then 结果语义与 MCP 对应工具一致
+  Then 结果语义与 MCP 对应工具一致（见 mcp-04）
   And 鉴权同为 Bearer API Key
 ```
 
@@ -823,6 +996,8 @@ As a 调试或薄集成方，
 I want 可选的 OpenAI 兼容入口调用同一工具集，  
 So that 我能调试而不把服务做成业务中台。
 
+**规范表面：** REST OpenAI 兼容路径（如 `/v1/chat/completions`）；**不**注册 `kb_chat_*` MCP 工具。内部 tool 调用须与 MCP/REST 同名同语义（`kb_internal_search` 等）；越界码含 `OUT_OF_SCOPE_BUSINESS_REASONING` / `OUT_OF_SCOPE_AUTO_INGEST`。
+
 **AC**
 
 ```gherkin
@@ -831,6 +1006,70 @@ Scenario: 薄门面执行相同越界规则
   When 调用方通过该门面要求生成业务投放策略
   Then 系统按与 MCP 相同的规则拒绝越界
   And 不扩展出无边界业务 Agent 能力
+  And 不新增与 contracts/mcp-tools.json 冲突的 MCP 工具名
+```
+
+#### 功能 agent-item-01 — 知识条目详情
+
+**用户故事**  
+As a 调用方，  
+I want 按 id 读取单条知识元数据与概述，  
+So that 我能在 list/search 之后查看详情而不必猜字段。
+
+**规范表面：** REST `GET /api/v1/kb/items/{id}`（architecture §11）。MCP 可选后续扩展；MVP-3 以 REST 为准。含 `summary`；不含密码/他户数据。
+
+**AC**
+
+```gherkin
+Scenario: 读取本库条目
+  Given 使用者拥有已确认或提案态条目 id
+  When GET /api/v1/kb/items/{id}
+  Then 返回 title、summary、project、tags、status 等元数据
+  And 他户 id 返回 404 或等价拒绝
+```
+
+#### 功能 agent-item-02 — 知识条目更新 / 软删
+
+**用户故事**  
+As a 调用方，  
+I want 更新元数据或软删条目，  
+So that 库内过时材料可下线且检索不再命中。
+
+**规范表面：** REST `PATCH` / `DELETE /api/v1/kb/items/{id}`。软删设 `deleted_at` 并清除向量；不硬物理删 Blob 亦可（实现可选）。重大元数据变更可与 `kb_organize(apply=true)` 并存，本故事覆盖单条 REST CRUD。
+
+**AC**
+
+```gherkin
+Scenario: 软删后不可检索
+  Given 本库存在已确认条目
+  When DELETE /api/v1/kb/items/{id}
+  Then 条目对 list/search 不可见
+  And 向量侧不再返回该 knowledge_id 命中
+
+Scenario: 更新 project/tags
+  Given 本库存在已确认条目
+  When PATCH 合法 project/tags
+  Then 元数据更新成功
+  And 他户 id 不可改
+```
+
+#### 功能 agent-quota-01 — 出站与导入配额
+
+**用户故事**  
+As a 运维人员，  
+I want 按 API Key 限制外部搜索、fetch 与批量导入规模，  
+So that 成本与滥用可控。
+
+**规范表面：** 配置项（见 `keys.md` / Settings）+ 稳定错误码（如 `RATE_LIMITED` / `IMPORT_LIMIT_EXCEEDED`）。导入体积上限可与 `agent-import-03` 共用；本故事补齐 **外部搜索/fetch 次数与并发** 的可观测硬限。
+
+**AC**
+
+```gherkin
+Scenario: 超限返回稳定码
+  Given Key 已达外部搜索或 fetch 配额
+  When 再次调用 kb_external_search 或 kb_fetch_url
+  Then 返回 RATE_LIMITED（或文档约定码）与重试提示
+  And 不静默放行
 ```
 
 #### 功能 agent-km-01 — 内部 Qwen 仅 KM
@@ -848,6 +1087,218 @@ Scenario: 内部模型用于提案摘要与归类
   When 系统生成摘要或分类建议
   Then 可使用内部 Qwen 完成该类知识管理任务
   And 不把「替调用方完成业务洞察」作为成功路径
+```
+
+#### 功能 agent-summary-01 — 内容概述 ≤400 字
+
+**用户故事**  
+As a Cursor 用户，  
+I want 每条知识有可读的内容概述（≤400 字），并能按需读取或刷新，  
+So that 我不必打开全文也能判断条目是否相关。
+
+**AC**
+
+```gherkin
+Scenario: propose 写入长概述
+  Given 用户提交足够长的正文
+  When 调用 kb_propose_add
+  Then 返回的 summary 为内容概述且长度 ≤ 400 字
+  And 不是仅标题复述一句
+
+Scenario: 读取与刷新概述
+  Given 库中已有 knowledge_id 或 pending_id
+  When 调用 kb_knowledge_summary 且 refresh=false
+  Then 返回已存 summary
+  When 调用 kb_knowledge_summary 且 refresh=true
+  Then 根据正文重生概述并写回且 ≤ 400 字
+
+Scenario: list / search 暴露概述
+  Given 已确认条目带 summary
+  When 调用 kb_list_knowledge 或 kb_internal_search
+  Then 结果项可包含 summary 字段
+```
+
+专文：[`knowledge-summary.md`](./knowledge-summary.md)。
+
+---
+
+### 模块：MCP
+
+设计专文：[`specs/mcp-design.md`](./mcp-design.md)。契约：[`contracts/mcp-tools.json`](../contracts/mcp-tools.json)。  
+本模块只做**协议门面**；领域行为由 Agent/RAG 故事覆盖。MCP 与 REST **必须**调用同一 `KbService`。
+
+#### 功能 mcp-01 — Streamable HTTP 与 `/mcp`
+
+**用户故事**  
+As a Cursor / ChatBox 用户，  
+I want kb-agent 以标准远程 MCP 传输暴露固定路径，  
+So that 我可以按文档配置 URL 而无需猜端口协议。
+
+**AC**
+
+```gherkin
+Scenario: 固定路径与传输
+  Given kb-agent 进程已启动
+  When 客户端以 Streamable HTTP 访问 /mcp
+  Then MCP 会话可建立（或按 SDK 语义返回可诊断错误，而非静默 404 到错误服务）
+  And MCP 与知识 REST 运行在同一 FastAPI 进程
+  And 生产反代路径为 https://<PUBLIC_HOST>/mcp（本地为 http://<HOST>:<AGENT_PORT>/mcp）
+
+Scenario: healthz 不等于 MCP 可用
+  Given GET /healthz 返回成功
+  When 仅凭健康检查判断
+  Then 不得宣称 MCP 工具已可用；须以 /mcp + 鉴权后 list_tools 或等价为准
+```
+
+#### 功能 mcp-02 — MCP Bearer 鉴权
+
+**用户故事**  
+As a 使用者，  
+I want MCP 使用与 REST 同一把 API Key，  
+So that 我只需配置一次密钥。
+
+**AC**
+
+```gherkin
+Scenario: 有效 Bearer 可列工具 / 调工具
+  Given 管理台签发的有效使用者 Key
+  When 客户端在 MCP 请求携带 Authorization: Bearer <key>
+  Then 解析出与 REST 相同的 user_id
+  And 可执行已注册工具
+
+Scenario: 缺失或吊销 Key
+  Given 无 Authorization 或 Key 已吊销
+  When 调用 MCP 受保护能力
+  Then 拒绝访问（与 REST 稳定 code 对齐：UNAUTHORIZED / KEY_REVOKED 等）
+  And 不泄露其他使用者数据
+
+Scenario: 禁止危险传 Key 方式
+  Given 客户端尝试把 Key 放进 URL query、路径或工具参数
+  When 服务端处理请求
+  Then 不以 query/path/tool-arg 作为有效凭证
+  And 工具参数中的 user_id（若有）被忽略，身份仅来自 Bearer
+```
+
+#### 功能 mcp-03 — 最小工具集注册
+
+**用户故事**  
+As a 宿主模型，  
+I want 只看到少量清晰工具，  
+So that 我能可靠选择检索与确认入库而不被工具表淹没。
+
+**AC**
+
+```gherkin
+Scenario: MVP-2 仅注册最小集
+  Given MCP 服务器已启动且鉴权成功
+  When 客户端 list_tools
+  Then 至少包含 kb_internal_search、kb_propose_add、kb_confirm_add
+  And 可选包含 kb_list_knowledge
+  And 包含 kb_knowledge_summary（内容概述读/刷新；见 agent-summary-01）
+  And 不包含当时未交付的工具（MVP-2 时不含 kb_import_*、kb_organize、kb_external_search、kb_fetch_url；后者属 MVP-3 故事交付时再注册）
+
+Scenario: 写工具描述含边界
+  Given 已注册 kb_propose_add 与 kb_confirm_add
+  When 读取其 description
+  Then 说明不会自动入库、须 confirm
+  And 说明不生成业务策略 / 投放结论
+  And 说明仅操作用户 Key 所属知识库
+
+Scenario: 无跳过确认参数
+  Given 任意已注册写工具的 input schema
+  When 检查参数表
+  Then 不存在 skip_confirm / auto_ingest 一类绕过确认的参数
+```
+
+#### 功能 mcp-04 — 与 REST 领域一致
+
+**用户故事**  
+As a 平台维护者，  
+I want MCP 与 REST 共用领域层且契约可对拍，  
+So that 双门面不会漂移出第二套业务逻辑。
+
+**AC**
+
+```gherkin
+Scenario: 同 Key 同输入同语义
+  Given 同一有效 Key 与同一 propose/confirm/search 输入
+  When 分别经 MCP 工具与对应 REST 路径执行
+  Then 核心 payload 字段一致（允许协议包装层差异）
+  And 越界 / 不足时 code 一致
+
+Scenario: 禁止 MCP 旁路
+  Given 实现代码审查或架构测试
+  When MCP handler 执行检索或确认
+  Then 必须调用 KbService（或与 REST 相同的领域入口）
+  And 不得在 MCP 内单独直连 RAG/SQL 形成第二路径
+
+Scenario: 契约工件
+  Given contracts/mcp-tools.json 与 search-response.schema.json
+  When 跑契约检查
+  Then 已注册工具名与映射 REST 路径与文档一致
+  And forbidden_params 含 user_id（及写工具的 skip_confirm）
+```
+
+#### 功能 mcp-05 — Cursor / ChatBox 手测
+
+**用户故事**  
+As a Cursor / ChatBox 用户，  
+I want 按接入指南手动添加 MCP 并走通最小闭环，  
+So that 我确认远程工具在真实宿主里可用。
+
+**AC**
+
+```gherkin
+Scenario: Cursor 手测最小闭环（DoD 证据）
+  Given 本地或预发 kb-agent 已暴露 /mcp 且 USE_FAKE_EMBEDDER=false（闭环门禁）
+  And 使用者持有管理台签发的 Key
+  When 在 Cursor 中配置 Streamable HTTP URL=…/mcp 与 Bearer Key
+  And 依次 kb_propose_add → kb_confirm_add → kb_internal_search
+  Then 提案未确认前 search 无该条正式知识命中
+  And 确认后 search 返回可引用命中（含 knowledge_id / chunk_id / text）
+  And 手测记录可附配置方式（URL 形态），不得把明文 Key 写入仓库
+
+Scenario: ChatBox SSE 手测
+  Given kb-agent 已暴露 GET /sse 与 POST /messages/
+  When 在 ChatBox 中配置 Type=Remote (http/sse)、URL=…/sse、Header Authorization=Bearer <key>
+  And Test 通过并启用该 MCP
+  Then 可调用与 Cursor 相同的工具集（至少 list / search）
+  And 不得把 URL 配成 /mcp（会导致 SSE 404）
+
+Scenario: 接入指南文案一致
+  Given Admin /guide 或 mockup 接入指南
+  When 阅读 MCP 说明
+  Then 写明 Cursor=/mcp（Streamable HTTP）与 ChatBox=/sse（http/sse）分节配置步骤
+  And 写明 Bearer 与 REST 相同
+```
+
+#### 功能 mcp-06 — 工具面扩展
+
+**用户故事**  
+As a 使用者，  
+I want 批量导入与体系整理也能经 MCP 调用，  
+So that 我不必只为这些能力改用另一套协议。
+
+**AC**
+
+```gherkin
+Scenario: import/org 已注册（本故事 Done 范围）
+  Given MVP-3 领域能力 agent-import-* / agent-org-01 已可用
+  When 客户端 list_tools
+  Then 含 kb_import_documents、kb_confirm_import_batch、kb_organize
+  And 名称与 contracts/mcp-tools.json 一致
+  And 仍调用同一 KbService；不重写传输/鉴权（mcp-01/02）
+
+Scenario: 仍无静默入库
+  Given MCP 扩展了批确认类工具
+  When 检查 schema 与行为
+  Then 仍禁止跳过确认直接索引
+
+Scenario: 后续工具随故事注册（非本故事重开）
+  Given agent-ingest-02 / agent-source-01 落地
+  When 更新 MCP 注册与契约
+  Then 分别注册 kb_fetch_url、kb_external_search（规范名，无别名并存）
+  And 不因 Chat 门面新增 kb_chat_* MCP 工具
 ```
 
 ---
@@ -951,12 +1402,14 @@ Scenario: 确认入库后原文可取回
 
 ## 备注
 
-- **MVP 批次（已确认）**
-  - **MVP-1**（17）：可登录、可发 Key、可鉴权空检索 — 地基  
-  - **MVP-2**（9）：单条提案→确认→可引用检索 + 越界 + KM  
-  - **MVP-3**（11）：MCP + 批量导入 + 列表/整理 + 多管理员  
-  - **MVP-4**（4）：外部补给 + URL 拉取 + 可选薄 Chat 门面  
-- 划批只改 Backlog「MVP批次」列，不改功能编号。  
-- **状态**：实现并通过对应 AC / 自动化后改为 `Done`。  
+- **MVP 规划表**见上文「MVP 规划（三批闭环）」；闭环细则见 `specs/mvp-2-3-delivery.md`。  
+- **模块 MCP**（`mcp-01`…`mcp-06`）：传输 `/mcp`、鉴权、最小工具集、与 REST 契约、Cursor 手测、MVP-3 工具扩展。专文 `specs/mcp-design.md`。  
+- **MVP-2**（13）：MCP 门面五条（`mcp-01`…`05`）+ 知识闭环（ingest/km/list/scope + rag-index/retrieve）。  
+- **MVP-3**（19）：全部 Done（含 URL/外部源/Chat、条目详情/更新软删、配额）。**不再单独设 MVP-4。**  
+- **工具命名：** 故事 id（`agent-*`）≠ MCP 工具名（`kb_*`）。规范映射见 [`agent-design.md`](./agent-design.md) §4.0a；列表工具规范名为 `kb_list_knowledge`（废弃 `kb_list`）。
+- 旧编号 `agent-mcp-01` **已废弃**，由 `mcp-01`…`mcp-05` 取代；跨文档请改引用。  
+- 划批改 Backlog「MVP批次」列与规划表；**新增模块行可增功能编号**（`mcp-*` / `agent-item-*`）。  
+- **状态**：实现并通过对应 AC / **闭环验收套件**后改为 `Done`（规划表与 Backlog 同步更新）。  
 - 部署域名、香港 VPS、tech-stack 等属运行约束，不单独拆功能行；见 `specs/deployment-plan.md` / `specs/architecture.md`。  
-- `agent-chat-01` 为可选能力，排在 MVP-4。
+- `agent-chat-01` 为可选能力，仍属 MVP-3（可最后交付）；**无** MCP `kb_chat_*` 工具。  
+- 规范化 Tag 表 / 独立 PendingIngest 表：非本批必做（Tag 用 JSONB；Pending 见 ADR-013）。
