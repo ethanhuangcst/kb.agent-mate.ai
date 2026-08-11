@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Key 已生成 · kb.agent-mate.ai</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="logo" href="index.html" aria-label="kb.agent-mate.ai">
+          <img class="logo-mark" src="logo.png" alt="" width="40" height="40" />
+          <span class="logo-word">kb.agent-mate.ai</span>
+        </a>
+        <nav class="nav" aria-label="管理导航">
+          <a class="active" href="users.html">使用者</a>
+          <a href="admins.html">管理员</a>
+          <a href="login.html">退出</a>
+        </nav>
+        <p class="foot">ADMIN</p>
+      </aside>
+      <div class="main">
+        <header class="topbar">
+          <span class="crumb">Users / Issued</span>
+          <span class="admin-chip">一次性</span>
+        </header>
+        <div class="content">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">Secret</p>
+              <h1>Key 已生成</h1>
+              <p>使用者 Ethan Huang。请立即复制；离开本页后无法再查看完整 Key。</p>
+            </div>
+          </div>
+
+          <div class="code-block" data-key-block>
+            <button type="button" class="btn-copy" data-copy-btn aria-label="复制 Key" title="复制">
+              <svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                <rect x="9" y="9" width="11" height="11" rx="1" />
+                <path d="M5 15V5h10" />
+              </svg>
+              <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                <path d="M5 12.5l4.5 4.5L19 7" />
+              </svg>
+            </button>
+            <pre><code id="api-key-value">kb_live_8f3a2c91d0e74b6a9c1e5f02a84d7b30</code></pre>
+          </div>
+          <p class="key-panel warn">遗失请返回列表执行重签。</p>
+
+          <div class="btn-row" style="margin-top: 2rem">
+            <a class="btn btn-ghost" href="users.html">返回列表</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var btn = document.querySelector("[data-copy-btn]");
+        var code = document.getElementById("api-key-value");
+        if (!btn || !code) return;
+        btn.addEventListener("click", function () {
+          var text = code.textContent.trim();
+          function done() {
+            btn.classList.add("is-copied");
+            btn.setAttribute("aria-label", "已复制");
+            btn.setAttribute("title", "已复制");
+            setTimeout(function () {
+              btn.classList.remove("is-copied");
+              btn.setAttribute("aria-label", "复制 Key");
+              btn.setAttribute("title", "复制");
+            }, 1600);
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done).catch(function () {
+              fallbackCopy(text, done);
+            });
+          } else {
+            fallbackCopy(text, done);
+          }
+        });
+        function fallbackCopy(text, done) {
+          var ta = document.createElement("textarea");
+          ta.value = text;
+          ta.setAttribute("readonly", "");
+          ta.style.position = "fixed";
+          ta.style.left = "-9999px";
+          document.body.appendChild(ta);
+          ta.select();
+          try {
+            document.execCommand("copy");
+            done();
+          } finally {
+            document.body.removeChild(ta);
+          }
+        }
+      })();
+    </script>
+  </body>
+</html>

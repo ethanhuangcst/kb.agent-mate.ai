@@ -1,0 +1,14 @@
+# 本地密钥与忽略项（仓库根）
+.env
+.env.local
+.env*.local
+**/.env
+specs/.env
+specs/keys.local.md
+specs/keys.cn.md
+keys.cn.md
+*.pem
+.DS_Store
+__pycache__/
+node_modules/
+.venv/

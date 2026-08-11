@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>邀请管理员 · kb.agent-mate.ai</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="logo" href="index.html" aria-label="kb.agent-mate.ai">
+          <img class="logo-mark" src="logo.png" alt="" width="40" height="40" />
+          <span class="logo-word">kb.agent-mate.ai</span>
+        </a>
+        <nav class="nav" aria-label="管理导航">
+          <a href="users.html">使用者</a>
+          <a class="active" href="admins.html">管理员</a>
+          <a href="login.html">退出</a>
+        </nav>
+        <p class="foot">ADMIN</p>
+      </aside>
+      <div class="main">
+        <header class="topbar">
+          <span class="crumb">Invite</span>
+          <span class="admin-chip">R2 · Resend</span>
+        </header>
+        <div class="content">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">Admins</p>
+              <h1>邀请管理员</h1>
+              <p>对方将收到设密链接。开放自助注册已关闭。</p>
+            </div>
+          </div>
+
+          <form class="form" action="accept-invite.html" method="get" style="max-width: 420px">
+            <label>
+              邮箱
+              <input type="email" name="email" placeholder="colleague@domain.com" required />
+            </label>
+            <p class="hint">邮件由 Resend 发送，链接短时有效。</p>
+            <div class="form-actions btn-row">
+              <button type="submit" class="btn">发送邀请</button>
+              <a class="btn btn-ghost" href="admins.html">取消</a>
+            </div>
+          </form>
+
+          <div style="margin-top: 3rem">
+            <p class="eyebrow">Pending</p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>邮箱</th>
+                    <th>状态</th>
+                    <th>有效期</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="mono">alex@example.com</td>
+                    <td><span class="status is-on">sent</span></td>
+                    <td class="mono">24h</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
