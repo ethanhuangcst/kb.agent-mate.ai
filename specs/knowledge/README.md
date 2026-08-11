@@ -29,7 +29,7 @@
 | — | [11](for-kb/11-product-positioning.md) | 产品定位 |
 | [ops/content-overview.md](ops/content-overview.md) | [12](for-kb/12-content-overview.md) | 内容概述 ≤400 |
 | [ops/mcp-mount-trailing-slash.md](ops/mcp-mount-trailing-slash.md) | [13](for-kb/13-mcp-bare-path.md) | 裸 `/mcp` 改写 |
-| [frontend/macos-contacts-autofill.md](frontend/macos-contacts-autofill.md)、[frontend/noncontact-input-e2e.md](frontend/noncontact-input-e2e.md) | [04](for-kb/04-admin-forms-autofill.md) | 签发表单与 Contacts |
+| [frontend/macos-contacts-autofill.md](frontend/macos-contacts-autofill.md)、[frontend/noncontact-input-e2e.md](frontend/noncontact-input-e2e.md) | [04](for-kb/04-admin-forms-autofill.md) | 签发与登录：Contacts / NonContactTextInput |
 | [frontend/guide-figure-full-bleed.md](frontend/guide-figure-full-bleed.md) | [05](for-kb/05-guide-layout-figures.md) | 指南截图全宽 |
 | [design/logo-optical-alignment.md](design/logo-optical-alignment.md) | [06](for-kb/06-logo-optical-align.md) | Logo 光学对齐 |
 
@@ -47,7 +47,8 @@
 | Doc | Topic | Updated |
 |-----|--------|---------|
 | [design/logo-optical-alignment.md](design/logo-optical-alignment.md) | Logo 黄泡光学对齐与资产几何 | 2026-08-11 |
-| [frontend/macos-contacts-autofill.md](frontend/macos-contacts-autofill.md) | macOS Contacts；禁止可见 honeypot | 2026-08-11 |
+| [frontend/macos-contacts-autofill.md](frontend/macos-contacts-autofill.md) | macOS Contacts；登录+签发；禁止可见 honeypot | 2026-08-12 |
+| [frontend/home-cta-width-stretch.md](frontend/home-cta-width-stretch.md) | 首页 CTA：`width:100%`+max-content 塌宽 | 2026-08-12 |
 | [frontend/noncontact-input-e2e.md](frontend/noncontact-input-e2e.md) | NonContactTextInput：click 再 fill | 2026-08-11 |
 | [frontend/guide-figure-full-bleed.md](frontend/guide-figure-full-bleed.md) | 指南截图与 code 同宽（ol padding） | 2026-08-11 |
 | [frontend/locale-switcher-header.md](frontend/locale-switcher-header.md) | 语言切换：顶栏灰色链，非墨盒 | 2026-08-11 |
@@ -65,6 +66,6 @@
 | [ops/admin-resend-mail.md](ops/admin-resend-mail.md) | Admin 邮件 Resend / log transport | 2026-08-11 |
 | [ops/safari-localhost-email-links.md](ops/safari-localhost-email-links.md) | Safari + `127.0.0.1` 邮件链接（ADR-012） | 2026-08-11 |
 | [ops/config-snippet-placeholders.md](ops/config-snippet-placeholders.md) | 配置示例占位符约定 | 2026-08-11 |
-| [ops/prod-yecaoyun3.md](ops/prod-yecaoyun3.md) | 野草云3 生产交接：端口、Aliyun `kb_agent`、release-bot | 2026-08-11 |
+| [ops/prod-yecaoyun3.md](ops/prod-yecaoyun3.md) | 野草云3 生产交接：端口、Aliyun `kb_agent`、gitignore 的 prod env | 2026-08-12 |
 | [security/api-key-ciphertext.md](security/api-key-ciphertext.md) | Key 密文 + 查看（ADR-007） | 2026-08-11 |
 | [for-kb/](for-kb/) | **产品库入库正文包** | 2026-08-11 |

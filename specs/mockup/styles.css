@@ -182,13 +182,13 @@ h3 {
 
 .auth-card h1 {
   font-size: 1.65rem;
-  margin-bottom: 0.55rem;
+  margin: 0 0 1.25rem;
 }
 
 .auth-card .lead {
   color: var(--mute);
   font-size: 1rem;
-  margin: 0 0 1.75rem;
+  margin: 0 0 1rem;
   font-weight: 400;
 }
 
@@ -202,6 +202,85 @@ h3 {
 .auth-card code {
   font-family: var(--font-mono);
   font-size: 0.9em;
+}
+
+/* —— Login: brand → notice plate → work (equal vertical gaps) —— */
+.auth-card-login {
+  --auth-notice-gap: 2rem;
+}
+
+.auth-card-login > .logo-auth {
+  margin-bottom: 0;
+}
+
+.auth-login-panel {
+  margin-top: var(--auth-notice-gap);
+}
+
+/*
+  Closed-registration plate: same --fill token as app surfaces,
+  zero radius, hairline — not a colored alert card.
+*/
+.auth-status {
+  margin: 0 0 var(--auth-notice-gap);
+  padding: 0.9rem 1rem;
+  box-sizing: border-box;
+  width: 100%;
+  background: var(--fill);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  font-family: var(--font-cn);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.7;
+  letter-spacing: 0.015em;
+  color: var(--mute);
+}
+
+.auth-status .contact-admin {
+  margin: 0 0.15em;
+}
+
+.auth-status .contact-admin-trigger {
+  font-size: inherit;
+  font-weight: 500;
+  letter-spacing: inherit;
+  color: var(--ink);
+  border-bottom-width: 1px;
+  border-bottom-color: var(--line-strong);
+}
+
+.auth-status-key {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+  background: none;
+  padding: 0;
+}
+
+.auth-work {
+  margin-top: 0;
+}
+
+.auth-work h1 {
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.auth-card-login .form-actions .btn {
+  height: 2.125rem;
+  min-width: 5.5rem;
+  padding: 0 1rem;
+}
+
+.auth-card-login .back-link {
+  margin-top: 1.75rem;
 }
 
 /* Login: WeChat QR on “联系管理员” hover / focus */
@@ -1014,10 +1093,11 @@ td {
 }
 
 .home-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1.25rem;
+  display: grid;
+  grid-template-columns: max-content;
+  justify-items: stretch;
+  gap: 1rem;
+  max-width: 100%;
   padding-top: 1.75rem;
   border-top: 1px solid var(--line);
 }
@@ -1037,7 +1117,12 @@ td {
 }
 
 .home-actions .btn {
-  min-width: 12rem;
+  min-width: 0;
+  width: auto;
+  height: 2.125rem;
+  padding: 0 0.85rem;
+  flex-shrink: 1;
+  letter-spacing: 0.06em;
 }
 
 /* —— Guide —— */

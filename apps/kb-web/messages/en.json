@@ -9,12 +9,12 @@
   "home": {
     "tagline": "Your private knowledge base agent. A smart knowledge assistant, one-stop manage all your knowledge.",
     "guide": "Integration guide",
-    "adminLogin": "Admin login"
+    "adminLogin": "Sign in"
   },
   "login": {
     "eyebrow": "Admin",
-    "title": "Sign in",
-    "lead": "Open registration is closed. <contact>Contact an admin</contact> for an api-key",
+    "title": "Admin sign-in",
+    "lead": "Open registration is closed. <contact>Contact an admin</contact> for an <key>api-key</key>",
     "wechatQrAlt": "Admin WeChat QR code",
     "wechatQrCaption": "Scan with WeChat",
     "loginLabel": "Username or email",

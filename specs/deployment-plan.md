@@ -32,7 +32,7 @@ Reserved from `hk_vps_3_resources.md` (avoid 3001–3003 / 3200–3201 / 6333 / 
 
 | Role | Host bind | Container | NPM uses |
 | --- | --- | --- | --- |
-| web | **`3004→3000`** | `kb-web:3000` | Forward **`kb-web:3000`** |
+| web | **`3006→3000`** | `kb-web:3000` | Forward **`kb-web:3000`** |
 | agent | **`3202→8000`** | `kb-agent:8000` | Path locations → **`kb-agent:8000`** |
 | rag | **`3203→8001`** | `kb-rag:8001` | not public |
 | qdrant | **`127.0.0.1:6336→6333`** | `kb-qdrant:6333` | not public |
@@ -115,7 +115,7 @@ Internal URLs (compose / Portainer env):
 
 | Service | container_name | Image | Container port | Host port | Public? | Role |
 | --- | --- | --- | --- | --- | --- | --- |
-| web | `kb-web` | `ghcr.io/ethanhuangcst/kb.agent-mate.ai/web:<tag>` | `3000` | `3004` | yes via NPM | Admin UI (+ BFF) |
+| web | `kb-web` | `ghcr.io/ethanhuangcst/kb.agent-mate.ai/web:<tag>` | `3000` | `3006` | yes via NPM | Admin UI (+ BFF) |
 | agent | `kb-agent` | `ghcr.io/ethanhuangcst/kb.agent-mate.ai/agent:<tag>` | `8000` | `3202` | yes via NPM path | MCP + knowledge REST |
 | rag | `kb-rag` | `ghcr.io/ethanhuangcst/kb.agent-mate.ai/rag:<tag>` | `8001` | `3203` | no | RAG / index |
 | qdrant | `kb-qdrant` | `qdrant/qdrant:v1.13.2` | `6333` | `127.0.0.1:6336` | no | Vectors |
@@ -346,7 +346,7 @@ After DB reachable → stack healthy → DNS → NPM:
 - [ ] Stack name `kb-agent` free on Portainer
 - [ ] Container names `kb-web` / `kb-agent` / `kb-rag` / `kb-qdrant` free
 - [ ] Volume names `kb_qdrant_data` / `kb_blob_data` free
-- [ ] Host ports **3004 / 3202 / 3203 / 127.0.0.1:6336** free per `hk_vps_3_resources.md`
+- [ ] Host ports **3006 / 3202 / 3203 / 127.0.0.1:6336** free per `hk_vps_3_resources.md`
 - [ ] Domain `kb.agent-mate.ai` not used by another NPM host
 - [ ] DB name `kb_agent` not used by another product
 - [ ] Will **not** recreate `portainer_network`
@@ -376,7 +376,7 @@ After DB reachable → stack healthy → DNS → NPM:
 
 | Step | This plan’s answer |
 | --- | --- |
-| 0 Preflight | Repo `ethanhuangcst/kb.agent-mate.ai`; stack `kb-agent`; domain `kb.agent-mate.ai`; images `…/web|agent|rag`; Qdrant pin `v1.13.2`; host ports 3004/3202/3203/6336 |
+| 0 Preflight | Repo `ethanhuangcst/kb.agent-mate.ai`; stack `kb-agent`; domain `kb.agent-mate.ai`; images `…/web|agent|rag`; Qdrant pin `v1.13.2`; host ports 3006/3202/3203/6336 |
 | 0b Isolation | §10 + live inventory (`hcp` / `mypoke` / reserved media **3003**) |
 | 1 Compose | Repo-root **`docker-compose.prod.yml`** |
 | 2 CI → GHCR | **`.github/workflows/ghcr.yml`** |

@@ -11,16 +11,18 @@ export default async function LoginPage() {
     <div className="auth-shell">
       <ShellLocale />
       <main className="auth-main">
-        <div className="auth-card">
+        <div className="auth-card auth-card-login">
           <BrandLockup size="auth" />
-          <p className="eyebrow">{t("eyebrow")}</p>
-          <h1>{t("title")}</h1>
-          <LoginLead />
-          <hr className="rule" />
-          <LoginForm />
-          <Link className="back-link" href="/">
-            {t("backHome")}
-          </Link>
+          <div className="auth-login-panel">
+            <LoginLead />
+            <div className="auth-work">
+              <h1>{t("title")}</h1>
+              <LoginForm />
+              <Link className="back-link" href="/">
+                {t("backHome")}
+              </Link>
+            </div>
+          </div>
         </div>
       </main>
       <SiteFooter />

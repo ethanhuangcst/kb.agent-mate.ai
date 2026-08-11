@@ -7,7 +7,9 @@ test.beforeEach(async ({ request }) => {
 
 async function loginAndUnlock(page: import("@playwright/test").Page) {
   await page.goto("/login");
-  await page.getByTestId("login-form").locator('input[name="login"]').fill("admin");
+  const login = page.getByTestId("login-form").locator('input[name="login"]');
+  await login.click();
+  await login.fill("admin");
   await page.getByTestId("login-form").locator('input[name="password"]').fill("admin");
   await page.getByTestId("login-form").locator('button[type="submit"]').click();
   await page.waitForURL(/change-password/);
@@ -66,9 +68,9 @@ test("should_reveal_wechat_qr_when_hovering_contact_admin", async ({ page }) => 
 test("should_switch_locale_to_en", async ({ page }) => {
   await page.goto("/");
   await page.getByTestId("locale-en").click();
-  await expect(page.getByTestId("admin-login")).toHaveText("Admin login");
+  await expect(page.getByTestId("admin-login")).toHaveText("Sign in");
   await page.getByTestId("locale-zh").click();
-  await expect(page.getByTestId("admin-login")).toHaveText("管理员登录");
+  await expect(page.getByTestId("admin-login")).toHaveText("登录");
 });
 
 test("should_revoke_and_reissue_key", async ({ page }) => {
@@ -140,7 +142,9 @@ test("should_reset_password_via_debug_token_when_test_reset_enabled", async ({
   await page.locator('input[name="confirm"]').fill("newpass12345");
   await page.locator('button[type="submit"]').click();
   await page.waitForURL(/login/);
-  await page.getByTestId("login-form").locator('input[name="login"]').fill("admin");
+  const login = page.getByTestId("login-form").locator('input[name="login"]');
+  await login.click();
+  await login.fill("admin");
   await page.getByTestId("login-form").locator('input[name="password"]').fill("newpass12345");
   await page.getByTestId("login-form").locator('button[type="submit"]').click();
   await page.waitForURL(/admin\/users/);

@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { NonContactTextInput } from "../non-contact-text-input";
 import { PasswordField } from "../password-field";
 
 export function LoginForm() {
@@ -36,16 +37,10 @@ export function LoginForm() {
   }
 
   return (
-    <form className="form" onSubmit={onSubmit} data-testid="login-form">
+    <form className="form" onSubmit={onSubmit} data-testid="login-form" autoComplete="off">
       <label>
         {t("loginLabel")}
-        <input
-          type="text"
-          name="login"
-          autoComplete="username"
-          placeholder="admin"
-          required
-        />
+        <NonContactTextInput name="login" placeholder="admin" required />
       </label>
       <PasswordField name="password" label={t("passwordLabel")} autoComplete="current-password" />
       {error ? (

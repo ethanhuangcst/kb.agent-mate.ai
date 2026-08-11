@@ -18,7 +18,7 @@ This document describes the **target architecture and steps** for the default ed
 | Prod compose | `docker-compose.prod.yml` |
 | Env template | `.env.prod.example` |
 | External Postgres | Aliyun **`101.132.156.250:5432` / `kb_agent`** |
-| Host ports | web **3004** · agent **3202** · rag **3203** · qdrant **127.0.0.1:6336** |
+| Host ports | web **3006** · agent **3202** · rag **3203** · qdrant **127.0.0.1:6336** |
 | Related apps on same zone | `hcp.agent-mate.ai`, `mypoke.trade` — isolate stack / ports / NPM host |
 | Canonical plan | [`specs/deployment-plan.md`](./deployment-plan.md) |
 

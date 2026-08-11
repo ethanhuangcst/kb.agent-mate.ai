@@ -9,12 +9,12 @@
   "home": {
     "tagline": "私人知识库智能体。你自己的个人知识智能助理，包罗万象，一网打尽，一站获取。",
     "guide": "接入指南",
-    "adminLogin": "管理员登录"
+    "adminLogin": "登录"
   },
   "login": {
     "eyebrow": "Admin",
-    "title": "登录",
-    "lead": "开放注册已关闭。<contact>联系管理员</contact>获得 api-key",
+    "title": "管理员登录",
+    "lead": "开放注册已关闭。<contact>联系管理员</contact>获得 <key>api-key</key>",
     "wechatQrAlt": "管理员微信二维码",
     "wechatQrCaption": "微信扫码联系",
     "loginLabel": "用户名或邮箱",

@@ -13,9 +13,9 @@ Handing `kb.agent-mate.ai` to release-bot for first (or subsequent) Portainer de
 | Stack | `kb-agent` |
 | Compose | repo `docker-compose.prod.yml` |
 | Images | `ghcr.io/ethanhuangcst/kb.agent-mate.ai/{web,agent,rag}` |
-| Host ports | `3004` (web), `3202` (agent), `3203` (rag), `127.0.0.1:6336` (qdrant) |
+| Host ports | `3006` (web), `3202` (agent), `3203` (rag), `127.0.0.1:6336` (qdrant) |
 | Postgres | Aliyun `101.132.156.250:5432` / DB **`kb_agent`** (created + migrated through `005_import_batch`) |
-| Env template | `.env.prod.example` (fill secrets in Portainer only) |
+| Env template | **`.env.prod.example`**（本机可填密钥且 **gitignored**；Portainer 粘贴同内容；勿提交） |
 
 Canonical runbook: [`deployment-plan.md`](../../deployment-plan.md).  
 Node inventory to update after deploy: release-bot `specs/hk_vps_3_resources.md`.

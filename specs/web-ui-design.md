@@ -83,7 +83,7 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 | 水平 | 内容块居中；卡内全部左对齐 |
 | 锁头 | logo 56×56 + 站名；**黄色灯泡左缘**与说明文左缘光学对齐（射线可伸出；`--logo-optical-shift`，见 ADR-001） |
 | 产品概述 | i18n `home.tagline`：私人知识库智能体 / 个人知识智能助理（包罗万象、一网打尽、一站获取） |
-| 操作 | 「接入指南」文字链 +「管理员登录」`.btn.btn-page` |
+| 操作 | 「接入指南」文字链 +「登录」`.btn.btn-page`（按钮宽度与「接入指南」对齐） |
 | 页脚 | 见 §4.4 |
 
 ```text
@@ -93,7 +93,7 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 │     一句产品说明                     │
 │     ───────────                     │
 │     接入指南                         │
-│     [管理员登录]                     │
+│     [登录]                           │
 │                                     │
 │           copyright ® Ethan Huang   │  ← 页脚右对齐
 └─────────────────────────────────────┘
@@ -109,6 +109,8 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 | 背景 / 顶距 / 水平 | 与 §4.1 相同 |
 | 锁头 | `.logo-auth`：规格同首页 `.logo-home`（56px、站名 `1.35rem`、黄泡光学左对齐） |
 | 说明 | 「开放注册已关闭。」+ 可交互「联系管理员」+「获得 api-key」；hover / focus 浮层显示微信二维码 `EthanWeChat.png`（零圆角、发丝边、上浮） |
+| 登录页层次（2026-08-12） | ① 锁头 → ② **灰底说明方框**（`--fill` + 发丝边、零圆角）→ ③「管理员登录」+ 表单；方框与上下块间距均为 `--auth-notice-gap`（默认 `2rem`） |
+| 登录防通讯录填充 | 用户名框：首焦前 `readonly` + `autocomplete="one-time-code"`（同 `NonContactTextInput`）；禁止 honeypot 假输入 |
 | 密码 | 密码框右侧眼睛图标切换显示/隐藏（`.password-field` / `.password-toggle`） |
 | 内容宽 | `max-width: 26rem`（与首页卡同宽） |
 | 页脚 | 见 §4.4 |
@@ -127,12 +129,14 @@ radial-gradient(100% 70% at 50% -20%, #ffffff → transparent)
 
 ```text
 ┌─────────────────────────────────────┐
-│                                     │
-│     [logo] kb.agent-mate.ai         │  ← 同首页偏上
-│     ADMIN / 标题 / 说明              │
-│     ───────────                     │
+│     [logo] kb.agent-mate.ai         │
+│              ↕ 2rem                 │
+│     ┌─────────────────────────┐     │
+│     │ 开放注册已关闭。联系…    │     │  ← --fill 方框
+│     └─────────────────────────┘     │
+│              ↕ 2rem                 │
+│     管理员登录                      │
 │     表单 · 主按钮 · 辅链             │
-│                                     │
 │           copyright ® Ethan Huang   │
 └─────────────────────────────────────┘
 ```

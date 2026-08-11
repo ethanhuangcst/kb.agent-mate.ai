@@ -2,12 +2,12 @@
 
 import { useTranslations } from "next-intl";
 
-/** Login lead: hover/focus “联系管理员” reveals WeChat QR (冷淡浮层). */
+/** Closed-registration notice plate; hover/focus “联系管理员” shows WeChat QR. */
 export function LoginLead() {
   const t = useTranslations("login");
 
   return (
-    <p className="lead">
+    <p className="auth-status" role="status" data-testid="login-status">
       {t.rich("lead", {
         contact: (chunks) => (
           <span className="contact-admin">
@@ -35,6 +35,7 @@ export function LoginLead() {
             </span>
           </span>
         ),
+        key: (chunks) => <code className="auth-status-key">{chunks}</code>,
       })}
     </p>
   );

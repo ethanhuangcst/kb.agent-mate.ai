@@ -1,8 +1,13 @@
-# 管理台签发表单：避开 macOS 通讯录自动填充
+# 管理台与登录表单：避开 macOS 通讯录自动填充
 
 ## 现象
 
-「使用者姓名」一类字段在 macOS / Safari（及部分 Chromium）会弹出 **通讯录（Contacts）** 自动填充。`autocomplete="off"` 经常无效。提交后系统浮层还可能残留在下一页（例如 Key 已生成页）上方。
+下列字段在 macOS / Safari（及部分 Chromium）会弹出 **通讯录（Contacts）** 或地址建议：
+
+- 管理台「使用者姓名」签发框  
+- 登录页「用户名或邮箱」
+
+`autocomplete="off"` / `autocomplete="username"` 经常无效。提交后系统浮层还可能残留在下一页上方。
 
 ## 禁止做法
 
@@ -15,4 +20,4 @@
 - 字段 `name` 避免 `name` / `displayName` 等通讯录敏感名（可用产品自定义名）  
 - 提交成功后 `blur` 再切换到结果页，给 WebKit 一点时间收起浮层  
 
-实现参考组件名：NonContactTextInput。E2E 填写前须先 click 再 fill（只 fill 可能打在仍只读的框上）。
+实现参考组件名：`NonContactTextInput`（签发与登录共用）。E2E 填写前须先 click 再 fill（只 fill 可能打在仍只读的框上）。
