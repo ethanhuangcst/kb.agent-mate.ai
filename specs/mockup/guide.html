@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>接入指南 · kb.agent-mate.ai</title>
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="icon" href="logo.png" type="image/png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="guide-shell">
+
+      <header class="guide-header">
+        <a class="logo" href="index.html" aria-label="kb.agent-mate.ai">
+          <img class="logo-header-mark" src="logo.png" alt="" width="36" height="36" />
+          <span class="logo-word">kb.agent-mate.ai</span>
+        </a>
+        <a class="btn-text" href="index.html">返回首页</a>
+      </header>
+
+      <article class="guide-body">
+        <p class="eyebrow">Connect</p>
+        <h1>接入指南</h1>
+        <p class="lead">私人知识库智能体。你自己的个人知识智能助理，包罗万象，一网打尽，一站获取。支持 IDE 和第三方工具通过 MCP 调用，以及在个人应用开发中通过 REST API 调用。</p>
+
+        <nav class="guide-toc" aria-label="章节">
+          <a href="#architecture">1. 架构</a>
+          <a href="#key">2. 获取 Key</a>
+          <a href="#ide">3. IDE 接入</a>
+          <a href="#tools">4. 第三方工具</a>
+        </nav>
+
+        <section id="architecture" class="guide-section">
+          <h2>1. 架构指南</h2>
+
+          <h3 id="who" class="guide-sub">调用者是谁</h3>
+          <ul class="guide-list">
+            <li><strong>IDE</strong> — 如 Cursor、CodeBuddy 里的 Agent / 项目会话</li>
+            <li><strong>聊天客户端</strong> — 如 ChatBox</li>
+            <li><strong>自有应用</strong> — 如 MyPoke.Trade</li>
+          </ul>
+          <p class="guide-note">以上都须自带大模型（或由宿主接入 LLM），用来理解意图、做业务判断、消费检索结果。</p>
+
+          <h3 id="services" class="guide-sub">kb.agent-mate.ai 提供什么</h3>
+          <ul class="guide-list">
+            <li>管理你在各项目中沉淀的知识（一人一库，按 user 隔离）</li>
+            <li>按输入检索已有知识，返回可引用片段</li>
+            <li>按需从外部找候选材料；你确认后才入库</li>
+            <li>归纳整理知识体系（分类、标签、项目归属）</li>
+          </ul>
+
+          <h3 id="modes" class="guide-sub">两种调用方式</h3>
+          <figure class="guide-flow" aria-label="调用方经 MCP 或 REST，用同一把 Bearer Key 进入 kb.agent-mate.ai，再访问按用户隔离的私人知识库">
+            <div class="guide-flow-lanes" aria-hidden="true">
+              <div class="guide-flow-lane">
+                <p class="guide-flow-clients">IDE · ChatBox</p>
+                <p class="guide-flow-proto">MCP</p>
+              </div>
+              <div class="guide-flow-lane">
+                <p class="guide-flow-clients">MyPoke.Trade</p>
+                <p class="guide-flow-proto">REST</p>
+              </div>
+            </div>
+            <div class="guide-flow-merge" aria-hidden="true">
+              <span class="guide-flow-auth">Bearer API Key</span>
+            </div>
+            <div class="guide-flow-hub" aria-hidden="true">
+              <p class="guide-flow-hub-name">kb.agent-mate.ai</p>
+              <p class="guide-flow-hub-ops">检索 · 提案 · 确认入库</p>
+            </div>
+            <div class="guide-flow-store" aria-hidden="true">
+              <p class="guide-flow-store-name">私人知识库</p>
+              <p class="guide-flow-store-meta">user 隔离</p>
+            </div>
+          </figure>
+          <div class="guide-modes">
+            <div class="guide-mode">
+              <p class="guide-mode-label">MCP</p>
+              <p class="guide-mode-who">IDE · ChatBox</p>
+              <p>远程 MCP 工具面（检索 / 提案 / 确认 / 列表 / 内容概述 ≤400 字）。IDE 与第三方客户端传输不同，见第 3–4 节。</p>
+            </div>
+            <div class="guide-mode">
+              <p class="guide-mode-label">REST</p>
+              <p class="guide-mode-who">MyPoke.Trade · 自有应用</p>
+              <p>HTTP 调 <span class="mono">/api/v1/kb/*</span>；与 MCP 同一套能力语义。</p>
+            </div>
+          </div>
+          <p class="guide-note">MCP 与 REST 共用一把 Key、同一知识库；请求体里的用户标识不能覆盖 Key 身份。</p>
+
+          <h3 id="llm-boundary" class="guide-sub">大模型怎么分工</h3>
+          <div class="guide-modes guide-roles">
+            <div class="guide-mode">
+              <p class="guide-mode-label">你自带的模型</p>
+              <ul>
+                <li>理解意图与任务目标</li>
+                <li>决定要不要外部补给、如何解读命中</li>
+                <li>按业务逻辑筛选、组合知识</li>
+                <li>产出洞察、策略、文案等下游结果</li>
+              </ul>
+            </div>
+            <div class="guide-mode">
+              <p class="guide-mode-label">本站内嵌模型</p>
+              <ul>
+                <li>库内检索、列表、体系整理辅助</li>
+                <li>外部候选检索与正文拉取</li>
+                <li>入库提案：≤400 字内容概述、分类建议、查重</li>
+                <li>确认后的持久化与向量化</li>
+              </ul>
+            </div>
+          </div>
+          <p class="guide-note">本站帮你<strong>找到并管好知识</strong>，不替你<strong>做完生意</strong>。要投放策略或业务结论，须由你侧模型结合业务数据完成；外部材料须确认后才入库。</p>
+        </section>
+
+        <section id="key" class="guide-section">
+          <h2>2. 获取 API Key</h2>
+          <p>管理员在管理台签发使用者 Key；列表可再次「查看」完整明文。MCP 与 REST 使用同一把 Key。</p>
+          <p>请求头：<span class="mono">Authorization: Bearer &lt;api_key&gt;</span></p>
+          <p class="guide-note">吊销立即失效；重签换密钥，知识库保留。</p>
+        </section>
+
+        <section id="ide" class="guide-section">
+          <h2>3. IDE 接入</h2>
+          <p class="guide-note">一律通过远端 <span class="mono">https://kb.agent-mate.ai</span> 接入（Streamable HTTP，客户端不配 Tavily）。以 Cursor 为例；CodeBuddy 字段相同。</p>
+
+          <h3 class="guide-sub">Cursor · 远程</h3>
+          <ol class="guide-steps">
+            <li class="guide-step">
+              <div class="guide-step-head">
+                <p class="guide-step-index">01</p>
+                <div class="guide-step-copy">
+                  <h3 class="guide-step-title">打开 Cursor Settings</h3>
+                  <p>菜单 Cursor → Preferences → Cursor Settings（或 ⌘,）。</p>
+                </div>
+              </div>
+              <figure class="guide-figure">
+                <img src="guide/cursor-01-settings.png" alt="Cursor 菜单打开 Preferences → Cursor Settings" width="1200" height="750" />
+                <figcaption>Cursor 菜单打开 Preferences → Cursor Settings</figcaption>
+              </figure>
+            </li>
+            <li class="guide-step">
+              <div class="guide-step-head">
+                <p class="guide-step-index">02</p>
+                <div class="guide-step-copy">
+                  <h3 class="guide-step-title">进入 Customize</h3>
+                  <p>左侧栏选择 Customize（Plugins、MCPs、Skills 已迁至此）。</p>
+                </div>
+              </div>
+              <figure class="guide-figure">
+                <img src="guide/cursor-02-customize.png" alt="Cursor Settings 左侧栏高亮 Customize" width="1200" height="750" />
+                <figcaption>Cursor Settings 左侧栏高亮 Customize</figcaption>
+              </figure>
+            </li>
+            <li class="guide-step">
+              <div class="guide-step-head">
+                <p class="guide-step-index">03</p>
+                <div class="guide-step-copy">
+                  <h3 class="guide-step-title">MCPs → New MCP Server</h3>
+                  <p>筛选 MCPs，点击 New MCP Server / Add a Custom MCP Server，打开 mcp.json。</p>
+                </div>
+              </div>
+              <figure class="guide-figure">
+                <img src="guide/cursor-03-new-mcp.png" alt="Customize 中 MCPs 分类与 New MCP Server" width="1200" height="750" />
+                <figcaption>Customize 中 MCPs 分类与 New MCP Server</figcaption>
+              </figure>
+            </li>
+            <li class="guide-step">
+              <div class="guide-step-head">
+                <p class="guide-step-index">04</p>
+                <div class="guide-step-copy">
+                  <h3 class="guide-step-title">填写远程 URL 与 Bearer</h3>
+                  <p>用下方模板：url 固定为 <span class="mono">https://kb.agent-mate.ai/mcp</span>；headers 里 <span class="mono">Authorization: Bearer &lt;使用者 Key&gt;</span>。不要填 <span class="mono">/sse</span>，不要加 <span class="mono">TAVILY_API_KEY</span>，不要使用本机地址。</p>
+                </div>
+              </div>
+              <figure class="guide-figure">
+                <img src="guide/cursor-04-mcp-json.png" alt="mcp.json 编辑界面（远程配置用 url + headers）" width="1200" height="750" />
+                <figcaption>mcp.json 编辑界面（远程配置用 url + headers）</figcaption>
+              </figure>
+            </li>
+          </ol>
+
+          <p class="guide-code-label">mcp.json 模板（远端 kb.agent-mate.ai）</p>
+          <pre class="guide-code"><code>{
+  "mcpServers": {
+    "kb-agent": {
+      "url": "https://kb.agent-mate.ai/mcp",
+      "headers": {
+        "Authorization": "Bearer &lt;paste_plaintext_user_api_key&gt;"
+      }
+    }
+  }
+}</code></pre>
+          <p class="guide-note">CodeBuddy：Remote MCP → <span class="mono">https://kb.agent-mate.ai/mcp</span> + Bearer（与上表相同）。</p>
+          <p class="guide-note">连通后可试：<span class="mono">kb_list_knowledge</span> → <span class="mono">kb_internal_search</span> →（可选）propose / confirm → <span class="mono">kb_external_search</span>。</p>
+        </section>
+
+        <section id="tools" class="guide-section">
+          <h2>4. 第三方工具接入</h2>
+          <p class="guide-note">以 ChatBox 为例。须使用 Remote (http/sse) 与远端 <span class="mono">/sse</span>，不能填 <span class="mono">/mcp</span>，不能使用本机地址。同样不配置 Tavily。</p>
+
+          <ol class="guide-steps">
+            <li class="guide-step">
+              <div class="guide-step-head">
+                <p class="guide-step-index">01</p>
+                <div class="guide-step-copy">
+                  <h3 class="guide-step-title">Settings → MCP</h3>
+                  <p>打开 ChatBox 设置，左侧选择 MCP。</p>
+                </div>
+              </div>
+              <figure class="guide-figure">
+                <img src="guide/chatbox-01-mcp-settings.png" alt="ChatBox MCP Settings，侧栏 MCP 与 Add Server" width="1200" height="750" />
+                <figcaption>ChatBox MCP Settings，侧栏 MCP 与 Add Server</figcaption>
+              </figure>
+            </li>
+            <li class="guide-step">
+              <div class="guide-step-head">
+                <p class="guide-step-index">02</p>
+                <div class="guide-step-copy">
+                  <h3 class="guide-step-title">Add Custom Server</h3>
+                  <p>Custom MCP Servers → Add Server → 选择 Add Custom Server。</p>
+                </div>
+              </div>
+              <figure class="guide-figure">
+                <img src="guide/chatbox-02-add-custom.png" alt="ChatBox 选择 Add Custom Server" width="1200" height="750" />
+                <figcaption>ChatBox 选择 Add Custom Server</figcaption>
+              </figure>
+            </li>
+            <li class="guide-step">
+              <div class="guide-step-head">
+                <p class="guide-step-index">03</p>
+                <div class="guide-step-copy">
+                  <h3 class="guide-step-title">填写服务器（注意 SSE）</h3>
+                  <p>Type = Remote (http/sse)。URL：<span class="mono">https://kb.agent-mate.ai/sse</span>。HTTP Header：<span class="mono">Authorization=Bearer &lt;api_key&gt;</span>。</p>
+                </div>
+              </div>
+              <figure class="guide-figure">
+                <img src="guide/chatbox-03-server-form.png" alt="ChatBox Add MCP Server 表单，Type 为 Remote http/sse，URL 以 /sse 结尾" width="1200" height="750" />
+                <figcaption>ChatBox Add MCP Server 表单，Type 为 Remote http/sse，URL 以 /sse 结尾</figcaption>
+              </figure>
+            </li>
+          </ol>
+          <p>点 Test，通过后再 Save；在会话中启用该 MCP。</p>
+          <p class="guide-note">不要填 <span class="mono">/mcp</span>。ChatBox 会对 URL 发 SSE GET，<span class="mono">/mcp</span> 会报 404。</p>
+          <p class="guide-note">只需 Bearer 使用者 Key；Tavily 由 kb-agent 服务端提供。</p>
+          <p class="guide-note">连通后可试：<span class="mono">kb_list_knowledge</span> → <span class="mono">kb_internal_search</span> →（可选）propose / confirm → <span class="mono">kb_external_search</span>。</p>
+        </section>
+      </article>
+
+      <footer class="site-footer">
+        <p>copyright ® Ethan Huang</p>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,7 +1,11 @@
 # 本地密钥与忽略项（仓库根）
+# Accidental nested clone
+/kb.agent-mate.ai/
 .env
 .env.local
 .env*.local
+.env.prod
+.env.prod.example
 **/.env
 specs/.env
 specs/keys.local.md
@@ -10,5 +14,22 @@ keys.cn.md
 *.pem
 .DS_Store
 __pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 node_modules/
 .venv/
+.pids/
+data/blob/
+data/raw/
+services/kb-agent/data/
+services/kb-rag/data/
+**/data/blob/
+**/data/raw/
+apps/kb-web/.next/
+apps/kb-web/test-results/
+apps/kb-web/playwright-report/
+*.egg-info/
+dist/
+build/

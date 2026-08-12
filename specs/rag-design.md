@@ -1,8 +1,8 @@
 # RAG 技术设计 — kb-agent
 
-对齐文档：`specs/req.md`、`specs/architecture.md`。本文细化**库内检索增强生成管道**与确认后索引；外部源路由见架构 §7，本文只定义与 RAG 相交的接口。
+对齐文档：`specs/req.md`、`specs/architecture.md`、`specs/mcp-design.md`、`specs/mvp-2-3-delivery.md`。本文细化**库内检索增强生成管道**与确认后索引；外部源路由见架构 §7，本文只定义与 RAG 相交的接口。
 
-不含实施排期。
+应用元数据与 Pending 状态在 **PostgreSQL**；向量在 **Qdrant**。检索结果经 MCP/REST 同一 `KbService` 暴露（见 `mcp-design.md`）。MVP-2 闭环交付须 `USE_FAKE_EMBEDDER=false` + 真 DashScope embed（见 `specs/mvp-2-3-delivery.md`）。不含排期日期。
 
 ---
 
@@ -39,7 +39,7 @@
 ```text
                     ┌─────────────┐
   confirm 正文 ───► │ Indexer     │──► BlobStore（原文）
-                    │             │──► SQLite（KnowledgeItem/Chunk 元数据）
+                    │             │──► PostgreSQL（KnowledgeItem/Chunk 元数据）
                     │             │──► Embedder ──► Qdrant
                     └─────────────┘
 
@@ -111,7 +111,7 @@ payload:
   tags: keyword[]
   project: keyword | null
   knowledge_type: keyword
-  content_preview: text   # 前 N 字，便于调试；全文以 SQLite/Blob 为准
+  content_preview: text   # 前 N 字，便于调试；全文以 PostgreSQL/Blob 为准
   language: keyword
 ```
 
@@ -128,7 +128,7 @@ payload:
 
 ## 5. 稀疏检索
 
-**方案 A（推荐基线）：** 在 SQLite 对 `Chunk.text` 做 FTS5（按 `user_id` 隔离虚拟表或过滤），BM25 打分。  
+**方案 A（推荐基线）：** 在 PostgreSQL 对 `Chunk.text` 做全文检索（`tsvector`/`pg_trgm`，按 `user_id` 过滤），BM25 或等价排序。  
 **方案 B：** Qdrant 稀疏向量 / 全文能力（若版本与运维允许）。
 
 无论 A/B，输出统一为 `(chunk_id, sparse_score)` 列表，供融合。
@@ -170,7 +170,7 @@ body_uri?               # 原文定位
 5. 权重（可选）：0.7 dense / 0.3 sparse 在 RRF 前对 rank 列表截断或分通道配额
 6. 按 knowledge_id 去重（同文档保留最高分 chunk；或保留 top-2 chunk/文档可配置）
 7. 截断至 final_k
-8. 回填 chunk 全文（SQLite）与 citation 字段
+8. 回填 chunk 全文（PostgreSQL）与 citation 字段
 ```
 
 ### 6.3 「库内是否足够」信号（供 Source Router）
@@ -224,7 +224,7 @@ on failure:
 | 步骤 | RAG | 内部 Qwen |
 | --- | --- | --- |
 | 分块 / 向量 / 检索 | 是 | 否 |
-| 提案 title/summary/tags | 否 | 是（propose 管道） |
+| 提案 title/summary/tags | 否 | 是（propose 管道；`summary` = ≤400 字内容概述，见 `knowledge-summary.md`） |
 | query rewrite | 可选触发 | 是 |
 | 证据 LLM 打分 | 可选后置 | 是（非基线必做） |
 | 业务回答 | 否 | 否 |
@@ -268,5 +268,5 @@ QDRANT_COLLECTION=kb_chunks
 
 ## 12. 接口契约（供 Agent / REST）
 
-`kb_search` / `POST /api/v1/kb/search` 返回上述 `Hit[]`，外加可选 `sufficiency` 信号。  
+`kb_internal_search` / `POST /api/v1/kb/search` 返回上述 `Hit[]`，外加可选 `sufficiency` 信号。  
 不在 RAG 层返回「最终业务结论」字符串（薄 Chat 门面若拼接，须在 Agent 设计中约束）。

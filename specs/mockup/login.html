@@ -4,34 +4,92 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>登录 · kb.agent-mate.ai</title>
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="icon" href="logo.png" type="image/png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="auth-shell">
-      <div class="auth-card">
-        <a class="logo" href="index.html" aria-label="kb.agent-mate.ai">
-          <img class="logo-full" src="logo.png" alt="kb.agent-mate.ai" width="80" height="80" />
-        </a>
-        <p class="eyebrow">Admin</p>
-        <h1>登录</h1>
-        <p class="lead">开放注册已关闭。初始化默认账号 <code>admin</code> / <code>admin</code> 须改密；经邀请自设密码者登录后无需再改。</p>
-        <hr class="rule" />
-        <form class="form" action="change-password.html" method="get">
-          <label>
-            用户名或邮箱
-            <input type="text" name="login" autocomplete="username" placeholder="admin" />
-          </label>
-          <label>
-            密码
-            <input type="password" name="password" autocomplete="current-password" placeholder="••••••••••••" />
-          </label>
-          <div class="form-actions btn-row">
-            <button type="submit" class="btn">登录</button>
-            <a class="btn-text" href="forgot-password.html">重设密码</a>
-          </div>
-        </form>
-        <a class="back-link" href="index.html">全部界面</a>
+      <div class="shell-locale">
+        <div class="locale-switch" role="group" aria-label="语言">
+          <button type="button" class="is-active">中文</button>
+          <button type="button">EN</button>
+        </div>
       </div>
+      <main class="auth-main">
+        <div class="auth-card auth-card-login">
+          <a class="logo logo-auth" href="index.html" aria-label="kb.agent-mate.ai">
+            <img class="logo-full" src="logo.png" alt="" width="56" height="56" />
+            <span class="logo-word">kb.agent-mate.ai</span>
+          </a>
+
+          <div class="auth-login-panel">
+            <!-- Notice plate: fill box, equal gap above/below via --auth-notice-gap -->
+            <p class="auth-status" role="status">
+              <span class="auth-status-text">开放注册已关闭。</span>
+              <span class="contact-admin">
+                <button type="button" class="contact-admin-trigger" aria-describedby="login-wechat-qr">
+                  联系管理员
+                </button>
+                <span id="login-wechat-qr" class="contact-admin-pop" role="tooltip">
+                  <img src="EthanWeChat.png" alt="管理员微信二维码" width="180" height="180" />
+                  <span class="contact-admin-caption">微信扫码联系</span>
+                </span>
+              </span>
+              <span class="auth-status-text">获得 <code class="auth-status-key">api-key</code></span>
+            </p>
+
+            <div class="auth-work">
+              <h1>管理员登录</h1>
+              <form class="form" action="change-password.html" method="get" autocomplete="off">
+                <label>
+                  用户名或邮箱
+                  <input
+                    type="text"
+                    name="kb_admin_login"
+                    autocomplete="one-time-code"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    data-1p-ignore
+                    data-lpignore="true"
+                    data-form-type="other"
+                    readonly
+                    onfocus="this.removeAttribute('readonly')"
+                    placeholder="admin"
+                    required
+                  />
+                </label>
+                <label>
+                  密码
+                  <span class="password-field">
+                    <input
+                      type="password"
+                      name="password"
+                      autocomplete="current-password"
+                      placeholder="••••••••••••"
+                    />
+                    <button type="button" class="password-toggle" aria-label="显示密码" aria-pressed="false">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    </button>
+                  </span>
+                </label>
+                <div class="form-actions btn-row">
+                  <button type="submit" class="btn">登录</button>
+                  <a class="btn-text" href="forgot-password.html">重设密码</a>
+                </div>
+              </form>
+              <a class="back-link" href="index.html">返回首页</a>
+            </div>
+          </div>
+        </div>
+      </main>
+      <footer class="site-footer">
+        <p>copyright ® Ethan Huang</p>
+      </footer>
     </div>
   </body>
 </html>

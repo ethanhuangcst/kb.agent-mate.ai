@@ -10,10 +10,17 @@ This document describes the **target architecture and steps** for the default ed
 
 | Field | Value |
 | --- | --- |
+| GitHub | **`ethanhuangcst/kb.agent-mate.ai`** |
+| GHCR | `ghcr.io/ethanhuangcst/kb.agent-mate.ai/{web,agent,rag}` |
 | Public domain | **`kb.agent-mate.ai`** |
 | `PUBLIC_BASE_URL` | `https://kb.agent-mate.ai` |
-| Target node | 野草云3（见下文） |
-| Related apps on same zone | e.g. `hcp.agent-mate.ai` — isolate stack / ports / NPM host |
+| Target node | 野草云3 · **`38.55.192.140`** |
+| Prod compose | `docker-compose.prod.yml` |
+| Env template | `.env.prod.example` |
+| External Postgres | Aliyun **`101.132.156.250:5432` / `kb_agent`** |
+| Host ports | web **3006** · agent **3202** · rag **3203** · qdrant **127.0.0.1:6336** |
+| Related apps on same zone | `hcp.agent-mate.ai`, `mypoke.trade` — isolate stack / ports / NPM host |
+| Canonical plan | [`specs/deployment-plan.md`](./deployment-plan.md) |
 
 ---
 

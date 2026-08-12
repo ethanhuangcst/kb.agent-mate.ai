@@ -1,0 +1,18 @@
+/* App-only extras; font stacks live in admin-ui.css (same as specs/mockup/styles.css). */
+
+.error {
+  color: #8b1a1a;
+  font-size: 0.95rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

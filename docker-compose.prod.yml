@@ -1,0 +1,110 @@
+# Production stack for release-bot → 野草云3 (Portainer + GHCR + NPM).
+# Local development: use docker-compose.yml + make up-daemon (Postgres on :5434).
+#
+# Images: ghcr.io/ethanhuangcst/kb.agent-mate.ai/{web,agent,rag}:<tag>
+# Network: existing external portainer_network (never delete/recreate).
+# External Postgres: Aliyun 101.132.156.250:5432 / database kb_agent
+
+name: kb-agent
+
+services:
+  web:
+    image: ghcr.io/ethanhuangcst/kb.agent-mate.ai/web:${IMAGE_TAG:-latest}
+    container_name: kb-web
+    restart: unless-stopped
+    ports:
+      - "3006:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-https://kb.agent-mate.ai}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://kb.agent-mate.ai}
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET}
+      API_KEY_PEPPER: ${API_KEY_PEPPER:?set API_KEY_PEPPER}
+      API_KEY_ENCRYPTION_SECRET: ${API_KEY_ENCRYPTION_SECRET:?set API_KEY_ENCRYPTION_SECRET}
+      RESEND_API_KEY: ${RESEND_API_KEY:?set RESEND_API_KEY}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-noreply@agent-mate.ai}
+      EMAIL_TRANSPORT: ${EMAIL_TRANSPORT:-resend}
+      AGENT_BASE_URL: ${AGENT_BASE_URL:-http://kb-agent:8000}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-me@ethanhuang.com}
+      ENABLE_TEST_RESET: ${ENABLE_TEST_RESET:-0}
+    networks:
+      - default
+
+  agent:
+    image: ghcr.io/ethanhuangcst/kb.agent-mate.ai/agent:${IMAGE_TAG:-latest}
+    container_name: kb-agent
+    restart: unless-stopped
+    ports:
+      - "3202:8000"
+    volumes:
+      - kb_blob_data:/data/kb
+    environment:
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-https://kb.agent-mate.ai}
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
+      RAG_BASE_URL: ${RAG_BASE_URL:-http://kb-rag:8001}
+      RAG_SERVICE_TOKEN: ${RAG_SERVICE_TOKEN:?set RAG_SERVICE_TOKEN}
+      API_KEY_PEPPER: ${API_KEY_PEPPER:?set API_KEY_PEPPER}
+      BLOB_ROOT: ${BLOB_ROOT:-/data/kb}
+      QWEN_API_KEY: ${QWEN_API_KEY:?set QWEN_API_KEY}
+      QWEN_BASE_URL: ${QWEN_BASE_URL:?set QWEN_BASE_URL}
+      QWEN_NATIVE_BASE_URL: ${QWEN_NATIVE_BASE_URL:-}
+      QWEN_HOST: ${QWEN_HOST:-}
+      QWEN_WORKSPACE: ${QWEN_WORKSPACE:-}
+      QWEN_REGION: ${QWEN_REGION:-cn-beijing}
+      QWEN_CHAT_MODEL: ${QWEN_CHAT_MODEL:?set QWEN_CHAT_MODEL}
+      QWEN_CHAT_MODEL_FALLBACK: ${QWEN_CHAT_MODEL_FALLBACK:-}
+      QWEN_EMBED_MODEL: ${QWEN_EMBED_MODEL:?set QWEN_EMBED_MODEL}
+      EMBED_DIM: ${EMBED_DIM:-1024}
+      USE_FAKE_EMBEDDER: ${USE_FAKE_EMBEDDER:-false}
+      USE_FAKE_KM: ${USE_FAKE_KM:-false}
+      TAVILY_API_KEY: ${TAVILY_API_KEY:-}
+      CHAT_FACADE_ENABLED: ${CHAT_FACADE_ENABLED:-false}
+      KB_EXTERNAL_SEARCH_RPM: ${KB_EXTERNAL_SEARCH_RPM:-30}
+      KB_FETCH_RPM: ${KB_FETCH_RPM:-20}
+    networks:
+      - default
+
+  rag:
+    image: ghcr.io/ethanhuangcst/kb.agent-mate.ai/rag:${IMAGE_TAG:-latest}
+    container_name: kb-rag
+    restart: unless-stopped
+    ports:
+      - "3203:8001"
+    volumes:
+      - kb_blob_data:/data/kb
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
+      QDRANT_URL: ${QDRANT_URL:-http://kb-qdrant:6333}
+      QDRANT_COLLECTION: ${QDRANT_COLLECTION:-kb_chunks}
+      RAG_SERVICE_TOKEN: ${RAG_SERVICE_TOKEN:?set RAG_SERVICE_TOKEN}
+      QWEN_API_KEY: ${QWEN_API_KEY:?set QWEN_API_KEY}
+      QWEN_BASE_URL: ${QWEN_BASE_URL:?set QWEN_BASE_URL}
+      QWEN_EMBED_MODEL: ${QWEN_EMBED_MODEL:?set QWEN_EMBED_MODEL}
+      EMBED_DIM: ${EMBED_DIM:-1024}
+      USE_FAKE_EMBEDDER: ${USE_FAKE_EMBEDDER:-false}
+      BLOB_ROOT: ${BLOB_ROOT:-/data/kb}
+    networks:
+      - default
+
+  qdrant:
+    image: qdrant/qdrant:v1.13.2
+    container_name: kb-qdrant
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6336:6333"
+    volumes:
+      - kb_qdrant_data:/qdrant/storage
+    networks:
+      - default
+
+volumes:
+  kb_qdrant_data:
+  kb_blob_data:
+
+networks:
+  default:
+    external: true
+    name: portainer_network
