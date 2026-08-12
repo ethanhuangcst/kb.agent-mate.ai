@@ -5,6 +5,9 @@ import "./globals.css";
 import "./admin-ui.css";
 import { ensureSeedAdmin } from "@/lib/seed";
 
+/** Required for per-request CSP nonces (static HTML cannot carry a fresh nonce). */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "kb.agent-mate.ai",
   description: "Private knowledge-base agent",
