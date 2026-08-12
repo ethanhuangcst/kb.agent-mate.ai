@@ -26,6 +26,8 @@
 | [11-product-positioning.md](./11-product-positioning.md) | 产品定位与 MCP/REST 分界 | 调用方、产品 |
 | [12-content-overview.md](./12-content-overview.md) | 内容概述 summary ≤400 字 | 调用方、运维 |
 | [13-mcp-bare-path.md](./13-mcp-bare-path.md) | 裸 `/mcp` 与尾斜杠改写 | 调用方、运维 |
+| [14-security-clickfix-and-csp.md](./14-security-clickfix-and-csp.md) | 假验证码（ClickFix）识别与本站 CSP/框架补丁 | 全体、管理员 |
+| [15-prod-release-health-checks.md](./15-prod-release-health-checks.md) | 发版后 CSP / healthz / MCP 抽查 | 运维、管理员 |
 
 ## 不入库（留在仓库 knowledge/）
 
@@ -34,4 +36,5 @@
 | 纯流程/编号约定 | `ops/adr-numbering.md` |
 | 已与上表合并 | `ops/chatbox-mcp-sse.md`、`ops/mcp-stdio-auth.md`、`ops/safari-…`、`ops/content-overview.md`、`ops/mcp-mount-trailing-slash.md`、`frontend/locale-…` 等 |
 | 决策原文 | `specs/adr/*`（检索决策用 ADR，不重复灌库） |
+| 事故工程长文 / IOC 细节 | `security/clickfix-html-inject-2026-08-12.md`（入库用 14 的摘要版） |
 | 易变营销句 | 首页/指南 slogan 的逐字文案（以 `messages/*.json` 为准；定位见 11） |

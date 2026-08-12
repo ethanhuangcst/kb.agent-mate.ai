@@ -29,6 +29,8 @@
 | — | [11](for-kb/11-product-positioning.md) | 产品定位 |
 | [ops/content-overview.md](ops/content-overview.md) | [12](for-kb/12-content-overview.md) | 内容概述 ≤400 |
 | [ops/mcp-mount-trailing-slash.md](ops/mcp-mount-trailing-slash.md) | [13](for-kb/13-mcp-bare-path.md) | 裸 `/mcp` 改写 |
+| [security/clickfix-html-inject-2026-08-12.md](security/clickfix-html-inject-2026-08-12.md)、[security/csp-and-next-cve.md](security/csp-and-next-cve.md) | [14](for-kb/14-security-clickfix-and-csp.md) | ClickFix / CSP / Next CVE |
+| [ops/prod-yecaoyun3.md](ops/prod-yecaoyun3.md) | [15](for-kb/15-prod-release-health-checks.md) | 生产发版健康检查 |
 | [frontend/macos-contacts-autofill.md](frontend/macos-contacts-autofill.md)、[frontend/noncontact-input-e2e.md](frontend/noncontact-input-e2e.md) | [04](for-kb/04-admin-forms-autofill.md) | 签发与登录：Contacts / NonContactTextInput |
 | [frontend/guide-figure-full-bleed.md](frontend/guide-figure-full-bleed.md) | [05](for-kb/05-guide-layout-figures.md) | 指南截图全宽 |
 | [design/logo-optical-alignment.md](design/logo-optical-alignment.md) | [06](for-kb/06-logo-optical-align.md) | Logo 光学对齐 |
@@ -66,6 +68,8 @@
 | [ops/admin-resend-mail.md](ops/admin-resend-mail.md) | Admin 邮件 Resend / log transport | 2026-08-11 |
 | [ops/safari-localhost-email-links.md](ops/safari-localhost-email-links.md) | Safari + `127.0.0.1` 邮件链接（ADR-012） | 2026-08-11 |
 | [ops/config-snippet-placeholders.md](ops/config-snippet-placeholders.md) | 配置示例占位符约定 | 2026-08-11 |
-| [ops/prod-yecaoyun3.md](ops/prod-yecaoyun3.md) | 野草云3 生产交接：端口、Aliyun `kb_agent`、gitignore 的 prod env | 2026-08-12 |
+| [ops/prod-yecaoyun3.md](ops/prod-yecaoyun3.md) | 野草云3 生产交接：`v0.1.3`、端口、Aliyun `kb_agent` | 2026-08-12 |
 | [security/api-key-ciphertext.md](security/api-key-ciphertext.md) | Key 密文 + 查看（ADR-007） | 2026-08-11 |
-| [for-kb/](for-kb/) | **产品库入库正文包** | 2026-08-11 |
+| [security/clickfix-html-inject-2026-08-12.md](security/clickfix-html-inject-2026-08-12.md) | 2026-08-12 ClickFix 事故（工程备忘） | 2026-08-12 |
+| [security/csp-and-next-cve.md](security/csp-and-next-cve.md) | nonce CSP + Next CVE-2025-66478 运维 | 2026-08-12 |
+| [for-kb/](for-kb/) | **产品库入库正文包**（含 14–15 安全/发版检查） | 2026-08-12 |

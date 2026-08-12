@@ -22,6 +22,7 @@ Aligned with Next.js CSP guidance and the release-bot prevention note (`prevent-
 - After deploy, verify response header `Content-Security-Policy` contains `nonce-` and that the homepage still hydrates.
 - CSP is defense-in-depth; continue host hardening, secret rotation, and HTML IOC monitoring.
 - Same change set upgrades **Next.js 15.5.2 → 15.5.7** for [CVE-2025-66478](https://nextjs.org/blog/CVE-2025-66478) (RSC RCE). Unpatched 15.5.x is a plausible path for post-deploy host/app compromise; patching is mandatory, not optional.
+- Knowledge: `specs/knowledge/security/csp-and-next-cve.md`, incident `security/clickfix-html-inject-2026-08-12.md`, ingestible `for-kb/14-security-clickfix-and-csp.md`.
 
 ## Date
 2026-08-12
